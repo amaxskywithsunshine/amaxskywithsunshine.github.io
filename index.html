@@ -8,16 +8,26 @@
 </head>
 <body>
 
+<!-- Splash screen -->
+<div id="splash-screen">
+  <div id="click-icon">Click to start</div>
+</div>
+
   <!-- ปุ่มเปิด/ปิดเสียง -->
   <button id="mute-btn">🌙</button>
 
-  <!-- Intro -->
-  <div id="intro">
-    <div class="background"></div>
-    <div class="intro-row">
-      <div class="text-container" id="text-container"></div>
-    </div>
+<!-- Intro -->
+<div id="intro">
+  <div class="background"></div>
+  <div class="intro-row">
+    <div class="text-container" id="text-container"></div>
   </div>
+</div>
+
+<audio id="bg-music" loop muted>
+  <source src="song/song.mp3" type="audio/mpeg">
+  Your browser does not support the audio tag.
+</audio>
 
   <div class="bg-video-wrapper">
     <video autoplay muted loop playsinline id="bg-video">
@@ -64,12 +74,6 @@
     </div>
     <p class="footer-copy">© 2025 amax. All rights reserved.</p>
   </footer>
-
-  <!-- เพลง -->
-  <audio id="bg-music" autoplay loop muted>
-    <source src="song/song.mp3" type="audio/mpeg">
-    Your browser does not support the audio tag.
-  </audio>
 
   <script src="script.js"></script>
 </body>

@@ -9,15 +9,29 @@ const container = document.getElementById("text-container");
 const mainContent = document.getElementById("main-content");
 const music = document.getElementById("bg-music");
 const muteBtn = document.getElementById("mute-btn");
+const splashScreen = document.getElementById("splash-screen");
+const clickIcon = document.getElementById("click-icon");
+const bgVideo = document.getElementById("bg-video");
 
 let index = 0;
 let musicStarted = false;
 
+// รอให้ video โหลดจนเล่นได้
+function waitForVideoLoaded(video) {
+  return new Promise(resolve => {
+    if (video.readyState >= 3) {
+      resolve();
+    } else {
+      video.addEventListener("canplaythrough", resolve, { once: true });
+    }
+  });
+}
+
+// fade out เพลงเบา ๆ
 function fadeOutMusic(targetVolume = 0.1, duration = 2000) {
   const steps = 20;
   const stepTime = duration / steps;
   const volumeStep = (music.volume - targetVolume) / steps;
-
   const interval = setInterval(() => {
     if (music.volume - volumeStep <= targetVolume) {
       music.volume = targetVolume;
@@ -28,6 +42,7 @@ function fadeOutMusic(targetVolume = 0.1, duration = 2000) {
   }, stepTime);
 }
 
+// โชว์ข้อความ intro ทีละอัน
 function showNextText() {
   if (index >= texts.length) {
     setTimeout(() => {
@@ -37,7 +52,6 @@ function showNextText() {
       setTimeout(() => {
         document.getElementById("intro").style.display = "none";
         document.body.style.overflow = "auto";
-
         fadeOutMusic(0.1, 2000);
         mainContent.style.display = "block";
         requestAnimationFrame(() => mainContent.classList.add("visible"));
@@ -52,36 +66,76 @@ function showNextText() {
   container.style.animation = "zoomText 2.5s ease forwards";
 
   index++;
-  setTimeout(showNextText, 2500);
+  setTimeout(showNextText, 3500);
 }
 
-// Wait for everything to load before starting the intro
-window.onload = () => {
-  // Wait for the music to load and play
-  music.volume = 1;
-  music.muted = false;
-  music.play().then(() => {
-    musicStarted = true;
-    muteBtn.textContent = "🔊";
-    showNextText();  // Start the text animation once everything is loaded
-  }).catch(() => {
-    document.addEventListener("click", () => {
-      if (!musicStarted) {
-        music.volume = 1;
-        music.muted = false;
-        music.play().catch(() => {});
-        muteBtn.textContent = "🔊";
+function startIntro() {
+  if (startIntro.started) return;
+  startIntro.started = true;
+
+  document.querySelector(".background").style.animation =
+    "zoomOut 18s ease-out forwards, blurOut 3s ease-out forwards";
+
+  setTimeout(() => {
+    splashScreen.style.transition = "opacity 1s ease";
+    splashScreen.style.opacity = 0;
+    splashScreen.style.pointerEvents = "none";
+
+    setTimeout(() => {
+      splashScreen.style.display = "none";
+
+      music.volume = 0;
+      music.muted = false;
+
+      music.play().then(() => {
         musicStarted = true;
-        showNextText();  // Start the text animation on user interaction if music fails to play initially
-      }
-    }, { once: true });
-  });
+        muteBtn.textContent = "🔊";
+
+        const duration = 2000;
+        const steps = 20;
+        const intervalTime = duration / steps;
+        let currentStep = 0;
+
+        const fadeInInterval = setInterval(() => {
+          currentStep++;
+          music.volume = currentStep / steps;
+          if (currentStep >= steps) clearInterval(fadeInInterval);
+        }, intervalTime);
+
+        showNextText();
+      }).catch(() => {
+        document.addEventListener("click", () => {
+          if (!musicStarted && music.paused) {
+            music.volume = 1;
+            music.muted = false;
+            music.play().catch(() => {});
+            muteBtn.textContent = "🔊";
+            musicStarted = true;
+            showNextText();
+          }
+        }, { once: true });
+      });
+    }, 1000);
+  }, 2000);
+}
+
+// โหลดทุก asset → ค่อยเริ่ม splash screen
+async function init() {
+  await Promise.all([
+    new Promise(r => window.addEventListener("load", r, { once: true })),
+    waitForVideoLoaded(bgVideo),
+    document.fonts.ready
+  ]);
+
+  splashScreen.style.display = "flex";
+  splashScreen.addEventListener("click", startIntro, { once: true });
 
   muteBtn.addEventListener("click", () => {
     music.muted = !music.muted;
     muteBtn.textContent = music.muted ? "🔇" : "🔊";
   });
 
+  // โหลดวิดีโอ YouTube
   const youtubeLinks = [
     "https://www.youtube.com/watch?v=4gGzsHAM4mA",
     "https://www.youtube.com/watch?v=NiYcw0yX2VY",
@@ -146,4 +200,7 @@ window.onload = () => {
         });
     }
   });
-};
+}
+
+// 🚀 เริ่ม
+init();
