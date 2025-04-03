@@ -1,0 +1,102 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+  }
+  
+  body, html {
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  #intro {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
+  }
+  
+  .background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: url('image/cloud.jpg') no-repeat center center/cover;
+    opacity: 0.7;
+    z-index: -1;
+    transform: scale(5);
+    animation: zoomOut 16s ease-out forwards;
+  }
+  
+  @keyframes zoomOut {
+    from { transform: scale(5); }
+    to { transform: scale(1); }
+  }
+  
+  @font-face {
+    font-family: 'MyCustomFont';
+    src: url('font/Annabelle.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+  .text-container {
+    color: white;
+    font-size: 2rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 1s ease;
+    font-family: 'MyCustomFont', sans-serif;
+  }
+  
+  .fade-in { opacity: 1; }
+  .fade-out { opacity: 0; }
+  
+  #main-content {
+    display: none;
+    padding: 4rem;
+    text-align: center;
+    background-color: #0a0a0a;
+    color: #ffffff;
+    min-height: 100vh;
+  }
+  
+  #mute-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 1.8rem;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    z-index: 1000;
+  }
+  
+  #mute-btn:hover {
+    background: rgba(255,255,255,0.2);
+  }
+  
+  #video-list {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+  
+  .video-thumb img {
+    width: 320px;
+    max-width: 90%;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+  }
+  
+  .video-thumb img:hover {
+    transform: scale(1.05);
+  }
+  

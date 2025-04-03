@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>theskyisshrine</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ปุ่มเปิด/ปิดเสียง -->
+  <button id="mute-btn">🌙</button>
+
+  <!-- Intro -->
+  <div id="intro">
+    <div class="background"></div>
+    <div class="text-container" id="text-container"></div>
+  </div>
+
+  <!-- เว็บหลัก -->
+  <div id="main-content">
+    <h1>Welcome to My Portfolio</h1>
+    <p>Here are some of my video works:</p>
+    <div id="video-list"></div>
+  </div>
+
+  <!-- เพลง -->
+  <audio id="bg-music" autoplay loop muted>
+    <source src="image/of flowers to bloom.mp3" type="audio/mpeg">
+    Your browser does not support the audio tag.
+  </audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
