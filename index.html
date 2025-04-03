@@ -14,19 +14,60 @@
   <!-- Intro -->
   <div id="intro">
     <div class="background"></div>
-    <div class="text-container" id="text-container"></div>
+    <div class="intro-row">
+      <div class="text-container" id="text-container"></div>
+    </div>
+  </div>
+
+  <div class="bg-video-wrapper">
+    <video autoplay muted loop playsinline id="bg-video">
+      <source src="video/cloud.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
   </div>
 
   <!-- เว็บหลัก -->
-  <div id="main-content">
-    <h1>Welcome to My Portfolio</h1>
-    <p>Here are some of my video works:</p>
+  <div id="main-content" class="fade-content">
+    <!-- โปรไฟล์อยู่บน -->
+    <div class="profile-section">
+      <div class="profile-image">
+        <img src="image/MyPhoto.jpg" alt="Your Photo" />
+        <div class="social-links">
+          <a href="https://www.youtube.com/@iaexamax" target="_blank">YouTube</a>
+          <a href="https://web.facebook.com/profile.php?id=100088880140399" target="_blank">Facebook</a>
+          <a href="https://www.instagram.com/iae_xamax/" target="_blank">Instagram</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ส่วนข้อความกลาง -->
+    <div class="header-text">
+      <h1>amax</h1>
+      <p>Here are some of my video works</p>
+    </div>
+
+    <!-- วิดีโอผลงาน -->
     <div id="video-list"></div>
   </div>
 
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-logo">
+        <img src="image/amax.png" alt="amax logo" />
+        <span>amax</span>
+      </div>
+      <div class="footer-social">
+        <a href="https://www.youtube.com/@iaexamax" target="_blank">YouTube</a>
+        <a href="https://web.facebook.com/profile.php?id=100088880140399" target="_blank">Facebook</a>
+        <a href="https://www.instagram.com/iae_xamax/" target="_blank">Instagram</a>
+      </div>
+    </div>
+    <p class="footer-copy">© 2025 amax. All rights reserved.</p>
+  </footer>
+
   <!-- เพลง -->
   <audio id="bg-music" autoplay loop muted>
-    <source src="image/of flowers to bloom.mp3" type="audio/mpeg">
+    <source src="song/song.mp3" type="audio/mpeg">
     Your browser does not support the audio tag.
   </audio>
 

@@ -2,7 +2,7 @@ const texts = [
   "The beautiful blue sky.",
   "The trembling sea.",
   "The sunlight that shines on my face.",
-  "I can't stop looking at it.",
+  "I can't stop looking at it."
 ];
 
 const container = document.getElementById("text-container");
@@ -11,77 +11,137 @@ const music = document.getElementById("bg-music");
 const muteBtn = document.getElementById("mute-btn");
 
 let index = 0;
-let introFinished = false;
 let musicStarted = false;
+
+function fadeOutMusic(targetVolume = 0.1, duration = 2000) {
+  const steps = 20;
+  const stepTime = duration / steps;
+  const volumeStep = (music.volume - targetVolume) / steps;
+
+  const interval = setInterval(() => {
+    if (music.volume - volumeStep <= targetVolume) {
+      music.volume = targetVolume;
+      clearInterval(interval);
+    } else {
+      music.volume -= volumeStep;
+    }
+  }, stepTime);
+}
 
 function showNextText() {
   if (index >= texts.length) {
-    introFinished = true;
-    const intro = document.getElementById("intro");
-    intro.style.transition = "opacity 1s ease";
-    intro.style.opacity = 0;
-
     setTimeout(() => {
-      intro.style.display = "none";
-      document.body.style.overflow = "auto";
-      mainContent.style.display = "block";
+      document.getElementById("intro").style.transition = "opacity 1s ease";
+      document.getElementById("intro").style.opacity = 0;
+
+      setTimeout(() => {
+        document.getElementById("intro").style.display = "none";
+        document.body.style.overflow = "auto";
+
+        fadeOutMusic(0.1, 2000);
+        mainContent.style.display = "block";
+        requestAnimationFrame(() => mainContent.classList.add("visible"));
+      }, 1000);
     }, 1000);
     return;
   }
 
   container.textContent = texts[index];
-  container.classList.remove("fade-out");
-  container.classList.add("fade-in");
+  container.style.animation = "none";
+  container.offsetHeight;
+  container.style.animation = "zoomText 2.5s ease forwards";
 
-  setTimeout(() => {
-    container.classList.remove("fade-in");
-    container.classList.add("fade-out");
-    index++;
-    setTimeout(showNextText, 1000);
-  }, 2500);
+  index++;
+  setTimeout(showNextText, 2500);
 }
 
-showNextText();
+document.addEventListener("DOMContentLoaded", () => {
+  showNextText();
 
-// ✅ คลิกเพื่อเริ่มเพลง (แค่ครั้งแรก)
-document.addEventListener("click", () => {
-  if (!musicStarted) {
-    music.volume = 0.1;
-    music.muted = false;
-    music.play().catch(() => {});
-    muteBtn.textContent = "🔊";
+  music.volume = 1;
+  music.muted = false;
+  music.play().then(() => {
     musicStarted = true;
-  }
-});
+    muteBtn.textContent = "🔊";
+  }).catch(() => {
+    document.addEventListener("click", () => {
+      if (!musicStarted) {
+        music.volume = 1;
+        music.muted = false;
+        music.play().catch(() => {});
+        muteBtn.textContent = "🔊";
+        musicStarted = true;
+      }
+    }, { once: true });
+  });
 
-// ✅ ปุ่ม mute
-muteBtn.addEventListener("click", () => {
-  music.muted = !music.muted;
-  muteBtn.textContent = music.muted ? "🔇" : "🔊";
-});
+  muteBtn.addEventListener("click", () => {
+    music.muted = !music.muted;
+    muteBtn.textContent = music.muted ? "🔇" : "🔊";
+  });
 
-// ✅ แสดงผลงานจาก YouTube
-const youtubeLinks = [
-  "https://www.youtube.com/watch?v=4gGzsHAM4mA",
-  "https://www.youtube.com/watch?v=NiYcw0yX2VY",
-  "https://www.youtube.com/watch?v=12LgU_nqrtE"
-];
+  const youtubeLinks = [
+    "https://www.youtube.com/watch?v=4gGzsHAM4mA",
+    "https://www.youtube.com/watch?v=NiYcw0yX2VY",
+    "https://www.youtube.com/watch?v=12LgU_nqrtE",
+    "https://www.youtube.com/watch?v=QpnHcE5G0ks",
+    "https://www.youtube.com/watch?v=e2Y3ahUBLtA",
+    "https://www.youtube.com/watch?v=R3zzz9GDyfs",
+    "https://www.youtube.com/watch?v=Rh4dEbGAAcw",
+    "https://www.youtube.com/watch?v=CtLN40lz-Uc",
+    "https://www.youtube.com/watch?v=fjyGz_GMzFA",
+    "https://www.youtube.com/watch?v=P5uiNuZG46s",
+    "https://www.youtube.com/watch?v=mw1IRZfXKtQ",
+    "https://www.youtube.com/watch?v=XgDKkSS0aPw",
+    "https://www.youtube.com/watch?v=gNO7aiqYkSQ",
+    "https://www.youtube.com/watch?v=Rc__qEAHGAU",
+    "https://www.youtube.com/watch?v=Taiw_SjScNY",
+    "https://www.youtube.com/watch?v=pIadIlqLQkA",
+    "https://www.youtube.com/watch?v=UwdviMsePOM",
+    "https://www.youtube.com/watch?v=esQ-jfzJ04A",
+    "https://www.youtube.com/watch?v=dxugkftLswo",
+    "https://www.youtube.com/watch?v=BrdejjaK67k",
+    "https://www.youtube.com/watch?v=HwNbl7GiEIw",
+    "https://www.youtube.com/watch?v=L8acuOgBb1g",
+    "https://www.youtube.com/watch?v=wGVq2o19UUM",
+    "https://www.youtube.com/watch?v=J0dSfjzMF2c"
+  ];
 
-const videoList = document.getElementById("video-list");
+  const videoList = document.getElementById("video-list");
+  youtubeLinks.forEach(link => {
+    const match = link.match(/(?:\?v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (match && match[1]) {
+      const videoId = match[1];
+      const container = document.createElement("div");
+      container.className = "video-thumb";
 
-youtubeLinks.forEach(link => {
-  const match = link.match(/(?:\?v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (match && match[1]) {
-    const videoId = match[1];
-    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      const img = document.createElement("img");
+      img.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      img.alt = "YouTube Thumbnail";
 
-    const div = document.createElement("div");
-    div.className = "video-thumb";
-    div.innerHTML = `
-      <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">
-        <img src="${thumbnailUrl}" alt="YouTube Thumbnail" />
-      </a>
-    `;
-    videoList.appendChild(div);
-  }
+      const a = document.createElement("a");
+      a.href = `https://www.youtube.com/watch?v=${videoId}`;
+      a.target = "_blank";
+      a.appendChild(img);
+
+      container.appendChild(a);
+      videoList.appendChild(container);
+
+      fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+        .then(res => res.json())
+        .then(data => {
+          a.title = data.title;
+          const title = document.createElement("div");
+          title.className = "video-title";
+          title.textContent = data.title;
+          container.appendChild(title);
+        })
+        .catch(() => {
+          const title = document.createElement("div");
+          title.className = "video-title";
+          title.textContent = "Untitled Video";
+          container.appendChild(title);
+        });
+    }
+  });
 });
