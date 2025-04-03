@@ -55,14 +55,15 @@ function showNextText() {
   setTimeout(showNextText, 2500);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  showNextText();
-
+// Wait for everything to load before starting the intro
+window.onload = () => {
+  // Wait for the music to load and play
   music.volume = 1;
   music.muted = false;
   music.play().then(() => {
     musicStarted = true;
     muteBtn.textContent = "🔊";
+    showNextText();  // Start the text animation once everything is loaded
   }).catch(() => {
     document.addEventListener("click", () => {
       if (!musicStarted) {
@@ -71,6 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         music.play().catch(() => {});
         muteBtn.textContent = "🔊";
         musicStarted = true;
+        showNextText();  // Start the text animation on user interaction if music fails to play initially
       }
     }, { once: true });
   });
@@ -144,4 +146,4 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
   });
-});
+};
