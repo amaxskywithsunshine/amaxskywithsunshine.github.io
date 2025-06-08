@@ -16,7 +16,6 @@ const bgVideo = document.getElementById("bg-video");
 let index = 0;
 let musicStarted = false;
 
-// รอให้ video โหลดจนเล่นได้
 function waitForVideoLoaded(video) {
   return new Promise(resolve => {
     if (video.readyState >= 3) {
@@ -27,7 +26,6 @@ function waitForVideoLoaded(video) {
   });
 }
 
-// fade out เพลงเบา ๆ
 function fadeOutMusic(targetVolume = 0.1, duration = 2000) {
   const steps = 20;
   const stepTime = duration / steps;
@@ -42,7 +40,6 @@ function fadeOutMusic(targetVolume = 0.1, duration = 2000) {
   }, stepTime);
 }
 
-// โชว์ข้อความ intro ทีละอัน
 function showNextText() {
   if (index >= texts.length) {
     setTimeout(() => {
@@ -119,7 +116,6 @@ function startIntro() {
   }, 2000);
 }
 
-// โหลดทุก asset → ค่อยเริ่ม splash screen
 async function init() {
   await Promise.all([
     new Promise(r => window.addEventListener("load", r, { once: true })),
@@ -135,33 +131,14 @@ async function init() {
     muteBtn.textContent = music.muted ? "🔇" : "🔊";
   });
 
-  // โหลดวิดีโอ YouTube
-  const youtubeLinks = [
-    "https://www.youtube.com/watch?v=4gGzsHAM4mA",
-    "https://www.youtube.com/watch?v=NiYcw0yX2VY",
-    "https://www.youtube.com/watch?v=12LgU_nqrtE",
-    "https://www.youtube.com/watch?v=QpnHcE5G0ks",
-    "https://www.youtube.com/watch?v=e2Y3ahUBLtA",
-    "https://www.youtube.com/watch?v=R3zzz9GDyfs",
-    "https://www.youtube.com/watch?v=Rh4dEbGAAcw",
-    "https://www.youtube.com/watch?v=CtLN40lz-Uc",
-    "https://www.youtube.com/watch?v=fjyGz_GMzFA",
-    "https://www.youtube.com/watch?v=P5uiNuZG46s",
-    "https://www.youtube.com/watch?v=mw1IRZfXKtQ",
-    "https://www.youtube.com/watch?v=XgDKkSS0aPw",
-    "https://www.youtube.com/watch?v=gNO7aiqYkSQ",
-    "https://www.youtube.com/watch?v=Rc__qEAHGAU",
-    "https://www.youtube.com/watch?v=Taiw_SjScNY",
-    "https://www.youtube.com/watch?v=pIadIlqLQkA",
-    "https://www.youtube.com/watch?v=UwdviMsePOM",
-    "https://www.youtube.com/watch?v=esQ-jfzJ04A",
-    "https://www.youtube.com/watch?v=dxugkftLswo",
-    "https://www.youtube.com/watch?v=BrdejjaK67k",
-    "https://www.youtube.com/watch?v=HwNbl7GiEIw",
-    "https://www.youtube.com/watch?v=L8acuOgBb1g",
-    "https://www.youtube.com/watch?v=wGVq2o19UUM",
-    "https://www.youtube.com/watch?v=J0dSfjzMF2c"
-  ];
+  let youtubeLinks = [];
+  try {
+    const response = await fetch("ytlink.txt");
+    const text = await response.text();
+    youtubeLinks = text.split(/\r?\n/).filter(line => line.trim() !== "");
+  } catch (e) {
+    console.error("Failed to load ytlink.txt", e);
+  }
 
   const videoList = document.getElementById("video-list");
   youtubeLinks.forEach(link => {
@@ -202,5 +179,4 @@ async function init() {
   });
 }
 
-// 🚀 เริ่ม
 init();
