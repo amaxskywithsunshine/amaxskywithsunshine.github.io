@@ -541,9 +541,9 @@ function parseYouTubeXML(xmlText) {
 }
 
 async function loadVideos() {
-  const hasHandle = YOUTUBE_HANDLE && YOUTUBE_HANDLE !== 'your_handle';
+  const hasHandle = (typeof YOUTUBE_HANDLE  !== 'undefined') && YOUTUBE_HANDLE !== 'your_handle';
+  const hasApiKey = (typeof YOUTUBE_API_KEY !== 'undefined') && YOUTUBE_API_KEY.length > 0;
   const hasStatic = STATIC_VIDEOS.length > 0;
-  const hasApiKey = YOUTUBE_API_KEY.length > 0;
 
   // ── Method 0: Static fallback (instant, always works) ──
   if (hasStatic) {
