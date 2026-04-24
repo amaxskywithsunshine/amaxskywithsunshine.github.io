@@ -416,9 +416,7 @@ const STATIC_VIDEOS = [
   { id: 'XgDKkSS0aPw', title: '.',                  date: '2023-05-01' },
 ];
 
-/* ─────────────────────────────────────────────
-   YOUTUBE DATA API KEY — defined in config.js
-───────────────────────────────────────────── */
+
 
 function formatDate(dateStr) {
   const d = new Date(dateStr);
@@ -510,133 +508,21 @@ function createVideoCard(item, index) {
   return card;
 }
 
-function renderError() {
-  loadingEl.innerHTML = `
-    <div style="color:#666;font-size:12px;letter-spacing:.18em;text-align:center;padding:60px 0;">
-      <div style="font-size:28px;margin-bottom:16px;color:#e8005a;">( ! )</div>
-      Set your YouTube handle in config.js to load your video catalog.<br/>
-      <span style="font-size:10px;color:#444;margin-top:8px;display:block;">const YOUTUBE_HANDLE = 'your_handle'</span>
-    </div>
-  `;
-}
+function loadVideos() {
+  loadingEl.remove();
+  projectsCount = STATIC_VIDEOS.length;
 
-/* ════════════════════════════════════════════
-   YOUTUBE — parse raw RSS XML
-════════════════════════════════════════════ */
-function parseYouTubeXML(xmlText) {
-  const parser = new DOMParser();
-  const doc    = parser.parseFromString(xmlText, 'application/xml');
-  const entries = Array.from(doc.querySelectorAll('entry'));
+  const statEl = document.getElementById('statProjects');
+  if (statEl.textContent !== '0') animateCounter(statEl, projectsCount);
 
-  return entries.map(entry => {
-    const videoId = entry.querySelector('videoId')?.textContent
-                 || entry.querySelector('id')?.textContent?.split(':').pop();
-    const title   = entry.querySelector('title')?.textContent || '';
-    const pubDate = entry.querySelector('published')?.textContent || '';
-    const thumb   = entry.querySelector('thumbnail')?.getAttribute('url')
-                 || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-    const link    = `https://www.youtube.com/watch?v=${videoId}`;
-    return { title, pubDate, link, thumbnail: { url: thumb } };
+  STATIC_VIDEOS.forEach((v, i) => {
+    videoGrid.appendChild(createVideoCard({
+      title:     v.title,
+      pubDate:   v.date,
+      link:      `https://www.youtube.com/watch?v=${v.id}`,
+      thumbnail: { url: `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` },
+    }, i));
   });
-}
-
-async function loadVideos() {
-  const hasHandle = (typeof YOUTUBE_HANDLE  !== 'undefined') && YOUTUBE_HANDLE !== 'your_handle';
-  const hasApiKey = (typeof YOUTUBE_API_KEY !== 'undefined') && YOUTUBE_API_KEY.length > 0;
-  const hasStatic = STATIC_VIDEOS.length > 0;
-
-  // ── Method 0: Static fallback (instant, always works) ──
-  if (hasStatic) {
-    loadingEl.remove();
-    projectsCount = STATIC_VIDEOS.length;
-    
-    // Update the counter text immediately if it's already visible
-    const statEl = document.getElementById('statProjects');
-    if (statEl.textContent !== '0') animateCounter(statEl, projectsCount);
-
-    STATIC_VIDEOS.forEach((v, i) => {
-      videoGrid.appendChild(createVideoCard({
-        title: v.title,
-        pubDate: v.date,
-        link: `https://www.youtube.com/watch?v=${v.id}`,
-        thumbnail: { url: `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` },
-      }, i));
-    });
-    return;
-  }
-
-  if (!hasHandle && !hasApiKey) { renderError(); return; }
-
-  let items = null;
-
-  // ── Method 1: YouTube Data API v3 (needs key + handle) ──
-  if (hasApiKey && hasHandle) {
-    try {
-      const url  = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&forHandle=@${YOUTUBE_HANDLE}&part=snippet&order=date&maxResults=30&type=video`;
-      const res  = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      const data = await res.json();
-      if (data.items?.length) {
-        items = data.items.map(v => ({
-          title:     v.snippet.title,
-          pubDate:   v.snippet.publishedAt,
-          link:      `https://www.youtube.com/watch?v=${v.id.videoId}`,
-          thumbnail: { url: v.snippet.thumbnails.high?.url || v.snippet.thumbnails.default?.url },
-        }));
-      }
-    } catch (_) {}
-  }
-
-  // ── Methods 2-4: RSS via CORS proxies ──
-  if (!items?.length) {
-    const rssUrls = [];
-    if (hasHandle) rssUrls.push(`https://www.youtube.com/feeds/videos.xml?user=${YOUTUBE_HANDLE}`);
-
-    outer:
-    for (const rssUrl of rssUrls) {
-      try {
-        const res  = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`, { signal: AbortSignal.timeout(9000) });
-        const json = await res.json();
-        if (json?.contents) {
-          const p = parseYouTubeXML(json.contents);
-          if (p.length) { items = p; break outer; }
-        }
-      } catch (_) {}
-
-      try {
-        const res  = await fetch(`https://corsproxy.io/?${encodeURIComponent(rssUrl)}`, { signal: AbortSignal.timeout(9000) });
-        const text = await res.text();
-        const p    = parseYouTubeXML(text);
-        if (p.length) { items = p; break outer; }
-      } catch (_) {}
-
-      try {
-        const res  = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=30`, { signal: AbortSignal.timeout(9000) });
-        const data = await res.json();
-        if (data.status === 'ok' && data.items?.length) { items = data.items; break outer; }
-      } catch (_) {}
-    }
-  }
-
-  // ── Render ──
-  if (items?.length) {
-    loadingEl.remove();
-    projectsCount = items.length;
-    
-    // Update the counter text immediately if it's already visible
-    const statEl = document.getElementById('statProjects');
-    if (statEl.textContent !== '0') animateCounter(statEl, projectsCount);
-
-    items.slice(0, 30).forEach((item, i) => videoGrid.appendChild(createVideoCard(item, i)));
-  } else {
-    loadingEl.innerHTML = `
-      <div style="color:#555;font-size:11px;letter-spacing:.15em;text-align:center;padding:50px 20px;line-height:2;">
-        <div style="font-size:22px;margin-bottom:14px;color:#7a7a7a;">( ! )</div>
-        YouTube RSS is currently unavailable (global outage).<br/>
-        <strong style="color:#aaa;">Quick fix:</strong> add your video IDs to <code style="color:#7a7a7a;">STATIC_VIDEOS</code> in script.js<br/>
-        <strong style="color:#aaa;">Permanent fix:</strong> add a free YouTube Data API key to <code style="color:#7a7a7a;">YOUTUBE_API_KEY</code>
-      </div>
-    `;
-  }
 }
 
 
