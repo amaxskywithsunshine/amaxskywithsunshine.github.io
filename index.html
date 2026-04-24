@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amax — Motion Graphic Portfolio</title>
+  <meta name="description" content="Motion graphic portfolio by theskyisshrine — cinematic animations, visual effects, and motion design." />
+  <link rel="icon" type="image/png" href="img/LOGO_BIG.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════
+       PRELOADER / CLICK TO START
+  ═══════════════════════════════════ -->
+  <div class="preloader" id="preloader">
+    <div class="preloader-content">
+      <div class="preloader-text" id="preloaderText">LOADING... 0%</div>
+      <div class="preloader-bar-wrap" id="preloaderBarWrap">
+        <div class="preloader-bar" id="preloaderBar"></div>
+      </div>
+      <div class="preloader-click" id="preloaderClick" style="display: none;">
+        <video id="enterVideo" src="video/click_to_enter.mp4" muted playsinline preload="auto"></video>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM CURSOR -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <img class="nav-logo" src="img/LOGO.png" alt="theskyisshrine logo" id="navLogo" />
+      <div class="nav-links">
+        <a href="#work" id="navWork">WORK</a>
+        <a href="#about" id="navAbout">ABOUT</a>
+        <a href="#contact" id="navContact">CONTACT</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════
+       SECTION 1 — INTRO
+  ═══════════════════════════════════ -->
+  <section class="intro" id="intro">
+    <!-- YouTube iframe background -->
+    <div id="ytBg">
+      <iframe
+        id="ytBgFrame"
+        src="https://www.youtube.com/embed/0eXpsDlfUII?autoplay=1&mute=1&loop=1&playlist=0eXpsDlfUII&start=9&controls=0&disablekb=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3"
+        allow="autoplay; encrypted-media"
+        allowfullscreen
+        title="Background video"
+      ></iframe>
+      <div id="ytBgShield"></div>
+    </div>
+    <canvas id="lightCanvas"></canvas>
+
+    <!-- spotlight god-ray layers -->
+    <div class="god-ray ray-1"></div>
+    <div class="god-ray ray-2"></div>
+    <div class="god-ray ray-3"></div>
+
+    <div class="intro-content">
+      <!-- Character -->
+      <div class="character-wrap" id="characterWrap">
+        <div class="char-glow-ring"></div>
+        <img class="character" id="character" src="img/character.png" alt="theskyisshrine character" crossorigin="anonymous" />
+        <div class="char-shadow"></div>
+      </div>
+
+      <!-- Hero text — bottom left -->
+      <div class="intro-text" id="introText">
+        <div class="intro-tag">( amax )-*</div>
+        <h1 class="intro-title">MOTION<br /><em>GRAPHIC</em></h1>
+        <p class="intro-sub">PORTFOLIO &nbsp;·&nbsp; 2022 - NOW</p>
+      </div>
+
+      <!-- Barcode decoration — top right -->
+      <div class="barcode" id="introBarcode" aria-hidden="true">
+        <div class="barcode-lines"></div>
+        <span class="barcode-text">amax.portfolio</span>
+      </div>
+
+      <!-- Top label tags -->
+      <div class="intro-tags-row" id="introTagsRow">
+        <span class="tag">MOTION</span>
+        <span class="tag">GRAPHIC</span>
+        <span class="tag">2D & 3D</span>
+      </div>
+    </div>
+
+    <!-- Scroll-fade overlay: darkens on scroll down -->
+    <div class="intro-overlay" id="introOverlay"></div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" id="scrollHint">
+      <span>SCROLL</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════
+       SECTION 2 — WORK / YOUTUBE
+  ═══════════════════════════════════ -->
+  <section class="work" id="work">
+    <div class="work-header reveal">
+      <div class="work-header-top">
+        <span class="work-year">( THIS IS JUST A FEW PIECE OF WORKS )-*</span>
+      </div>
+      <h2 class="work-title">( WORK )-*</h2>
+      <div class="work-meta">
+        <span class="wm-item">MOTION GRAPHIC</span>
+        <span class="wm-sep">|</span>
+        <span class="wm-item wm-pink">@iaexamax</span>
+      </div>
+    </div>
+
+    <div class="video-grid" id="videoGrid">
+      <div class="loading-state" id="loadingState">
+        <div class="loader"></div>
+        <p>Loading catalog…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════
+       SECTION 3 — ABOUT
+  ═══════════════════════════════════ -->
+  <section class="about" id="about">
+    <video class="about-bg-video" src="img/Sky.mp4" autoplay loop muted playsinline></video>
+    <div class="about-bg-overlay"></div>
+    <div class="about-inner">
+      <div class="about-tag reveal"><span class="ILIKESKY">( I LIKE SKY ! )-* </span> </div>
+      <h2 class="about-title reveal reveal-delay-1">( ABOUT )-*</h2>
+      <p class="about-desc reveal reveal-delay-2">
+        My name is Amax.<br />
+        I am 16 years old. <span class="Age-Date">[BIRTHDAY - 01/02/2010]</span> <br />
+        I am a Men.<br />
+        I am from Thailand (Asia).<br />
+        <br />
+        I've been start doing motion graphics since i was 12 years old.<br />
+        I specializing in smooth animations combined with 2D&3D graphics.<br />
+        and i also been a scripter for a game but i didn't have the work much.<br />
+        This is my information in social media, i hope you will enjoy my work.<br /> 
+        Thank you so much for interesting in me and my work.
+      </p>
+      <div class="about-stats reveal reveal-delay-3">
+        <div class="stat">
+          <span class="stat-num" data-target="50" id="statProjects">0</span>
+          <span class="stat-label">PROJECTS</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" data-target="3" id="statYears">0</span>
+          <span class="stat-label">YEARS EXP.</span>
+        </div>
+      </div>
+    </div>
+    <div class="about-bg-text" aria-hidden="true">AMAX</div>
+  </section>
+
+  <!-- ═══════════════════════════════
+       SECTION 4 — CONTACT / THANKS
+  ═══════════════════════════════════ -->
+  <section class="contact" id="contact">
+    <div class="contact-stars stars-1" aria-hidden="true"></div>
+    <div class="contact-stars stars-2" aria-hidden="true"></div>
+    <div class="contact-grass" aria-hidden="true"></div>
+    <div class="contact-inner">
+      <div class="contact-tag reveal">( THANKS )-*</div>
+      <div class="contact-links reveal reveal-delay-1">
+        <a href="https://www.youtube.com/@iaexamax" target="_blank" id="linkYT" class="contact-link">YOUTUBE</a>
+        <a href="https://www.instagram.com/itxamax/" target="_blank" id="linkIG" class="contact-link">INSTAGRAM</a>
+        <a href="https://x.com/i_AExAmax" target="_blank" id="linkTW" class="contact-link">TWITTER / X</a>
+      </div>
+      <div class="contact-footer reveal reveal-delay-2">
+        <span>- Looking forward to cooperation -</span>
+      </div>
+      <div class="contact-bottom reveal reveal-delay-3">
+        <span>@iaexamax</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════
+       VIDEO MODAL PLAYER
+  ═══════════════════════════════════ -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal-wrap" id="modalWrap">
+      <button class="modal-close" id="modalClose" aria-label="Close player">✕</button>
+      <div class="modal-player" id="modalPlayer">
+        <!-- iframe injected by JS -->
+      </div>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-meta">
+        <span id="modalDate"></span>
+        <a id="modalYTLink" href="#" target="_blank">Open on YouTube ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════
+       STATUS & MUSIC WIDGET
+  ═══════════════════════════════════ -->
+  <div class="status-widget">
+    <div class="status-top">
+      <div class="status-indicator">
+        <span>WORK STATUS</span>
+        <div class="status-dot red" id="workStatusDot"></div>
+      </div>
+      <div class="status-divider"></div>
+      <button class="mute-btn" id="muteBtn">MUSIC: ON</button>
+    </div>
+    <div class="song-marquee-wrap" id="songMarqueeWrap" style="display: none;">
+      <div class="song-marquee" id="songNameDisplay">No track playing</div>
+    </div>
+  </div>
+  <audio id="bgMusic" src=""></audio>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
