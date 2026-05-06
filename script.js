@@ -71,7 +71,14 @@ window.onYouTubeIframeAPIReady = function () {
   window._ytPlayer = new YT.Player('ytBgFrame', {
     events: {
       onStateChange: function (e) {
-        if (e.data === YT.PlayerState.PLAYING) fadeShield();
+        if (e.data === YT.PlayerState.PLAYING) {
+          fadeShield();
+          // Credit YouTube loading weight to the preloader (once only)
+          if (!window._ytProgressAdded && typeof addProgress === 'function') {
+            window._ytProgressAdded = true;
+            addProgress(LOAD_ASSETS.ytReady);
+          }
+        }
       }
     }
   });
@@ -208,49 +215,119 @@ const scrollHint = document.getElementById('scrollHint');
 const rays       = document.querySelectorAll('.god-ray');
 
 /* ════════════════════════════════════════════
-   PRELOADER LOGIC
+   PRELOADER LOGIC — Real asset tracking
 ════════════════════════════════════════════ */
-const preloader     = document.getElementById('preloader');
-const preloaderText = document.getElementById('preloaderText');
-const preloaderBar  = document.getElementById('preloaderBar');
-const preloaderClick= document.getElementById('preloaderClick');
+const preloader        = document.getElementById('preloader');
+const preloaderText    = document.getElementById('preloaderText');
+const preloaderBar     = document.getElementById('preloaderBar');
+const preloaderClick   = document.getElementById('preloaderClick');
 const preloaderBarWrap = document.getElementById('preloaderBarWrap');
 
-let loadProgress = 0;
 const enterVideo = document.getElementById('enterVideo');
 
-// Force the browser to render the first frame of the video
+// ── Real progress tracking ────────────────────────────────
+// Each asset has a weight (total = 100).
+// When it resolves we add its weight to loadProgress.
+// ─────────────────────────────────────────────────────────
+const LOAD_ASSETS = {
+  //              weight
+  config:         15,   // /config fetch
+  enterVideo:     30,   // click_to_enter.mp4 canplaythrough
+  characterImg:   25,   // character.png
+  logoImg:        15,   // LOGO.png
+  ytReady:        15,   // YouTube iframe starts playing
+};
+
+let loadProgress = 0;
+let loadingDone  = false;
+
+function addProgress(weight) {
+  if (loadingDone) return;
+  loadProgress = Math.min(100, loadProgress + weight);
+  preloaderBar.style.width = loadProgress + '%';
+  preloaderText.textContent = `LOADING... ${Math.floor(loadProgress)}%`;
+  if (loadProgress >= 100) onLoadComplete();
+}
+
+function onLoadComplete() {
+  if (loadingDone) return;
+  loadingDone = true;
+  // Small pause so the user sees "LOADING... 100%" before transition
+  setTimeout(() => {
+    preloaderText.style.display = 'none';
+    preloaderBarWrap.style.display = 'none';
+    preloaderClick.style.display = 'flex';
+  }, 350);
+}
+
+// ── Safety net: if any asset stalls, still finish after 8s ──
+const safetyTimer = setTimeout(() => {
+  if (!loadingDone) {
+    loadProgress = 100;
+    preloaderBar.style.width = '100%';
+    preloaderText.textContent = 'LOADING... 100%';
+    onLoadComplete();
+  }
+}, 8000);
+
+// ── 1. /config fetch ─────────────────────────────────────
+configReady.finally(() => addProgress(LOAD_ASSETS.config));
+
+// ── 2. Enter video (click_to_enter.mp4) ──────────────────
+// Show first frame as soon as metadata is ready
 enterVideo.addEventListener('loadedmetadata', () => {
   enterVideo.currentTime = 0.01;
 });
 
-const loadInterval = setInterval(() => {
-  loadProgress += Math.floor(Math.random() * 15) + 5;
-  if (loadProgress >= 100) {
-    loadProgress = 100;
-    clearInterval(loadInterval);
-    setTimeout(() => {
-      preloaderText.style.display = 'none';
-      preloaderBarWrap.style.display = 'none';
-      preloaderClick.style.display = 'flex'; // Use flex to match CSS alignment
-    }, 400);
-  }
-  preloaderBar.style.width = loadProgress + '%';
-  preloaderText.textContent = `LOADING... ${loadProgress}%`;
-}, 100);
+function onEnterVideoReady() {
+  addProgress(LOAD_ASSETS.enterVideo);
+}
+if (enterVideo.readyState >= 3) {
+  // Already ready in cache
+  onEnterVideoReady();
+} else {
+  enterVideo.addEventListener('canplaythrough', onEnterVideoReady, { once: true });
+  // Fallback: if 'canplaythrough' doesn't fire (e.g. no video file), count as done after metadata
+  enterVideo.addEventListener('loadeddata', () => {
+    if (loadProgress < LOAD_ASSETS.config + LOAD_ASSETS.enterVideo) {
+      onEnterVideoReady();
+    }
+  }, { once: true });
+}
 
+// ── 3. Character image ───────────────────────────────────
+const _charImg = document.getElementById('character');
+function onCharImgReady() { addProgress(LOAD_ASSETS.characterImg); }
+if (_charImg.complete && _charImg.naturalWidth > 0) {
+  onCharImgReady();
+} else {
+  _charImg.addEventListener('load',  onCharImgReady, { once: true });
+  _charImg.addEventListener('error', onCharImgReady, { once: true }); // count errors too
+}
+
+// ── 4. Logo image ────────────────────────────────────────
+const _logoImg = new Image();
+_logoImg.onload  = () => addProgress(LOAD_ASSETS.logoImg);
+_logoImg.onerror = () => addProgress(LOAD_ASSETS.logoImg);
+_logoImg.src = 'img/LOGO.png';
+
+// ── 5. YouTube iframe (counted when it starts playing) ───
+// Handled below in onYouTubeIframeAPIReady via window._ytProgressAdded flag.
+// We give it up to 6s to start before we forfeit its weight via safety net.
+window._ytProgressAdded = false;
+
+// ── Click to enter ───────────────────────────────────────
 preloaderClick.addEventListener('click', () => {
-  preloaderClick.style.pointerEvents = 'none'; // Prevent clicking again
-  
-  // Play the video
+  preloaderClick.style.pointerEvents = 'none';
+  clearTimeout(safetyTimer);
+
   enterVideo.play().catch(() => {
-    // Fallback if video play fails for any reason
     preloader.classList.add('hidden');
     startIntroSequence();
   });
 });
 
-// Transition to the main page when the video finishes
+// Transition to main page when enter video finishes
 enterVideo.addEventListener('ended', () => {
   preloader.classList.add('hidden');
   startIntroSequence();
