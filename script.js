@@ -1,7 +1,17 @@
 /* ════════════════════════════════════════════
-   CONFIG — loaded from config.js  (local only, not in git)
-   YOUTUBE_HANDLE, YOUTUBE_API_KEY are defined there.
+   CONFIG — loaded from /config endpoint (reads .env on the server)
+   YOUTUBE_HANDLE, YOUTUBE_API_KEY are injected below.
 ════════════════════════════════════════════ */
+let YOUTUBE_HANDLE  = '';
+let YOUTUBE_API_KEY = '';
+
+const configReady = fetch('/config')
+  .then(r => r.json())
+  .then(cfg => {
+    YOUTUBE_HANDLE  = cfg.YOUTUBE_HANDLE  || '';
+    YOUTUBE_API_KEY = cfg.YOUTUBE_API_KEY || '';
+  })
+  .catch(() => console.warn('[CONFIG] Could not load /config — using static videos only.'));
 
 /* ════════════════════════════════════════════
    CUSTOM CURSOR
@@ -509,11 +519,12 @@ function createVideoCard(item, index) {
 }
 
 async function loadVideos() {
-  const hasApiKey = (typeof YOUTUBE_API_KEY !== 'undefined') && YOUTUBE_API_KEY.length > 0;
-  const hasHandle = (typeof YOUTUBE_HANDLE  !== 'undefined') && YOUTUBE_HANDLE !== 'your_handle';
+  await configReady; // ensure .env values are loaded before using them
+  const hasApiKey = YOUTUBE_API_KEY.length > 0;
+  const hasHandle = YOUTUBE_HANDLE.length > 0 && YOUTUBE_HANDLE !== 'your_handle';
 
   console.log('%c[VIDEO CATALOG]', 'color:#a78bfa;font-weight:bold',
-    hasApiKey ? '🔑 API key found' : '⚠️ No API key (config.js not loaded)',
+    hasApiKey ? '🔑 API key found' : '⚠️ No API key',
     '|',
     hasHandle ? `🎯 Handle: @${YOUTUBE_HANDLE}` : '⚠️ No handle'
   );

@@ -1,5 +1,6 @@
 # ── Private / sensitive ──────────────────────
-config.js
+.config.js
+.env
 .vscode/
 
 # ── Dependencies ─────────────────────────────
