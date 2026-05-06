@@ -404,16 +404,16 @@ const loadingEl = document.getElementById('loadingState');
    Find video ID: youtube.com/watch?v=ID_HERE
 ───────────────────────────────────────────── */
 const STATIC_VIDEOS = [
-  { id: 'zIEbQMFPSMs', title: 'REMAKE:AMOS',        date: '2025-03-15' },
-  { id: '0eXpsDlfUII', title: 'REEL:2024-2025',     date: '2025-03-01' },
-  { id: 'ZVTB6703DnE', title: 'HBD:AMAX.',          date: '2025-02-01' },
-  { id: 'Q-Fg1dh8s_I', title: 'HBD_SXCStyles.',     date: '2024-08-01' },
-  { id: 'NiYcw0yX2VY', title: 'not enough.',        date: '2024-04-01' },
-  { id: 'QpnHcE5G0ks', title: 'all alone.',         date: '2024-03-01' },
-  { id: 'D89aT1j98RQ', title: 'reels 2022-2024.',   date: '2024-02-01' },
-  { id: 'R3zzz9GDyfs', title: 'untitled.',           date: '2024-01-01' },
-  { id: 'P5uiNuZG46s', title: 'Daisey.',            date: '2023-06-01' },
-  { id: 'XgDKkSS0aPw', title: '.',                  date: '2023-05-01' },
+  { id: 'zIEbQMFPSMs', title: 'REMAKE:AMOS',        date: '2026-03-15' },
+  { id: '0eXpsDlfUII', title: 'REEL:2024-2025',     date: '2026-03-01' },
+  { id: 'ZVTB6703DnE', title: 'HBD:AMAX.',          date: '2026-02-01' },
+  { id: 'Q-Fg1dh8s_I', title: 'HBD_SXCStyles.',     date: '2025-08-01' },
+  { id: 'NiYcw0yX2VY', title: 'not enough.',        date: '2025-04-01' },
+  { id: 'QpnHcE5G0ks', title: 'all alone.',         date: '2025-03-01' },
+  { id: 'D89aT1j98RQ', title: 'reels 2022-2024.',   date: '2025-02-01' },
+  { id: 'R3zzz9GDyfs', title: 'untitled.',           date: '2025-01-01' },
+  { id: 'P5uiNuZG46s', title: 'Daisey.',            date: '2024-06-01' },
+  { id: 'XgDKkSS0aPw', title: '.',                  date: '2024-05-01' },
 ];
 
 
