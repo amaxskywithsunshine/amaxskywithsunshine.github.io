@@ -472,70 +472,7 @@ statsObs.observe(statsSection);
 const videoGrid = document.getElementById('videoGrid');
 const loadingEl = document.getElementById('loadingState');
 
-/* ─────────────────────────────────────────────
-   STATIC FALLBACK — Accurate catalog of recent videos.
-   These show immediately if offline or network fails.
-   Format: { id, title, date }
-───────────────────────────────────────────── */
-const STATIC_VIDEOS = [
-  { id: 'k5uBiraClCY', title: 'ENDER LILIES | EP1 ( NO CUT ) | กำเนิดนักบุญตัวน้อยแห่งดอกไม้ขาว Lilies (Lily)', date: '2026-08-17' },
-  { id: 'AdU297GBNvg', title: 'visuals:AZURE2026', date: '2026-07-07' },
-  { id: 'rpY9ydbisP4', title: 'visuals:AZURE2026 [ Discarded ]', date: '2026-06-11' },
-  { id: 'Rwc5zKMN1xM', title: 'visuals:NO_WORRIES.', date: '2026-05-31' },
-  { id: 'mm-pWXxyT6k', title: 'visuals:Height.', date: '2026-05-31' },
-  { id: 'N0SML3Qotaw', title: 'banner:HIRO.', date: '2026-05-31' },
-  { id: 'zIEbQMFPSMs', title: 'remake:AMOS', date: '2026-03-15' },
-  { id: '0eXpsDlfUII', title: 'reels:2024-2025', date: '2026-03-08' },
-  { id: 'ZVTB6703DnE', title: 'HBD:amax.', date: '2026-02-02' },
-  { id: 'Q-Fg1dh8s_I', title: 'HBD:sxcstyles2025.', date: '2025-08-17' },
-  { id: '4gGzsHAM4mA', title: 'amv:News.', date: '2024-10-21' },
-  { id: 'NiYcw0yX2VY', title: '文字PV:not_enough.', date: '2024-09-12' },
-  { id: 'QpnHcE5G0ks', title: '文字PV:all_alone.', date: '2024-06-10' },
-  { id: 'R3zzz9GDyfs', title: 'amv:Untitled.', date: '2024-05-13' },
-  { id: 'P5uiNuZG46s', title: 'amv:Daisey.', date: '2024-02-29' },
-  { id: 'XgDKkSS0aPw', title: '.', date: '2024-05-01' },
-  { id: 'gNO7aiqYkSQ', title: 'visuals:busy.', date: '2024-02-01' },
-  { id: 'Rc__qEAHGAU', title: 'amv:Story.', date: '2023-11-01' },
-  { id: 'Taiw_SjScNY', title: 'HBD:sxcstyles', date: '2023-08-17' },
-  { id: 'ot68zIJmfyY', title: 'intro:HiroNeyka.', date: '2023-05-01' },
-  { id: 'r5wQP7NbVmQ', title: 'fantro:Nerumi-S', date: '2023-03-01' },
-  { id: 'x8C_vZsPIFc', title: 'amv:amax&witty.', date: '2022-12-01' },
-];
 
-function mergeVideos(liveItems, catalog) {
-  const seen = new Set();
-  const merged = [];
-
-  // 1. Put live items first (so any new uploads appear at the top)
-  (liveItems || []).forEach(item => {
-    const vid = item.id || item.videoId || extractVideoId(item.link || item.guid || '');
-    if (vid && !seen.has(vid)) {
-      seen.add(vid);
-      merged.push({
-        ...item,
-        id: vid,
-        link: item.link || `https://www.youtube.com/watch?v=${vid}`,
-      });
-    }
-  });
-
-  // 2. Append all other videos from the catalog so none are lost
-  (catalog || []).forEach(item => {
-    const vid = item.id || extractVideoId(item.link || '');
-    if (vid && !seen.has(vid)) {
-      seen.add(vid);
-      merged.push({
-        title: item.title,
-        pubDate: item.date || item.pubDate || '',
-        link: `https://www.youtube.com/watch?v=${vid}`,
-        thumbnail: item.thumbnail || { url: `https://img.youtube.com/vi/${vid}/hqdefault.jpg` },
-        id: vid,
-      });
-    }
-  });
-
-  return merged;
-}
 
 function formatDate(dateStr) {
   const d = new Date(dateStr);
@@ -755,16 +692,24 @@ async function loadVideos() {
     }
   }
 
-  // ── Render Videos (Merged Live + Archive) ──
-  const finalVideos = mergeVideos(items, STATIC_VIDEOS);
-  console.log(`%c[VIDEO] ✅ Displaying ${finalVideos.length} videos (Live: ${items ? items.length : 0} via ${method || 'Archive'})`, 'color:#34d399;font-weight:bold');
-
-  loadingEl.remove();
-  projectsCount = finalVideos.length;
-  const statEl = document.getElementById('statProjects');
-  if (statEl && statEl.textContent !== '0') animateCounter(statEl, projectsCount);
-  videoGrid.innerHTML = '';
-  finalVideos.forEach((item, i) => videoGrid.appendChild(createVideoCard(item, i)));
+  // ── Render Videos (100% Live Dynamic from YouTube) ──
+  if (items?.length) {
+    console.log(`%c[VIDEO] ✅ Displaying ${items.length} videos live from YouTube (${method})`, 'color:#34d399;font-weight:bold');
+    if (loadingEl) loadingEl.remove();
+    projectsCount = items.length;
+    const statEl = document.getElementById('statProjects');
+    if (statEl && statEl.textContent !== '0') animateCounter(statEl, projectsCount);
+    videoGrid.innerHTML = '';
+    items.forEach((item, i) => videoGrid.appendChild(createVideoCard(item, i)));
+  } else {
+    console.warn('[VIDEO] Could not fetch videos from YouTube.');
+    if (loadingEl) {
+      loadingEl.innerHTML = `
+        <p style="color: var(--gray); font-size: 12px; letter-spacing: 0.1em;">Unable to load YouTube videos at this moment.</p>
+        <button onclick="location.reload()" class="mute-btn" style="margin-top: 12px; cursor: pointer;">RETRY</button>
+      `;
+    }
+  }
 }
 
 

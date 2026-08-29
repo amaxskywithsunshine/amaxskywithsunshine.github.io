@@ -1,5 +1,7 @@
 # ── Private / sensitive ──────────────────────
 .env
+.env.*
+!.env.example
 .vscode/
 
 # ── Dependencies ─────────────────────────────
