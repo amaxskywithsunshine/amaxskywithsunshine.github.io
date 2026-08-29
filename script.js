@@ -1,37 +1,25 @@
 /* ════════════════════════════════════════════
-   CONFIG — loaded from /config endpoint (reads .env on the server)
-   YOUTUBE_HANDLE, YOUTUBE_API_KEY are injected below.
+   CONFIG — loaded from config.js (window.CONFIG) or /config endpoint (reads .env on the server)
+   YOUTUBE_HANDLE, YOUTUBE_CHANNEL_ID, YOUTUBE_API_KEY are injected below.
 ════════════════════════════════════════════ */
-let YOUTUBE_HANDLE  = '';
-let YOUTUBE_API_KEY = '';
+let YOUTUBE_HANDLE              = window.CONFIG?.YOUTUBE_HANDLE              || 'iaexamax';
+let YOUTUBE_CHANNEL_ID          = window.CONFIG?.YOUTUBE_CHANNEL_ID          || 'UCuDkWnsBiTKlsecae0D11Ag';
+let YOUTUBE_UPLOADS_PLAYLIST_ID = window.CONFIG?.YOUTUBE_UPLOADS_PLAYLIST_ID || 'UUuDkWnsBiTKlsecae0D11Ag';
+let YOUTUBE_API_KEY             = window.CONFIG?.YOUTUBE_API_KEY             || '';
 
 const configReady = fetch('/config')
-  .then(r => r.json())
-  .then(cfg => {
-    YOUTUBE_HANDLE  = cfg.YOUTUBE_HANDLE  || '';
-    YOUTUBE_API_KEY = cfg.YOUTUBE_API_KEY || '';
+  .then(r => {
+    if (!r.ok) throw new Error('No server config endpoint');
+    return r.json();
   })
-  .catch(() => console.warn('[CONFIG] Could not load /config — using static videos only.'));
+  .then(cfg => {
+    if (cfg.YOUTUBE_HANDLE)              YOUTUBE_HANDLE              = cfg.YOUTUBE_HANDLE;
+    if (cfg.YOUTUBE_CHANNEL_ID)          YOUTUBE_CHANNEL_ID          = cfg.YOUTUBE_CHANNEL_ID;
+    if (cfg.YOUTUBE_UPLOADS_PLAYLIST_ID) YOUTUBE_UPLOADS_PLAYLIST_ID = cfg.YOUTUBE_UPLOADS_PLAYLIST_ID;
+    if (cfg.YOUTUBE_API_KEY)             YOUTUBE_API_KEY             = cfg.YOUTUBE_API_KEY;
+  })
+  .catch(() => console.log('[CONFIG] Using local config.js channel settings.'));
 
-/* ════════════════════════════════════════════
-   CUSTOM CURSOR
-════════════════════════════════════════════ */
-const cursor     = document.getElementById('cursor');
-const cursorRing = document.getElementById('cursorRing');
-let mx = 0, my = 0, rx = 0, ry = 0;
-
-document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY;
-  cursor.style.left = mx + 'px';
-  cursor.style.top  = my + 'px';
-});
-(function tickCursor() {
-  rx += (mx - rx) * 0.11;
-  ry += (my - ry) * 0.11;
-  cursorRing.style.left = rx + 'px';
-  cursorRing.style.top  = ry + 'px';
-  requestAnimationFrame(tickCursor);
-})();
 
 /* ════════════════════════════════════════════
    NAVBAR — scroll behavior
@@ -485,25 +473,27 @@ const videoGrid = document.getElementById('videoGrid');
 const loadingEl = document.getElementById('loadingState');
 
 /* ─────────────────────────────────────────────
-   STATIC FALLBACK — paste your video IDs here.
-   These show immediately even if RSS is down.
+   STATIC FALLBACK — Accurate catalog of recent videos.
+   These show immediately if offline or network fails.
    Format: { id, title, date }
-   Find video ID: youtube.com/watch?v=ID_HERE
 ───────────────────────────────────────────── */
 const STATIC_VIDEOS = [
-  { id: 'zIEbQMFPSMs', title: 'REMAKE:AMOS',        date: '2026-03-15' },
-  { id: '0eXpsDlfUII', title: 'REEL:2024-2025',     date: '2026-03-01' },
-  { id: 'ZVTB6703DnE', title: 'HBD:AMAX.',          date: '2026-02-01' },
-  { id: 'Q-Fg1dh8s_I', title: 'HBD_SXCStyles.',     date: '2025-08-01' },
-  { id: 'NiYcw0yX2VY', title: 'not enough.',        date: '2025-04-01' },
-  { id: 'QpnHcE5G0ks', title: 'all alone.',         date: '2025-03-01' },
-  { id: 'D89aT1j98RQ', title: 'reels 2022-2024.',   date: '2025-02-01' },
-  { id: 'R3zzz9GDyfs', title: 'untitled.',           date: '2025-01-01' },
-  { id: 'P5uiNuZG46s', title: 'Daisey.',            date: '2024-06-01' },
-  { id: 'XgDKkSS0aPw', title: '.',                  date: '2024-05-01' },
+  { id: 'k5uBiraClCY', title: 'ENDER LILIES | EP1 ( NO CUT ) | กำเนิดนักบุญตัวน้อยแห่งดอกไม้ขาว Lilies (Lily)', date: '2026-08-17' },
+  { id: 'AdU297GBNvg', title: 'visuals:AZURE2026', date: '2026-07-07' },
+  { id: 'rpY9ydbisP4', title: 'visuals:AZURE2026 [ Discarded ]', date: '2026-06-11' },
+  { id: 'Rwc5zKMN1xM', title: 'visuals:NO_WORRIES.', date: '2026-05-31' },
+  { id: 'mm-pWXxyT6k', title: 'visuals:Height.', date: '2026-05-31' },
+  { id: 'N0SML3Qotaw', title: 'banner:HIRO.', date: '2026-05-31' },
+  { id: 'zIEbQMFPSMs', title: 'remake:AMOS', date: '2026-03-15' },
+  { id: '0eXpsDlfUII', title: 'reels:2024-2025', date: '2026-03-08' },
+  { id: 'ZVTB6703DnE', title: 'HBD:amax.', date: '2026-02-02' },
+  { id: 'Q-Fg1dh8s_I', title: 'HBD:sxcstyles2025.', date: '2025-08-17' },
+  { id: '4gGzsHAM4mA', title: 'amv:News.', date: '2024-10-21' },
+  { id: 'NiYcw0yX2VY', title: '文字PV:not_enough.', date: '2024-09-12' },
+  { id: 'QpnHcE5G0ks', title: '文字PV:all_alone.', date: '2024-06-10' },
+  { id: 'R3zzz9GDyfs', title: 'amv:Untitled.', date: '2024-05-13' },
+  { id: 'P5uiNuZG46s', title: 'amv:Daisey.', date: '2024-02-29' },
 ];
-
-
 
 function formatDate(dateStr) {
   const d = new Date(dateStr);
@@ -511,7 +501,8 @@ function formatDate(dateStr) {
 }
 
 function extractVideoId(url) {
-  const m = url.match(/[?&]v=([^&]+)/) || url.match(/youtu\.be\/([^?]+)/);
+  if (!url) return null;
+  const m = url.match(/[?&]v=([^&]+)/) || url.match(/youtu\.be\/([^?]+)/) || url.match(/embed\/([^?]+)/);
   return m ? m[1] : null;
 }
 
@@ -572,8 +563,10 @@ document.addEventListener('keydown', e => {
 });
 
 function createVideoCard(item, index) {
-  const videoId = extractVideoId(item.link);
-  const thumb   = item.thumbnail?.url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  const videoId = item.id || item.videoId || extractVideoId(item.link || item.guid || '');
+  const thumb   = (typeof item.thumbnail === 'string' && item.thumbnail)
+    ? item.thumbnail
+    : (item.thumbnail?.url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
   const delay   = (index % 12) * 60;
   const card    = document.createElement('div');
   card.className = 'video-card';
@@ -596,93 +589,146 @@ function createVideoCard(item, index) {
 }
 
 async function loadVideos() {
-  await configReady; // ensure .env values are loaded before using them
-  const hasApiKey = YOUTUBE_API_KEY.length > 0;
-  const hasHandle = YOUTUBE_HANDLE.length > 0 && YOUTUBE_HANDLE !== 'your_handle';
+  await configReady; // ensure config values are loaded before using them
+  const hasApiKey     = Boolean(YOUTUBE_API_KEY && YOUTUBE_API_KEY.length > 0);
+  const targetChannel = YOUTUBE_CHANNEL_ID || 'UCuDkWnsBiTKlsecae0D11Ag';
+  const targetHandle  = YOUTUBE_HANDLE || 'iaexamax';
 
   console.log('%c[VIDEO CATALOG]', 'color:#a78bfa;font-weight:bold',
-    hasApiKey ? '🔑 API key found' : '⚠️ No API key',
+    `Channel: ${targetChannel}`,
     '|',
-    hasHandle ? `🎯 Handle: @${YOUTUBE_HANDLE}` : '⚠️ No handle'
+    `Handle: @${targetHandle}`,
+    '|',
+    hasApiKey ? '🔑 API Key configured' : '📡 Auto-Sync Mode'
   );
 
   let items   = null;
   let method  = null;
 
-  // ── Method 1: YouTube Data API v3 ──
-  if (hasApiKey && hasHandle) {
-    console.log('%c[VIDEO] Trying YouTube Data API...', 'color:#60a5fa');
-    try {
-      const url  = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&forHandle=@${YOUTUBE_HANDLE}&part=snippet&order=date&maxResults=30&type=video`;
-      const res  = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  // ── Method 1: Local / Express Backend API (bypasses browser CORS completely) ──
+  try {
+    console.log('%c[VIDEO] Checking backend API /api/videos...', 'color:#60a5fa');
+    const res = await fetch('/api/videos', { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
       const data = await res.json();
-      if (data.items?.length) {
-        items  = data.items.map(v => ({
-          title:     v.snippet.title,
-          pubDate:   v.snippet.publishedAt,
-          link:      `https://www.youtube.com/watch?v=${v.id.videoId}`,
-          thumbnail: { url: v.snippet.thumbnails.high?.url || v.snippet.thumbnails.default?.url },
-        }));
-        method = 'YouTube Data API v3';
-      } else {
-        console.warn('[VIDEO] API returned no items:', data.error?.message || 'unknown reason');
+      if (data.items && data.items.length) {
+        items = data.items;
+        method = 'Backend API (/api/videos)';
+      }
+    }
+  } catch (e) {
+    // Server endpoint not active or running statically — proceed to client methods
+  }
+
+  // ── Method 2: YouTube Data API v3 (Uploads Playlist) ──
+  if (!items?.length && hasApiKey) {
+    console.log('%c[VIDEO] Trying YouTube Data API v3...', 'color:#60a5fa');
+    try {
+      const playlistId = YOUTUBE_UPLOADS_PLAYLIST_ID || ('UU' + targetChannel.slice(2));
+      const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=30&key=${YOUTUBE_API_KEY}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items?.length) {
+          items = data.items.map(v => ({
+            title: v.snippet.title,
+            pubDate: v.snippet.publishedAt,
+            link: `https://www.youtube.com/watch?v=${v.snippet.resourceId.videoId}`,
+            thumbnail: {
+              url: v.snippet.thumbnails?.maxres?.url || v.snippet.thumbnails?.high?.url || v.snippet.thumbnails?.default?.url
+            }
+          }));
+          method = 'YouTube Data API v3 (Uploads Playlist)';
+        }
       }
     } catch (err) {
-      console.warn('[VIDEO] API request failed:', err.message);
+      console.warn('[VIDEO] YouTube Data API request failed:', err.message);
     }
   }
 
-  // ── Method 2: RSS via CORS proxies ──
-  if (!items?.length && hasHandle) {
-    const rssUrl = `https://www.youtube.com/feeds/videos.xml?user=${YOUTUBE_HANDLE}`;
-    const proxies = [
-      url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=30`,
+  // ── Method 3: Official YouTube RSS Feed via rss2json ──
+  if (!items?.length && targetChannel) {
+    console.log('%c[VIDEO] Fetching latest videos from YouTube RSS feed (rss2json)...', 'color:#60a5fa');
+    try {
+      const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${targetChannel}`;
+      const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&t=${Date.now()}`;
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(7000) });
+      if (res.ok) {
+        const raw = await res.json();
+        if (raw?.status === 'ok' && raw.items?.length) {
+          items = raw.items.map(item => ({
+            title: item.title,
+            pubDate: item.pubDate,
+            link: item.link,
+            thumbnail: {
+              url: (typeof item.thumbnail === 'string' && item.thumbnail)
+                ? item.thumbnail
+                : (item.enclosure?.thumbnail || `https://img.youtube.com/vi/${extractVideoId(item.link)}/hqdefault.jpg`)
+            }
+          }));
+          method = 'Live YouTube RSS Feed (rss2json)';
+        }
+      }
+    } catch (err) {
+      console.warn('[VIDEO] rss2json proxy failed:', err.message);
+    }
+  }
+
+  // ── Method 4: Raw XML via CORS proxies ──
+  if (!items?.length && targetChannel) {
+    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${targetChannel}`;
+    const xmlProxies = [
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
+      `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`,
     ];
 
-    for (let i = 0; i < proxies.length; i++) {
-      console.log(`%c[VIDEO] Trying RSS proxy ${i + 1}/3...`, 'color:#60a5fa');
+    for (let i = 0; i < xmlProxies.length; i++) {
+      console.log(`%c[VIDEO] Trying XML proxy ${i + 1}/${xmlProxies.length}...`, 'color:#60a5fa');
       try {
-        const res  = await fetch(proxies[i](rssUrl), { signal: AbortSignal.timeout(9000) });
-        const raw  = await res.json();
-        const xml  = raw?.contents ?? null;
-        if (xml) {
-          const parser = new DOMParser();
-          const doc    = parser.parseFromString(xml, 'application/xml');
-          const parsed = Array.from(doc.querySelectorAll('entry')).map(e => {
-            const vid = e.querySelector('videoId')?.textContent || e.querySelector('id')?.textContent?.split(':').pop();
-            return {
-              title:     e.querySelector('title')?.textContent || '',
-              pubDate:   e.querySelector('published')?.textContent || '',
-              link:      `https://www.youtube.com/watch?v=${vid}`,
-              thumbnail: { url: e.querySelector('thumbnail')?.getAttribute('url') || `https://img.youtube.com/vi/${vid}/hqdefault.jpg` },
-            };
-          });
-          if (parsed.length) { items = parsed; method = `RSS proxy ${i + 1}`; break; }
+        const res = await fetch(xmlProxies[i], { signal: AbortSignal.timeout(6000) });
+        if (res.ok) {
+          const xml = await res.text();
+          if (xml && xml.includes('<entry>')) {
+            const parser = new DOMParser();
+            const doc    = parser.parseFromString(xml, 'application/xml');
+            const parsed = Array.from(doc.querySelectorAll('entry')).map(e => {
+              const vid = e.querySelector('videoId')?.textContent || e.querySelector('id')?.textContent?.split(':').pop();
+              return {
+                title:     e.querySelector('title')?.textContent || '',
+                pubDate:   e.querySelector('published')?.textContent || '',
+                link:      `https://www.youtube.com/watch?v=${vid}`,
+                thumbnail: { url: e.querySelector('thumbnail')?.getAttribute('url') || `https://img.youtube.com/vi/${vid}/hqdefault.jpg` },
+              };
+            });
+            if (parsed.length) {
+              items = parsed;
+              method = `XML Proxy ${i + 1}`;
+              break;
+            }
+          }
         }
-        // rss2json format
-        if (raw?.status === 'ok' && raw.items?.length) { items = raw.items; method = `RSS proxy ${i + 1} (rss2json)`; break; }
       } catch (err) {
-        console.warn(`[VIDEO] RSS proxy ${i + 1} failed:`, err.message);
+        console.warn(`[VIDEO] XML proxy ${i + 1} failed:`, err.message);
       }
     }
   }
 
-  // ── Method 3: Static fallback ──
+  // ── Render Videos ──
   if (items?.length) {
-    console.log(`%c[VIDEO] ✅ Loaded ${items.length} videos via ${method}`, 'color:#34d399;font-weight:bold');
+    console.log(`%c[VIDEO] ✅ Successfully auto-synced ${items.length} videos via ${method}`, 'color:#34d399;font-weight:bold');
     loadingEl.remove();
     projectsCount = items.length;
     const statEl = document.getElementById('statProjects');
-    if (statEl.textContent !== '0') animateCounter(statEl, projectsCount);
-    items.slice(0, 30).forEach((item, i) => videoGrid.appendChild(createVideoCard(item, i)));
+    if (statEl && statEl.textContent !== '0') animateCounter(statEl, projectsCount);
+    videoGrid.innerHTML = '';
+    items.forEach((item, i) => videoGrid.appendChild(createVideoCard(item, i)));
   } else {
-    console.log('%c[VIDEO] ⚡ Falling back to STATIC_VIDEOS', 'color:#fbbf24;font-weight:bold');
+    console.log('%c[VIDEO] ⚡ Falling back to STATIC_VIDEOS safeguard', 'color:#fbbf24;font-weight:bold');
     loadingEl.remove();
     projectsCount = STATIC_VIDEOS.length;
     const statEl = document.getElementById('statProjects');
-    if (statEl.textContent !== '0') animateCounter(statEl, projectsCount);
+    if (statEl && statEl.textContent !== '0') animateCounter(statEl, projectsCount);
+    videoGrid.innerHTML = '';
     STATIC_VIDEOS.forEach((v, i) => {
       videoGrid.appendChild(createVideoCard({
         title:     v.title,
@@ -691,9 +737,10 @@ async function loadVideos() {
         thumbnail: { url: `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` },
       }, i));
     });
-    console.log(`%c[VIDEO] ✅ Loaded ${STATIC_VIDEOS.length} videos from STATIC_VIDEOS`, 'color:#34d399;font-weight:bold');
+    console.log(`%c[VIDEO] Loaded ${STATIC_VIDEOS.length} videos from STATIC_VIDEOS`, 'color:#34d399;font-weight:bold');
   }
 }
+
 
 
 
