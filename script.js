@@ -541,6 +541,60 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
 
+const CATALOG_VIDEOS = [
+  { id: 'AdU297GBNvg', title: 'visuals:AZURE2026', pubDate: '2026-07-07T07:53:15Z' },
+  { id: 'rpY9ydbisP4', title: 'visuals:AZURE2026 [ Discarded ]', pubDate: '2026-06-11T16:26:26Z' },
+  { id: 'Rwc5zKMN1xM', title: 'visuals:NO_WORRIES.', pubDate: '2026-05-31T15:03:05Z' },
+  { id: 'mm-pWXxyT6k', title: 'visuals:Height.', pubDate: '2026-05-31T13:49:22Z' },
+  { id: 'N0SML3Qotaw', title: 'banner:HIRO.', pubDate: '2026-05-31T13:08:11Z' },
+  { id: 'zIEbQMFPSMs', title: 'remake:AMOS', pubDate: '2026-03-15T13:54:37Z' },
+  { id: '0eXpsDlfUII', title: 'reels:2024-2025', pubDate: '2026-03-08T02:10:51Z' },
+  { id: 'ZVTB6703DnE', title: 'HBD:amax.', pubDate: '2026-02-02T09:11:09Z' },
+  { id: 'Q-Fg1dh8s_I', title: 'HBD:sxcstyles2025.', pubDate: '2025-08-17T04:02:46Z' },
+  { id: '4gGzsHAM4mA', title: 'amv:News.', pubDate: '2024-10-21T10:21:34Z' },
+  { id: 'NiYcw0yX2VY', title: '文字PV:not_enough.', pubDate: '2024-09-12T03:43:59Z' },
+  { id: 'QpnHcE5G0ks', title: '文字PV:all_alone.', pubDate: '2024-06-10T09:03:54Z' },
+  { id: 'R3zzz9GDyfs', title: 'amv:Untitled.', pubDate: '2024-05-13T17:43:31Z' },
+  { id: 'P5uiNuZG46s', title: 'amv:Daisey.', pubDate: '2024-02-29T06:37:30Z' },
+  { id: 'XgDKkSS0aPw', title: 'amv:dot.', pubDate: '2024-02-05T00:59:57Z' },
+  { id: 'gNO7aiqYkSQ', title: 'visuals:busy.', pubDate: '2024-01-07T11:14:44Z' },
+  { id: 'zVkIiLFjrWU', title: 'miley', pubDate: '2023-12-09T15:07:36Z' },
+  { id: 'Rc__qEAHGAU', title: 'amv:Story.', pubDate: '2023-10-27T14:12:59Z' },
+  { id: 'Taiw_SjScNY', title: 'HBD:sxcstyles', pubDate: '2023-07-22T06:01:41Z' },
+  { id: 'ot68zIJmfyY', title: 'intro:HiroNeyka.', pubDate: '2023-06-10T09:08:34Z' },
+  { id: 'r5wQP7NbVmQ', title: 'fantro:Nerumi-S', pubDate: '2023-05-29T10:29:48Z' },
+  { id: 'x8C_vZsPIFc', title: 'amv:amax&witty.', pubDate: '2023-05-20T12:13:08Z' },
+];
+
+function mergeWithCatalog(liveList) {
+  const seen = new Set();
+  const result = [];
+  (liveList || []).forEach(item => {
+    const vid = item.id || item.videoId || extractVideoId(item.link || item.guid || '');
+    if (vid && !seen.has(vid)) {
+      seen.add(vid);
+      result.push({
+        title: item.title,
+        pubDate: item.pubDate,
+        link: item.link || `https://www.youtube.com/watch?v=${vid}`,
+        thumbnail: item.thumbnail || { url: `https://img.youtube.com/vi/${vid}/hqdefault.jpg` },
+      });
+    }
+  });
+  CATALOG_VIDEOS.forEach(item => {
+    if (!seen.has(item.id)) {
+      seen.add(item.id);
+      result.push({
+        title: item.title,
+        pubDate: item.pubDate,
+        link: `https://www.youtube.com/watch?v=${item.id}`,
+        thumbnail: { url: `https://img.youtube.com/vi/${item.id}/hqdefault.jpg` },
+      });
+    }
+  });
+  return result;
+}
+
 function createVideoCard(item, index) {
   const videoId = item.id || item.videoId || extractVideoId(item.link || item.guid || '');
   const thumb   = (typeof item.thumbnail === 'string' && item.thumbnail)
@@ -578,7 +632,7 @@ async function loadVideos() {
     '|',
     `Handle: @${targetHandle}`,
     '|',
-    hasApiKey ? '🔑 API Key configured' : '📡 Auto-Sync Mode'
+    hasApiKey ? '🔑 API Key configured' : '📡 Auto-Sync Mode (22+ Catalog)'
   );
 
   let items   = null;
@@ -604,7 +658,7 @@ async function loadVideos() {
     console.log('%c[VIDEO] Trying YouTube Data API v3...', 'color:#60a5fa');
     try {
       const playlistId = YOUTUBE_UPLOADS_PLAYLIST_ID || ('UU' + targetChannel.slice(2));
-      const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=30&key=${YOUTUBE_API_KEY}`;
+      const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&key=${YOUTUBE_API_KEY}`;
       const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
       if (res.ok) {
         const data = await res.json();
@@ -692,17 +746,20 @@ async function loadVideos() {
     }
   }
 
-  // ── Render Videos (100% Live Dynamic from YouTube) ──
-  if (items?.length) {
-    console.log(`%c[VIDEO] ✅ Displaying ${items.length} videos live from YouTube (${method})`, 'color:#34d399;font-weight:bold');
+  // ── Merge with complete channel catalog (ensures all 22+ videos show) ──
+  const allVideos = mergeWithCatalog(items);
+
+  // ── Render Videos ──
+  if (allVideos.length) {
+    console.log(`%c[VIDEO] ✅ Displaying ${allVideos.length} videos (${method ? `${method} + ` : ''}Catalog Sync)`, 'color:#34d399;font-weight:bold');
     if (loadingEl) loadingEl.remove();
-    projectsCount = items.length;
+    projectsCount = allVideos.length;
     const statEl = document.getElementById('statProjects');
     if (statEl && statEl.textContent !== '0') animateCounter(statEl, projectsCount);
     videoGrid.innerHTML = '';
-    items.forEach((item, i) => videoGrid.appendChild(createVideoCard(item, i)));
+    allVideos.forEach((item, i) => videoGrid.appendChild(createVideoCard(item, i)));
   } else {
-    console.warn('[VIDEO] Could not fetch videos from YouTube.');
+    console.warn('[VIDEO] Could not load video catalog.');
     if (loadingEl) {
       loadingEl.innerHTML = `
         <p style="color: var(--gray); font-size: 12px; letter-spacing: 0.1em;">Unable to load YouTube videos at this moment.</p>
