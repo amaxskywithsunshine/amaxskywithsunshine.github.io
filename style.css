@@ -719,7 +719,7 @@ body::-webkit-scrollbar { display: none; }
 }
 .contact-links {
   display: flex;
-  gap: 48px;
+  gap: 20px 36px;
   justify-content: center;
   margin-bottom: 48px;
   flex-wrap: wrap;
