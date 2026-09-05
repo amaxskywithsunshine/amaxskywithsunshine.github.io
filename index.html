@@ -13,20 +13,7 @@
 </head>
 <body>
 
-  <!-- ═══════════════════════════════
-       PRELOADER / CLICK TO START
-  ═══════════════════════════════════ -->
-  <div class="preloader" id="preloader">
-    <div class="preloader-content">
-      <div class="preloader-text" id="preloaderText">LOADING... 0%</div>
-      <div class="preloader-bar-wrap" id="preloaderBarWrap">
-        <div class="preloader-bar" id="preloaderBar"></div>
-      </div>
-      <div class="preloader-click" id="preloaderClick" style="display: none;">
-        <video id="enterVideo" src="video/click_to_enter.mp4" muted playsinline preload="auto"></video>
-      </div>
-    </div>
-  </div>
+
 
 
   <!-- NAVBAR -->
@@ -34,7 +21,7 @@
     <div class="nav-inner">
       <img class="nav-logo" src="img/LOGO.png" alt="theskyisshrine logo" id="navLogo" />
       <div class="nav-links">
-        <a href="#work" id="navWork">WORK</a>
+        <a href="#works" id="navWorks">WORKS</a>
         <a href="#about" id="navAbout">ABOUT</a>
         <a href="#contact" id="navContact">CONTACT</a>
       </div>
@@ -45,51 +32,21 @@
        SECTION 1 — INTRO
   ═══════════════════════════════════ -->
   <section class="intro" id="intro">
-    <!-- YouTube iframe background -->
-    <div id="ytBg">
-      <iframe
-        id="ytBgFrame"
-        src="https://www.youtube.com/embed/0eXpsDlfUII?autoplay=1&mute=1&loop=1&playlist=0eXpsDlfUII&start=9&controls=0&disablekb=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3"
-        allow="autoplay; encrypted-media"
-        allowfullscreen
-        title="Background video"
-      ></iframe>
-      <div id="ytBgShield"></div>
+    <!-- Intro Background Image -->
+    <div class="intro-bg" id="introBg">
+      <img src="img/intro_bg.jpg" alt="amax — Motion Design" class="intro-bg-img" id="introBgImg" />
+      <div class="intro-bg-overlay"></div>
     </div>
     <canvas id="lightCanvas"></canvas>
 
-    <!-- spotlight god-ray layers -->
-    <div class="god-ray ray-1"></div>
-    <div class="god-ray ray-2"></div>
-    <div class="god-ray ray-3"></div>
-
     <div class="intro-content">
-      <!-- Character -->
-      <div class="character-wrap" id="characterWrap">
-        <div class="char-glow-ring"></div>
-        <img class="character" id="character" src="img/character.png" alt="theskyisshrine character" crossorigin="anonymous" />
-        <div class="char-shadow"></div>
-      </div>
 
       <!-- Hero text — bottom left -->
       <div class="intro-text" id="introText">
-        <div class="intro-tag">( amax )-*</div>
-        <h1 class="intro-title">MOTION<br /><em>DESIGN</em></h1>
-        <p class="intro-sub">PORTFOLIO &nbsp;·&nbsp; 2022 - NOW</p>
+        <h1 class="intro-title">AMAX<br /></h1>
+        <div class="intro-tag">MOTION DESIGN &nbsp;·&nbsp; PORTFOLIO &nbsp;·&nbsp; 2022 - NOW <br />live2d model by miikutea</div>
       </div>
 
-      <!-- Barcode decoration — top right -->
-      <div class="barcode" id="introBarcode" aria-hidden="true">
-        <div class="barcode-lines"></div>
-        <span class="barcode-text">amax.portfolio</span>
-      </div>
-
-      <!-- Top label tags -->
-      <div class="intro-tags-row" id="introTagsRow">
-        <span class="tag">MOTION</span>
-        <span class="tag">DESIGN</span>
-        <span class="tag">2D & 3D</span>
-      </div>
     </div>
 
     <!-- Scroll-fade overlay: darkens on scroll down -->
@@ -103,25 +60,130 @@
   </section>
 
   <!-- ═══════════════════════════════
-       SECTION 2 — WORK / YOUTUBE
+       SECTION 2 — WORKS (PERSONAL & CLIENT WORKS)
   ═══════════════════════════════════ -->
-  <section class="work" id="work">
-    <div class="work-header reveal">
-      <div class="work-header-top">
-        <span class="work-year">( THIS IS JUST A FEW PIECE OF WORKS )-*</span>
+  <section class="collection works" id="works">
+    <div id="collection" aria-hidden="true" style="position: absolute; top: -40px;"></div>
+    <div id="work" aria-hidden="true" style="position: absolute; top: -40px;"></div>
+    <div class="collection-header reveal">
+      <div class="collection-header-top">
+        <span class="collection-year">MOTION WORKS &amp; CLIENT COLLECTIONS</span>
       </div>
-      <h2 class="work-title">( WORK )-*</h2>
-      <div class="work-meta">
-        <span class="wm-item">MOTION DESIGN</span>
-        <span class="wm-sep">|</span>
-        <span class="wm-item wm-pink">@iaexamax</span>
+      <h2 class="collection-title">WORKS</h2>
+      <div class="collection-meta">
+        <span class="cm-item">MOTION &amp; GRAPHIC DESIGN</span>
+        <span class="cm-sep">|</span>
+        <span class="cm-item cm-pink">PERSONAL &amp; CLIENT WORKS</span>
       </div>
     </div>
 
-    <div class="video-grid" id="videoGrid">
-      <div class="loading-state" id="loadingState">
-        <div class="loader"></div>
-        <p>Loading catalog…</p>
+    <!-- Client Selection Boxes -->
+    <div class="client-boxes-wrap reveal reveal-delay-1">
+      <div class="client-boxes-label">SELECT A COLLECTION OR CLIENT :</div>
+      <div class="client-boxes" id="clientBoxes">
+        <!-- Collection Box: Personal Project -->
+        <button type="button" class="client-box" data-client="personal" id="clientBoxPersonal" aria-label="Select Personal Project">
+          <div class="client-box-preview">
+            <img src="img/personal_preview.jpg" alt="Personal Project preview" class="client-box-img" />
+            <div class="client-box-shade"></div>
+          </div>
+          <div class="client-box-content">
+            <div class="client-box-top-row">
+              <span class="client-box-tag">ORIGINAL</span>
+            </div>
+            <h3 class="client-box-title">Personal Project</h3>
+            <span class="client-box-sub">@iaexamax</span>
+            <div class="client-box-footer">
+              <span class="client-box-count" id="personalWorksCount">22 WORKS</span>
+              <span class="client-box-arrow">→</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Client Box: Aihara Ch. -->
+        <button type="button" class="client-box" data-client="aihara" id="clientBoxAihara" aria-label="Select client Aihara Ch.">
+          <div class="client-box-preview">
+            <img src="img/clients/aihara/battlefield_v.png" alt="Aihara Ch. preview" class="client-box-img" />
+            <div class="client-box-shade"></div>
+          </div>
+          <div class="client-box-content">
+            <div class="client-box-top-row">
+              <span class="client-box-tag">CLIENT</span>
+            </div>
+            <h3 class="client-box-title">Aihara Ch.</h3>
+            <span class="client-box-sub">@Aihara-wan</span>
+            <div class="client-box-footer">
+              <span class="client-box-count">4 WORKS</span>
+              <span class="client-box-arrow">→</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Client Box: HiroNeyka / HiroKitsuNyx -->
+        <button type="button" class="client-box" data-client="hironeyka" id="clientBoxHiroNeyka" aria-label="Select client HiroNeyka">
+          <div class="client-box-preview">
+            <img src="img/clients/hironeyka/banner_hiro.jpg" alt="HiroNeyka preview" class="client-box-img" />
+            <div class="client-box-shade"></div>
+          </div>
+          <div class="client-box-content">
+            <div class="client-box-top-row">
+              <span class="client-box-tag">CLIENT</span>
+            </div>
+            <h3 class="client-box-title">HiroKitsuNyx</h3>
+            <span class="client-box-sub">@HiroNeyka</span>
+            <div class="client-box-footer">
+              <span class="client-box-count">2 WORKS</span>
+              <span class="client-box-arrow">→</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Placeholder for future clients -->
+        <div class="client-box client-box-placeholder" aria-hidden="true">
+          <div class="client-box-placeholder-inner">
+            <span class="client-box-plus">+</span>
+            <span class="client-box-placeholder-text">MORE SOON</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hint when no client is selected -->
+      <div class="client-select-hint" id="clientSelectHint">
+        <span class="hint-icon">↳</span>
+        <span class="hint-text">SELECT A COLLECTION ABOVE TO VIEW WORKS</span>
+      </div>
+    </div>
+
+    <!-- Active Client Showcase Wrapper (Slide down / up accordion) -->
+    <div class="client-showcase-wrapper" id="clientShowcaseWrapper">
+      <div class="client-showcase-inner">
+        <div class="client-showcase" id="clientShowcase">
+          <div class="client-showcase-bar">
+            <div class="client-showcase-info">
+              <div class="client-showcase-avatar">
+                <span id="clientShowcaseAvatar">P</span>
+              </div>
+              <div class="client-showcase-text">
+                <div class="client-showcase-title-row">
+                  <h3 class="client-showcase-name" id="clientShowcaseName">Personal Project</h3>
+                  <div class="client-channel-links" id="clientChannelLinks">
+                    <!-- Dynamic platform links -->
+                  </div>
+                </div>
+                <p class="client-showcase-desc" id="clientShowcaseDesc">Personal motion graphics, visual experiments, and animations.</p>
+              </div>
+            </div>
+            <div class="client-showcase-stats">
+              <span class="client-stat-badge" id="clientWorkCount">22 WORKS</span>
+              <button type="button" class="client-close-btn" id="clientCloseBtn" aria-label="Close showcase">✕ CLOSE</button>
+            </div>
+          </div>
+
+          <!-- Gallery Grid of Client Images / Videos -->
+          <div class="client-gallery-grid" id="clientGalleryGrid">
+            <!-- Rendered dynamically by script.js -->
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -130,60 +192,137 @@
        SECTION 3 — ABOUT
   ═══════════════════════════════════ -->
   <section class="about" id="about">
-    <video class="about-bg-video" src="img/Sky.mp4" autoplay loop muted playsinline></video>
-    <div class="about-bg-overlay"></div>
-    <div class="about-inner">
-      <div class="about-tag reveal"><span class="ILIKESKY">( I LIKE SKY ! )-* </span> </div>
-      <h2 class="about-title reveal reveal-delay-1">( ABOUT )-*</h2>
-      <p class="about-desc reveal reveal-delay-2">
-        My name is Amax.<br />
-        I am 16 years old. <span class="Age-Date">[BIRTHDAY - 01/02/2010]</span> <br />
-        I am a Men.<br />
-        I am from Thailand (Asia).<br />
-        <br />
-        I've been start making motion since I was 12 years old.<br />
-        I bring 2D and 3D graphics to life through smooth, dynamic motion.<br />
-        and I also been a scripter for a game but i didn't have the work much.<br />
-        This is my information in social media, I hope you will enjoy my work.<br /> 
-        Thank you so much for interest.
-      </p>
-      <div class="about-stats reveal reveal-delay-3">
-        <div class="stat">
-          <span class="stat-num" data-target="50" id="statProjects">0</span>
-          <span class="stat-label">PROJECTS</span>
+    <div class="about-left reveal">
+      <div class="about-content">
+        <h2 class="about-title">ABOUT</h2>
+
+        <!-- OVERVIEW / BACKGROUND TABS -->
+        <div class="about-tabs" role="tablist" aria-label="About Information">
+          <button type="button" class="about-tab-btn active" id="tabOverview" role="tab" aria-selected="true" aria-controls="paneOverview" data-tab="overview">OVERVIEW</button>
+          <span class="about-tab-sep">/</span>
+          <button type="button" class="about-tab-btn" id="tabBackground" role="tab" aria-selected="false" aria-controls="paneBackground" data-tab="background">BACKGROUND</button>
         </div>
-        <div class="stat">
-          <span class="stat-num" data-target="3" id="statYears">0</span>
-          <span class="stat-label">YEARS EXP.</span>
+
+        <div class="about-panes">
+          <!-- PANE 1: OVERVIEW -->
+          <div class="about-pane active" id="paneOverview" role="tabpanel" aria-labelledby="tabOverview">
+            <p class="about-desc">
+              Amax is a Thailand-based motion designer specializing in fluid animation and precise audio-visual synchronization, operating as a versatile solo creator who independently builds and composites both custom 3D and 2D assets.<br />
+              <br />
+              While his design process begins by studying and merging diverse references, he is constantly experimenting to break away from conventional formulas and craft a unique visual style.<br />
+              <br />
+              Although complex narrative storytelling is an area he is still actively developing, his core strength lies in delivering powerful aesthetic impact and rhythmic flow.<br />
+              <br />
+              To maintain high-quality output and manage burnout, Amax adopts a sustainable, quality-over-speed approach that strictly prioritizes his physical and mental well-being; consequently, his project timelines are carefully paced—ranging from a single week to over a year—ensuring every piece receives the dedicated time, rest, and meticulous care it truly requires.
+            </p>
+          </div>
+
+          <!-- PANE 2: BACKGROUND -->
+          <div class="about-pane" id="paneBackground" role="tabpanel" aria-labelledby="tabBackground">
+            <p class="about-desc">
+              Amax is a Thailand-based motion designer.<br />
+              <br />
+              Starting his creative journey in AMV editing a few years ago, he developed a deep fascination with motion design. He draws continuous inspiration from creative videos across Japan and China. While he started as an admirer from afar, his editing style is heavily influenced by these video, and he hopes to connect with those creators in the future. In late 2025, he expanded his workflow into 3D production for the first time, exploring new dimensions of visual depth and camera dynamics.<br />
+              <br />
+              His creative interests also extend into the virtual club scene. After experiencing Japanese clubs within VRChat, he developed a passion for DJing and VJing. His dream is to gain hands-on experience within VRChat clubs and eventually build a virtual club of his own.<br />
+              <br />
+              Beyond motion design, he has a wide range of interests, including music production, 3D modeling, and illustration. His original goal was to become a game developer; while that specific ambition has faded over time, he lives by the principle that once a goal is set, it should never be abandoned and he views his current interests as things that can all be leveraged to help him achieve his goal of becoming a game developer.<br />
+              <br />
+              Over the past four years, his portfolio has grown through select commissions, personal projects, and creative collaborations. While still humble in scale, his work on social media reflects his genuine dedication to the craft—always creating in hopes of connecting with those who appreciate his vision.
+            </p>
+          </div>
+        </div>
+
+        <div class="about-stats">
+          <div class="stat">
+            <span class="stat-num" data-target="20" id="statProjects">20+</span>
+            <span class="stat-label">PROJECTS</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-target="4" id="statYears">4+</span>
+            <span class="stat-label">YEARS EXP.</span>
+          </div>
         </div>
       </div>
     </div>
-    <div class="about-bg-text" aria-hidden="true">AMAX</div>
+
+    <div class="about-right reveal reveal-delay-1">
+      <img src="img/about_avatar.jpg" alt="amax" class="about-full-img" id="aboutAvatarImg" />
+    </div>
   </section>
 
   <!-- ═══════════════════════════════
-       SECTION 4 — CONTACT / THANKS
+       SECTION 4 — CONTACT
   ═══════════════════════════════════ -->
   <section class="contact" id="contact">
-    <div class="contact-stars stars-1" aria-hidden="true"></div>
-    <div class="contact-stars stars-2" aria-hidden="true"></div>
-    <div class="contact-grass" aria-hidden="true"></div>
     <div class="contact-inner">
-      <div class="contact-tag reveal">( THANKS )-*</div>
-      <div class="contact-links reveal reveal-delay-1">
-        <a href="https://www.youtube.com/@iaexamax" target="_blank" rel="noopener noreferrer" id="linkYT" class="contact-link">YOUTUBE</a>
-        <a href="https://www.instagram.com/itxamax/" target="_blank" rel="noopener noreferrer" id="linkIG" class="contact-link">INSTAGRAM</a>
-        <a href="https://x.com/i_AExAmax" target="_blank" rel="noopener noreferrer" id="linkTW" class="contact-link">TWITTER / X</a>
-        <a href="https://www.twitch.tv/iaexamax" target="_blank" rel="noopener noreferrer" id="linkTwitch" class="contact-link">TWITCH</a>
-        <a href="https://www.tiktok.com/@iaexamax" target="_blank" rel="noopener noreferrer" id="linkTikTok" class="contact-link">TIKTOK</a>
-        <a href="https://web.facebook.com/amaxwastoolazytoedits.somethinginaftereffects" target="_blank" rel="noopener noreferrer" id="linkFB" class="contact-link">FACEBOOK</a>
-        <a href="https://soundcloud.com/itxamax" target="_blank" rel="noopener noreferrer" id="linkSC" class="contact-link">SOUNDCLOUD</a>
+      <div class="contact-header reveal">
+        <div class="contact-header-top">
+          <span class="contact-year">DIRECT INQUIRIES &amp; COLLABORATION</span>
+        </div>
+        <h2 class="contact-title">CONTACT</h2>
       </div>
-      <div class="contact-footer reveal reveal-delay-2">
-        <span>- Looking forward to cooperation -</span>
-      </div>
-      <div class="contact-bottom reveal reveal-delay-3">
-        <span>@iaexamax</span>
+
+      <!-- EMAIL SENDER FORM -->
+      <form id="contactForm" class="contact-form reveal reveal-delay-2" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactName" class="form-label">NAME</label>
+            <input type="text" id="contactName" name="name" class="form-input" placeholder="Your name or organization" required autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="contactEmail" class="form-label">EMAIL</label>
+            <input type="email" id="contactEmail" name="email" class="form-input" placeholder="Your email address" required autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="contactInquiry" class="form-label">WORK INQUIRIES</label>
+          <textarea id="contactInquiry" name="inquiry" class="form-textarea" rows="4" placeholder="Tell me about your project, timeline, deliverables, or questions..." required></textarea>
+        </div>
+
+        <div class="form-bottom-row">
+          <button type="submit" id="contactSubmitBtn" class="contact-submit-btn">
+            <span class="btn-text">SEND</span>
+            <span class="btn-arrow" aria-hidden="true">→</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div id="contactStatus" class="contact-status" aria-live="polite"></div>
+      </form>
+
+      <!-- SOCIAL MEDIA LINKS -->
+      <div class="contact-social-wrap reveal reveal-delay-3">
+        <div class="contact-links">
+          <a href="https://www.youtube.com/@iaexamax" target="_blank" rel="noopener noreferrer" id="linkYT" class="contact-link" aria-label="YouTube" title="YouTube">
+            <img src="img/icons/Platform=YouTube, Color=Negative.png" alt="YouTube" class="contact-icon-img" />
+          </a>
+          <a href="https://www.instagram.com/itxamax/" target="_blank" rel="noopener noreferrer" id="linkIG" class="contact-link" aria-label="Instagram" title="Instagram">
+            <img src="img/icons/Platform=Instagram, Color=Negative.png" alt="Instagram" class="contact-icon-img" />
+          </a>
+          <a href="https://x.com/i_AExAmax" target="_blank" rel="noopener noreferrer" id="linkTW" class="contact-link" aria-label="Twitter / X" title="Twitter / X">
+            <img src="img/icons/Platform=X (Twitter), Color=Negative.png" alt="Twitter / X" class="contact-icon-img" />
+          </a>
+          <a href="https://www.twitch.tv/iaexamax" target="_blank" rel="noopener noreferrer" id="linkTwitch" class="contact-link" aria-label="Twitch" title="Twitch">
+            <img src="img/icons/Platform=Twitch, Color=Negative.png" alt="Twitch" class="contact-icon-img" />
+          </a>
+          <a href="https://www.tiktok.com/@iaexamax" target="_blank" rel="noopener noreferrer" id="linkTikTok" class="contact-link" aria-label="TikTok" title="TikTok">
+            <img src="img/icons/Platform=TikTok, Color=Negative.png" alt="TikTok" class="contact-icon-img" />
+          </a>
+          <a href="https://web.facebook.com/amaxwastoolazytoedits.somethinginaftereffects" target="_blank" rel="noopener noreferrer" id="linkFB" class="contact-link" aria-label="Facebook" title="Facebook">
+            <img src="img/icons/Platform=Facebook, Color=Negative.png" alt="Facebook" class="contact-icon-img" />
+          </a>
+          <a href="https://soundcloud.com/itxamax" target="_blank" rel="noopener noreferrer" id="linkSC" class="contact-link" aria-label="SoundCloud" title="SoundCloud">
+            <img src="img/icons/Platform=SoundCloud, Color=Negative.png" alt="SoundCloud" class="contact-icon-img" />
+          </a>
+          <button type="button" class="contact-link discord-btn" id="linkDiscord" aria-label="Discord: amax.the_skywithsunshine." title="Discord: amax.the_skywithsunshine. (click to copy)" data-discord="amax.the_skywithsunshine.">
+            <img src="img/icons/Platform=Discord, Color=Negative.png" alt="Discord" class="contact-icon-img" />
+            <span class="discord-tooltip" id="discordTooltip">Copied!</span>
+          </button>
+        </div>
+
+        <div class="contact-copyright reveal reveal-delay-3">© amax</div>
       </div>
     </div>
   </section>
@@ -206,22 +345,40 @@
   </div>
 
   <!-- ═══════════════════════════════
-       STATUS & MUSIC WIDGET
+       IMAGE LIGHTBOX MODAL
   ═══════════════════════════════════ -->
-  <div class="status-widget">
-    <div class="status-top">
-      <div class="status-indicator">
-        <span>WORK STATUS</span>
-        <div class="status-dot red" id="workStatusDot"></div>
+  <div class="image-modal-backdrop" id="imageModalBackdrop" aria-hidden="true">
+    <div class="image-modal-wrap" id="imageModalWrap">
+      <button class="image-modal-close" id="imageModalClose" aria-label="Close image">✕</button>
+      <button class="image-modal-nav prev" id="imageModalPrev" aria-label="Previous image">‹</button>
+      <button class="image-modal-nav next" id="imageModalNext" aria-label="Next image">›</button>
+      <div class="image-modal-frame">
+        <img src="" alt="" class="image-modal-img" id="imageModalImg" />
       </div>
-      <div class="status-divider"></div>
-      <button class="mute-btn" id="muteBtn">MUSIC: ON</button>
-    </div>
-    <div class="song-marquee-wrap" id="songMarqueeWrap" style="display: none;">
-      <div class="song-marquee" id="songNameDisplay">No track playing</div>
+      <div class="image-modal-bar">
+        <div class="image-modal-info">
+          <div class="image-modal-title" id="imageModalTitle"></div>
+          <div class="image-modal-meta">
+            <span id="imageModalClient"></span>
+            <span class="image-modal-sep">·</span>
+            <span id="imageModalCategory"></span>
+            <a id="imageModalVideoLink" class="image-modal-video-link" style="display:none;" href="#" title="Watch Video">PLAY VIDEO ▶</a>
+          </div>
+        </div>
+        <div class="image-modal-count" id="imageModalCount">1 / 4</div>
+      </div>
     </div>
   </div>
-  <audio id="bgMusic" src=""></audio>
+
+  <!-- ═══════════════════════════════
+       WORK STATUS WIDGET
+  ═══════════════════════════════════ -->
+  <div class="status-widget">
+    <div class="status-indicator">
+      <span>WORK STATUS</span>
+      <div class="status-dot green" id="workStatusDot" title="Available for Work"></div>
+    </div>
+  </div>
 
   <script src="config.js"></script>
   <script src="script.js"></script>
