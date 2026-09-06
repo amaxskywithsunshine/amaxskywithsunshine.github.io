@@ -34,8 +34,8 @@
   --white:     #f0f0f0;
   --gray:      #666666;
   --gray2:     #333333;
-  --font:      'Gotham', 'Inter', sans-serif;
-  --font-blk:  'GothamBlack', 'Inter', sans-serif;
+  --font:      'Gotham', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Thai", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-blk:  'GothamBlack', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Thai", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 /* ════════════════════════════════════════════
@@ -1792,12 +1792,20 @@ body::-webkit-scrollbar { display: none; }
 }
 
 /* ════════════════════════════════════════════
-   WORK STATUS WIDGET
+   FIXED BOTTOM WIDGETS (STATUS & LANGUAGE)
 ════════════════════════════════════════════ */
-.status-widget {
+.bottom-widgets {
   position: fixed;
-  bottom: 40px;
+  bottom: 36px;
   right: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.status-widget {
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
@@ -1809,8 +1817,8 @@ body::-webkit-scrollbar { display: none; }
   font-family: var(--font);
   font-size: 10px;
   letter-spacing: .12em;
-  z-index: 1000;
   border-radius: 2px;
+  user-select: none;
 }
 .status-indicator {
   display: flex;
@@ -1834,10 +1842,52 @@ body::-webkit-scrollbar { display: none; }
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
 }
 
+.lang-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.171);
+  background: rgba(14, 14, 14, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 2px;
+  user-select: none;
+}
+.lang-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.42);
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  padding: 2px 4px;
+  cursor: pointer;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+  line-height: 1;
+}
+.lang-btn:hover {
+  color: #fff;
+}
+.lang-btn.active {
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+.lang-sep {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 9px;
+  user-select: none;
+}
+
 /* ════════════════════════════════════════════
    RESPONSIVE ADJUSTMENTS
 ════════════════════════════════════════════ */
 @media (max-width: 768px) {
+  .bottom-widgets {
+    bottom: 20px;
+    right: 20px;
+  }
   .collection {
     padding: 70px 24px 70px;
   }

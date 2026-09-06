@@ -744,7 +744,8 @@ async function loadVideos() {
 }
 
 // Trigger video catalog sync when Works scrolls into view or after initial delay
-const collectionSection = document.getElementById("works") || document.getElementById("collection");
+const collectionSection =
+  document.getElementById("works") || document.getElementById("collection");
 let videosLoaded = false;
 if (collectionSection) {
   const collObs = new IntersectionObserver(
@@ -917,21 +918,29 @@ if (contactForm) {
         _captcha: "false",
       };
 
-      const response = await fetch("https://formsubmit.co/ajax/aongsakrb@gmail.com", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+      const response = await fetch(
+        "https://formsubmit.co/ajax/aongsakrb@gmail.com",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const data = await response.json().catch(() => ({}));
 
-      if (response.ok && (data.success === "true" || data.success === true || response.status === 200)) {
+      if (
+        response.ok &&
+        (data.success === "true" ||
+          data.success === true ||
+          response.status === 200)
+      ) {
         showContactStatus(
           "success",
-          `✓ Thank you, ${escapeContactHtml(nameVal)}! Your inquiry has been sent. I will get back to you shortly.`
+          `✓ Thank you, ${escapeContactHtml(nameVal)}! Your inquiry has been sent. I will get back to you shortly.`,
         );
         contactForm.reset();
       } else {
@@ -941,13 +950,13 @@ if (contactForm) {
       console.warn("[Contact Form] Notice:", err);
       const mailtoSubject = encodeURIComponent(`Work Inquiry from ${nameVal}`);
       const mailtoBody = encodeURIComponent(
-        `Name: ${nameVal}\nEmail: ${emailVal}\n\nWork Inquiries:\n${inquiryVal}`
+        `Name: ${nameVal}\nEmail: ${emailVal}\n\nWork Inquiries:\n${inquiryVal}`,
       );
       const mailtoUrl = `mailto:aongsakrb@gmail.com,amaxforworks@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
 
       showContactStatus(
         "error",
-        `Could not deliver automatically via network. <a href="${mailtoUrl}" target="_blank" rel="noopener">Click here to send directly via your email client</a> to aongsakrb@gmail.com &amp; amaxforworks@gmail.com.`
+        `Could not deliver automatically via network. <a href="${mailtoUrl}" target="_blank" rel="noopener">Click here to send directly via your email client</a> to aongsakrb@gmail.com &amp; amaxforworks@gmail.com.`,
       );
     } finally {
       setButtonLoading(false);
@@ -955,16 +964,18 @@ if (contactForm) {
   });
 
   // Clear invalid border and dismiss error on user input
-  [contactNameInput, contactEmailInput, contactInquiryInput].forEach((input) => {
-    if (input) {
-      input.addEventListener("input", () => {
-        input.classList.remove("is-invalid");
-        if (contactStatus && contactStatus.classList.contains("error")) {
-          hideContactStatus();
-        }
-      });
-    }
-  });
+  [contactNameInput, contactEmailInput, contactInquiryInput].forEach(
+    (input) => {
+      if (input) {
+        input.addEventListener("input", () => {
+          input.classList.remove("is-invalid");
+          if (contactStatus && contactStatus.classList.contains("error")) {
+            hideContactStatus();
+          }
+        });
+      }
+    },
+  );
 }
 
 /* ════════════════════════════════════════════
@@ -1145,10 +1156,20 @@ function renderClientShowcase(clientKey) {
   const countEl = document.getElementById("clientWorkCount");
   const gridEl = document.getElementById("clientGalleryGrid");
 
-  if (nameEl) nameEl.textContent = data.name;
+  const currentT = (typeof I18N_DATA !== "undefined" && I18N_DATA[currentAppLang]) ? I18N_DATA[currentAppLang] : {
+    worksCountSuffix: "WORKS",
+    worksBadgeVideo: "VIDEO",
+    worksBadgeImage: "IMAGE",
+    worksPlayVideo: "PLAY VIDEO ▶",
+    worksViewArtwork: "VIEW ARTWORK",
+    worksPersonalTitle: "Personal Project",
+    worksPersonalDesc: data.desc
+  };
+
+  if (nameEl) nameEl.textContent = (clientKey === "personal" && currentT.worksPersonalTitle) ? currentT.worksPersonalTitle : data.name;
   if (avatarEl) avatarEl.textContent = data.avatar || data.name.charAt(0);
-  if (descEl) descEl.textContent = data.desc;
-  if (countEl) countEl.textContent = `${data.works.length} WORKS`;
+  if (descEl) descEl.textContent = (clientKey === "personal" && currentT.worksPersonalDesc) ? currentT.worksPersonalDesc : data.desc;
+  if (countEl) countEl.textContent = `${data.works.length} ${currentT.worksCountSuffix || "WORKS"}`;
 
   if (linksWrapEl) {
     if (data.links && data.links.length > 0) {
@@ -1183,7 +1204,7 @@ function renderClientShowcase(clientKey) {
               ? `
             <div class="client-work-type-badge client-work-type-video">
               <svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-              <span>VIDEO</span>
+              <span>${currentT.worksBadgeVideo || "VIDEO"}</span>
             </div>
           `
               : `
@@ -1193,12 +1214,12 @@ function renderClientShowcase(clientKey) {
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <polyline points="21 15 16 10 5 21"/>
               </svg>
-              <span>IMAGE</span>
+              <span>${currentT.worksBadgeImage || "IMAGE"}</span>
             </div>
           `
           }
           <div class="client-work-overlay">
-            <span class="client-work-zoom-btn">${work.videoId ? "PLAY VIDEO ▶" : "VIEW ARTWORK"}</span>
+            <span class="client-work-zoom-btn">${work.videoId ? (currentT.worksPlayVideo || "PLAY VIDEO ▶") : (currentT.worksViewArtwork || "VIEW ARTWORK")}</span>
           </div>
         </div>
         <div class="client-work-info">
@@ -1304,6 +1325,8 @@ function updateImageModal() {
   const videoBtn = document.getElementById("imageModalVideoLink");
   if (videoBtn) {
     if (work.videoId) {
+      const currentT = (typeof I18N_DATA !== "undefined" && I18N_DATA[currentAppLang]) ? I18N_DATA[currentAppLang] : null;
+      videoBtn.textContent = (currentT && currentT.worksPlayVideo) ? currentT.worksPlayVideo : "PLAY VIDEO ▶";
       videoBtn.style.display = "inline-flex";
       videoBtn.onclick = (e) => {
         e.preventDefault();
@@ -1370,3 +1393,332 @@ if (clientCloseBtn) {
 
 // Initial state: default is NOT selected (closed)
 closeClientShowcase();
+
+/* ════════════════════════════════════════════
+   MULTI-LANGUAGE SUPPORT (EN / TH / JP / CN)
+════════════════════════════════════════════ */
+let currentAppLang = "en";
+
+const I18N_DATA = {
+  en: {
+    // Navigation
+    navWorks: "WORKS",
+    navAbout: "ABOUT",
+    navContact: "CONTACT",
+    scrollHint: "SCROLL",
+    // Works section
+    worksTopTag: "MOTION WORKS & CLIENT COLLECTIONS",
+    worksTitle: "WORKS",
+    worksMetaMotion: "MOTION & GRAPHIC DESIGN",
+    worksMetaWorks: "PERSONAL & CLIENT WORKS",
+    worksSelectLabel: "SELECT A COLLECTION OR CLIENT :",
+    worksTagOriginal: "ORIGINAL",
+    worksTagClient: "CLIENT",
+    worksPersonalTitle: "Personal Project",
+    worksCountSuffix: "WORKS",
+    worksPlaceholderText: "MORE SOON",
+    worksHintText: "SELECT A COLLECTION ABOVE TO VIEW WORKS",
+    worksCloseBtn: "✕ CLOSE",
+    worksPlayVideo: "PLAY VIDEO ▶",
+    worksViewArtwork: "VIEW ARTWORK",
+    worksBadgeVideo: "VIDEO",
+    worksBadgeImage: "IMAGE",
+    worksPersonalDesc: "Original motion design, typography PVs, visual experiments, and animated showcase reels.",
+    // About section
+    aboutTitle: "ABOUT",
+    tabOverview: "OVERVIEW",
+    tabBackground: "BACKGROUND",
+    statProjects: "PROJECTS",
+    statYears: "YEARS EXP.",
+    aboutOverview: `Amax is a motion designer from Thailand. He makes smooth animations that match music and sound. As a solo creator, he builds both 2D and 3D graphics by himself.<br /><br />He learns from many different styles, but he always tries new ideas to make his work fresh and unique.<br /><br />He is still practicing story writing. His greatest strength is making videos that look cool, energetic, and move to the beat.<br /><br />Amax cares about good quality and staying healthy. He does not rush his work. Depending on the project, he may take from one day to over a year to finish, making sure every video is made with care.`,
+    aboutBackground: `Amax is a motion designer from Thailand.<br /><br />He started making videos four years ago by editing anime music videos (AMVs). In 2024, he loved watching motion design creators from Japan and China, and their work inspired him a lot. In late 2025, he started learning 3D for the first time, making motion graphics with references from Japanese and Chinese creators.<br /><br />In 2026, he also discovered virtual club culture. After visiting music clubs in VRChat, he became very interested in DJing and VJing. His dream is to perform in VRChat clubs and build his own virtual club one day.<br /><br />Besides motion design, he also likes making music, 3D modeling, and drawing. His first dream was to make video games. He believes that once you set a goal, you should never give up. He uses all these skills to help him make games in the future.<br /><br />Over the last four years, he has worked for clients, friends, and himself. He always works hard on his art, hoping to share his work with people who enjoy his style.`,
+    // Contact section
+    contactYearTag: "DIRECT INQUIRIES & COLLABORATION",
+    contactTitle: "CONTACT",
+    contactLabelName: "NAME",
+    contactLabelEmail: "EMAIL",
+    contactLabelInquiry: "WORK INQUIRIES",
+    contactPlaceholderName: "Your name or organization",
+    contactPlaceholderEmail: "Your email address",
+    contactPlaceholderInquiry: "Tell me about your project, timeline, deliverables, or questions...",
+    contactBtnText: "SEND",
+    // Work Status
+    workStatusLabel: "WORK STATUS",
+    workStatusTooltip: "Available for Work",
+  },
+  th: {
+    // Navigation
+    navWorks: "ผลงาน",
+    navAbout: "เกี่ยวกับ",
+    navContact: "ติดต่อ",
+    scrollHint: "เลื่อนลง",
+    // Works section
+    worksTopTag: "รวมผลงานโมชันและลูกค้า",
+    worksTitle: "ผลงาน",
+    worksMetaMotion: "โมชัน & กราฟิกดีไซน์",
+    worksMetaWorks: "โปรเจกต์ส่วนตัว & ลูกค้า",
+    worksSelectLabel: "เลือกผลงานหรือลูกค้า :",
+    worksTagOriginal: "ออริจินัล",
+    worksTagClient: "ลูกค้า",
+    worksPersonalTitle: "โปรเจกต์ส่วนตัว",
+    worksCountSuffix: "ผลงาน",
+    worksPlaceholderText: "เร็วๆ นี้",
+    worksHintText: "เลือกผลงานด้านบนเพื่อดูวิดีโอ",
+    worksCloseBtn: "✕ ปิด",
+    worksPlayVideo: "เล่นวิดีโอ ▶",
+    worksViewArtwork: "ดูภาพผลงาน",
+    worksBadgeVideo: "วิดีโอ",
+    worksBadgeImage: "รูปภาพ",
+    worksPersonalDesc: "ผลงานโมชันดีไซน์ออริจินัล, ไทโปกราฟี PV, งานทดลองภาพ และแอนิเมชัน",
+    // About section
+    aboutTitle: "เกี่ยวกับ",
+    tabOverview: "ภาพรวม",
+    tabBackground: "ประวัติ",
+    statProjects: "โปรเจกต์",
+    statYears: "ปีประสบการณ์",
+    aboutOverview: `Amax เป็นโมชันดีไซเนอร์จากประเทศไทย เขาถนัดการทำแอนิเมชันที่ลื่นไหลและตรงตามจังหวะเพลง ในฐานะครีเอเตอร์เดี่ยว เขาสร้างสรรค์กราฟิกทั้ง 2D และ 3D ด้วยตัวเองทั้งหมด<br /><br />เขาเรียนรู้จากหลากหลายสไตล์ และชอบลองไอเดียใหม่ๆ เสมอ เพื่อให้ผลงานดูสดใหม่และมีเอกลักษณ์เฉพาะตัว<br /><br />เขายังคงฝึกฝนด้านการเล่าเรื่องอยู่ แต่จุดเด่นที่สุดของเขาคือการทำวิดีโอที่ดูเท่ ทรงพลัง และเคลื่อนไหวตามจังหวะได้อย่างลงตัว<br /><br />Amax ให้ความสำคัญกับงานที่มีคุณภาพและสุขภาพที่ดี เขาทำงานอย่างตั้งใจโดยไม่เร่งรีบ ในแต่ละโปรเจกต์อาจใช้เวลาตั้งแต่ 1 วัน ไปจนถึงมากกว่า 1 ปี เพื่อให้มั่นใจว่าทุกชิ้นงานได้รับการดูแลอย่างประณีต`,
+    aboutBackground: `Amax เป็นโมชันดีไซเนอร์จากประเทศไทย<br /><br />เขาเริ่มต้นทำวิดีโอเมื่อ 4 ปีก่อนจากการตัดต่อคลิป AMV อนิเมะ ในปี 2024 เขาหลงใหลและติดตามผลงานของครีเอเตอร์โมชันดีไซน์จากญี่ปุ่นและจีน ซึ่งเป็นแรงบันดาลใจให้เขาอย่างมาก ในช่วงปลายปี 2025 เขาเริ่มเรียนรู้การทำ 3D เป็นครั้งแรก และสร้างสรรค์งานโมชันโดยนำเรฟเฟอเรนซ์จากครีเอเตอร์ญี่ปุ่นและจีนมาต่อยอด<br /><br />ในปี 2026 เขาได้เปิดโลกสู่ Virtual Club หลังจากการไปสัมผัสคลับดนตรีใน VRChat เขาก็สนใจด้าน DJ และ VJ อย่างมาก ความฝันของเขาคือการได้ขึ้นแสดงในคลับ VRChat และสร้างเวอร์ชวลคลับของตัวเองขึ้นมาในอนาคต<br /><br />นอกจากโมชันดีไซน์แล้ว เขายังชอบทำเพลง ปั้นโมเดล 3D และวาดรูป ความฝันแรกของเขาคือการเป็นนักพัฒนาเกม เขาเชื่อเสมอว่าเมื่อตั้งเป้าหมายแล้วต้องไม่ยอมแพ้ และนำทักษะทั้งหมดที่เรียนรู้มาช่วยสร้างเกมในอนาคต<br /><br />ตลอด 4 ปีที่ผ่านมา เขาได้ทำงานทั้งสำหรับลูกค้า เพื่อน และโปรเจกต์ส่วนตัว เขาทุ่มเทสร้างสรรค์ผลงานเสมอ โดยหวังว่าจะได้แบ่งปันงานศิลปะนี้ให้กับทุกคนที่ชื่นชอบสไตล์ของเขา`,
+    // Contact section
+    contactYearTag: "ติดต่องาน & ร่วมงาน",
+    contactTitle: "ติดต่อ",
+    contactLabelName: "ชื่อ",
+    contactLabelEmail: "อีเมล",
+    contactLabelInquiry: "รายละเอียดงาน",
+    contactPlaceholderName: "ชื่อของคุณหรือองค์กร",
+    contactPlaceholderEmail: "ที่อยู่อีเมลของคุณ",
+    contactPlaceholderInquiry: "บอกเล่าเกี่ยวกับโปรเจกต์ ระยะเวลา สิ่งที่ต้องการ หรือคำถามของคุณ...",
+    contactBtnText: "ส่งข้อความ",
+    // Work Status
+    workStatusLabel: "สถานะงาน",
+    workStatusTooltip: "พร้อมรับงาน",
+  },
+  jp: {
+    // Navigation
+    navWorks: "作品",
+    navAbout: "概要",
+    navContact: "連絡先",
+    scrollHint: "スクロール",
+    // Works section
+    worksTopTag: "モーション作品＆クライアント制作",
+    worksTitle: "作品",
+    worksMetaMotion: "モーション＆グラフィックデザイン",
+    worksMetaWorks: "自主制作＆クライアントワーク",
+    worksSelectLabel: "コレクションまたはクライアントを選択 :",
+    worksTagOriginal: "オリジナル",
+    worksTagClient: "クライアント",
+    worksPersonalTitle: "自主制作プロジェクト",
+    worksCountSuffix: "作品",
+    worksPlaceholderText: "近日公開",
+    worksHintText: "上記のコレクションを選択して作品を見る",
+    worksCloseBtn: "✕ 閉じる",
+    worksPlayVideo: "動画を再生 ▶",
+    worksViewArtwork: "作品を見る",
+    worksBadgeVideo: "動画",
+    worksBadgeImage: "画像",
+    worksPersonalDesc: "オリジナルモーションデザイン、タイポグラフィPV、ビジュアル実験、アニメーション制作。",
+    // About section
+    aboutTitle: "概要",
+    tabOverview: "概要",
+    tabBackground: "経歴",
+    statProjects: "実績数",
+    statYears: "経験年数",
+    aboutOverview: `Amaxはタイ出身のモーションデザイナーです。音楽やサウンドに合わせた滑らかなアニメーション制作を得意とし、ソロクリエイターとして2D・3Dのグラフィックス制作から合成までを自身で行っています。<br /><br />様々な表現から学びつつ、常に新しいアイデアを取り入れ、新鮮で独自性のあるスタイルを追求しています。<br /><br />ストーリーテリングは現在も学びの途中ですが、最大の強みはクールでエネルギッシュ、そしてビートにシンクロした映像表現です。<br /><br />作品のクオリティと健康を大切にしており、無理に急ぐことはしません。プロジェクトに応じて1日から1年以上じっくり時間をかけ、一つひとつの作品に愛情とこだわりを込めて制作しています。`,
+    aboutBackground: `Amaxはタイ出身のモーションデザイナーです。<br /><br />4年前にアニメのAMV（アニメ・ミュージック・ビデオ）編集から動画制作を始めました。2024年には日本や中国のモーションデザインクリエイターの作品に魅了され、大きなインスピレーションを受けました。そして2025年末に初めて3Dの制作を始め、日本や中国のクリエイターをリファレンスにしたモーション作品を手掛けました。<br /><br />2026年にはバーチャルクラブ文化の魅力に出会いました。VRChat内の音楽クラブを体験したことをきっかけにDJやVJに興味を持ち、いつかVRChatクラブでパフォーマンスすること、そして自分自身のバーチャルクラブを作ることを夢見ています。<br /><br />モーションデザインのほか、作曲、3Dモデリング、イラスト制作なども行っています。最初の夢はゲームクリエイターになることでした。「一度決めた目標は決して諦めない」という信念のもと、これらすべてのスキルを活かして将来ゲームを制作したいと考えています。<br /><br />この4年間で、クライアントワーク、友人への制作、そして個人作品を手掛けてきました。自分のスタイルを気に入ってくれる人たちと作品を共有できるよう、常に心を込めて制作に取り組んでいます。`,
+    // Contact section
+    contactYearTag: "お仕事のご相談・共同制作",
+    contactTitle: "連絡先",
+    contactLabelName: "お名前",
+    contactLabelEmail: "メールアドレス",
+    contactLabelInquiry: "ご依頼内容",
+    contactPlaceholderName: "お名前または貴社名",
+    contactPlaceholderEmail: "メールアドレス",
+    contactPlaceholderInquiry: "プロジェクトの概要、スケジュール、ご予算、ご質問などをお書きください...",
+    contactBtnText: "送信する",
+    // Work Status
+    workStatusLabel: "稼働ステータス",
+    workStatusTooltip: "お仕事募集中",
+  },
+  cn: {
+    // Navigation
+    navWorks: "作品",
+    navAbout: "关于",
+    navContact: "联系",
+    scrollHint: "下滑",
+    // Works section
+    worksTopTag: "动态设计作品与商业委托",
+    worksTitle: "作品",
+    worksMetaMotion: "动态与平面视觉设计",
+    worksMetaWorks: "个人创作与商业委托",
+    worksSelectLabel: "选择作品集或客户 :",
+    worksTagOriginal: "原创作品",
+    worksTagClient: "商业客户",
+    worksPersonalTitle: "个人原创项目",
+    worksCountSuffix: "部作品",
+    worksPlaceholderText: "敬请期待",
+    worksHintText: "点击上方选择作品集以查看内容",
+    worksCloseBtn: "✕ 关闭",
+    worksPlayVideo: "播放视频 ▶",
+    worksViewArtwork: "查看作品",
+    worksBadgeVideo: "视频",
+    worksBadgeImage: "图片",
+    worksPersonalDesc: "原创动态设计、文字排版 PV、视觉概念实验及精选动画合集。",
+    // About section
+    aboutTitle: "关于",
+    tabOverview: "概述",
+    tabBackground: "背景",
+    statProjects: "累计项目",
+    statYears: "年经验",
+    aboutOverview: `Amax 是一位来自泰国的动态设计师（Motion Designer）。他擅长制作流畅且与音乐节奏高度契合的动画。作为一名独立创作者，他能够全流程独立完成 2D 和 3D 视觉制作。<br /><br />他广泛汲取各种风格的灵感，并勇于尝试新想法，力求让自己的作品始终保持新颖与独特性。<br /><br />虽然复杂的叙事表达仍是他正在不断练习的领域，但他最大的优势在于打造酷炫、充满活力且与节拍完美契合的动态视觉。<br /><br />Amax 非常注重作品的质量与身心健康，从不盲目赶工。根据项目的不同，制作周期从一天到一年以上不等，只为确保每一件作品都倾注了足够的心思与精细打磨。`,
+    aboutBackground: `Amax 是一位来自泰国的动态设计师。<br /><br />大约四年前，他通过制作动漫 AMV 开启了视频创作之路。2024 年，他深深喜欢上来自日本和中国创作者的优秀动态设计作品，并获得了极大的启发。在 2025 年底，他首次开始学习 3D 制作，并参考中日创作者的风格打造属于自己的动态作品。<br /><br />到了 2026 年，他又爱上了虚拟俱乐部（Virtual Club）文化。在体验了 VRChat 中的音乐俱乐部后，他对 DJ 和 VJ 产生了浓厚兴趣。他的梦想是在 VRChat 俱乐部中进行演出，并在未来打造一个属于自己的虚拟俱乐部。<br /><br />除了动态设计，他还热爱音乐制作、3D 建模和插画。他最初的梦想是成为一名游戏开发者。他坚信一旦确立了目标就绝不轻言放弃，并希望将目前掌握的全部技能，转化为未来制作独立游戏的基石。<br /><br />在过去的四年里，他完成了多项客户约稿、朋友合作及个人作品。他始终全心投入于艺术创作，期待与喜欢这种风格的朋友们分享自己的作品。`,
+    // Contact section
+    contactYearTag: "商业合作与项目洽谈",
+    contactTitle: "联系",
+    contactLabelName: "您的称呼",
+    contactLabelEmail: "电子邮箱",
+    contactLabelInquiry: "项目需求",
+    contactPlaceholderName: "您的姓名或机构名称",
+    contactPlaceholderEmail: "您的电子邮箱",
+    contactPlaceholderInquiry: "请简述您的项目需求、时间周期、交付内容或任何疑问...",
+    contactBtnText: "发送信息",
+    // Work Status
+    workStatusLabel: "工作状态",
+    workStatusTooltip: "开放承接中",
+  },
+};
+
+function applyLanguage(lang) {
+  if (!I18N_DATA[lang]) lang = "en";
+  currentAppLang = lang;
+  const t = I18N_DATA[lang];
+
+  // Update active button in widget
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    const isActive = btn.getAttribute("data-lang") === lang;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+
+  // Update Navigation
+  const navWorks = document.getElementById("navWorks");
+  if (navWorks) navWorks.textContent = t.navWorks;
+  const navAbout = document.getElementById("navAbout");
+  if (navAbout) navAbout.textContent = t.navAbout;
+  const navContact = document.getElementById("navContact");
+  if (navContact) navContact.textContent = t.navContact;
+
+  // Update Scroll hint
+  const scrollHint = document.querySelector("#scrollHint span");
+  if (scrollHint) scrollHint.textContent = t.scrollHint;
+
+  // Update Works section
+  const worksTopTag = document.getElementById("worksTopTag");
+  if (worksTopTag) worksTopTag.textContent = t.worksTopTag;
+  const worksTitle = document.getElementById("worksTitle");
+  if (worksTitle) worksTitle.textContent = t.worksTitle;
+  const worksMetaMotion = document.getElementById("worksMetaMotion");
+  if (worksMetaMotion) worksMetaMotion.textContent = t.worksMetaMotion;
+  const worksMetaWorks = document.getElementById("worksMetaWorks");
+  if (worksMetaWorks) worksMetaWorks.textContent = t.worksMetaWorks;
+  const worksSelectLabel = document.getElementById("worksSelectLabel");
+  if (worksSelectLabel) worksSelectLabel.textContent = t.worksSelectLabel;
+
+  const tagPersonal = document.getElementById("tagPersonal");
+  if (tagPersonal) tagPersonal.textContent = t.worksTagOriginal;
+  const tagAihara = document.getElementById("tagAihara");
+  if (tagAihara) tagAihara.textContent = t.worksTagClient;
+  const tagHiro = document.getElementById("tagHiro");
+  if (tagHiro) tagHiro.textContent = t.worksTagClient;
+
+  const titlePersonal = document.getElementById("titlePersonal");
+  if (titlePersonal) titlePersonal.textContent = t.worksPersonalTitle;
+
+  const personalWorksCount = document.getElementById("personalWorksCount");
+  const pLen = (CLIENT_COLLECTIONS.personal?.works || []).length || 22;
+  if (personalWorksCount) personalWorksCount.textContent = `${pLen} ${t.worksCountSuffix}`;
+
+  const aiharaWorksCount = document.getElementById("aiharaWorksCount");
+  if (aiharaWorksCount) aiharaWorksCount.textContent = `4 ${t.worksCountSuffix}`;
+
+  const hiroWorksCount = document.getElementById("hiroWorksCount");
+  if (hiroWorksCount) hiroWorksCount.textContent = `2 ${t.worksCountSuffix}`;
+
+  const worksPlaceholderText = document.getElementById("worksPlaceholderText");
+  if (worksPlaceholderText) worksPlaceholderText.textContent = t.worksPlaceholderText;
+
+  const worksHintText = document.getElementById("worksHintText");
+  if (worksHintText) worksHintText.textContent = t.worksHintText;
+
+  const clientCloseBtn = document.getElementById("clientCloseBtn");
+  if (clientCloseBtn) clientCloseBtn.textContent = t.worksCloseBtn;
+
+  // Re-render active client showcase if open
+  if (activeClientKey) {
+    renderClientShowcase(activeClientKey);
+  }
+
+  // Update About section
+  const aboutTitle = document.querySelector(".about-title");
+  if (aboutTitle) aboutTitle.textContent = t.aboutTitle;
+  const tabOverview = document.getElementById("tabOverview");
+  if (tabOverview) tabOverview.textContent = t.tabOverview;
+  const tabBackground = document.getElementById("tabBackground");
+  if (tabBackground) tabBackground.textContent = t.tabBackground;
+
+  const statProjectsLabel = document.getElementById("statProjectsLabel");
+  if (statProjectsLabel) statProjectsLabel.textContent = t.statProjects;
+  const statYearsLabel = document.getElementById("statYearsLabel");
+  if (statYearsLabel) statYearsLabel.textContent = t.statYears;
+
+  const descOverview = document.querySelector("#paneOverview .about-desc");
+  if (descOverview) descOverview.innerHTML = t.aboutOverview;
+  const descBackground = document.querySelector("#paneBackground .about-desc");
+  if (descBackground) descBackground.innerHTML = t.aboutBackground;
+
+  // Update Contact section
+  const contactYearTag = document.getElementById("contactYearTag");
+  if (contactYearTag) contactYearTag.textContent = t.contactYearTag;
+  const contactTitle = document.getElementById("contactTitle");
+  if (contactTitle) contactTitle.textContent = t.contactTitle;
+
+  const contactLabelName = document.getElementById("contactLabelName");
+  if (contactLabelName) contactLabelName.textContent = t.contactLabelName;
+  const contactLabelEmail = document.getElementById("contactLabelEmail");
+  if (contactLabelEmail) contactLabelEmail.textContent = t.contactLabelEmail;
+  const contactLabelInquiry = document.getElementById("contactLabelInquiry");
+  if (contactLabelInquiry) contactLabelInquiry.textContent = t.contactLabelInquiry;
+
+  const contactName = document.getElementById("contactName");
+  if (contactName) contactName.setAttribute("placeholder", t.contactPlaceholderName);
+  const contactEmail = document.getElementById("contactEmail");
+  if (contactEmail) contactEmail.setAttribute("placeholder", t.contactPlaceholderEmail);
+  const contactInquiry = document.getElementById("contactInquiry");
+  if (contactInquiry) contactInquiry.setAttribute("placeholder", t.contactPlaceholderInquiry);
+
+  const contactBtnText = document.getElementById("contactBtnText");
+  if (contactBtnText) contactBtnText.textContent = t.contactBtnText;
+
+  // Update Work Status widget
+  const workStatusLabel = document.getElementById("workStatusLabel");
+  if (workStatusLabel) workStatusLabel.textContent = t.workStatusLabel;
+  const workStatusDot = document.getElementById("workStatusDot");
+  if (workStatusDot) workStatusDot.setAttribute("title", t.workStatusTooltip);
+
+  try {
+    localStorage.setItem("amax_site_lang", lang);
+  } catch (e) {}
+}
+
+// Setup language switcher clicks
+document.querySelectorAll(".lang-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const lang = btn.getAttribute("data-lang");
+    applyLanguage(lang);
+  });
+});
+
+// Restore saved language or default to en
+let initialLang = "en";
+try {
+  initialLang = localStorage.getItem("amax_site_lang") || "en";
+} catch (e) {}
+applyLanguage(initialLang);

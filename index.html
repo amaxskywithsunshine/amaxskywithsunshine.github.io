@@ -67,19 +67,19 @@
     <div id="work" aria-hidden="true" style="position: absolute; top: -40px;"></div>
     <div class="collection-header reveal">
       <div class="collection-header-top">
-        <span class="collection-year">MOTION WORKS &amp; CLIENT COLLECTIONS</span>
+        <span class="collection-year" id="worksTopTag">MOTION WORKS &amp; CLIENT COLLECTIONS</span>
       </div>
-      <h2 class="collection-title">WORKS</h2>
+      <h2 class="collection-title" id="worksTitle">WORKS</h2>
       <div class="collection-meta">
-        <span class="cm-item">MOTION &amp; GRAPHIC DESIGN</span>
+        <span class="cm-item" id="worksMetaMotion">MOTION &amp; GRAPHIC DESIGN</span>
         <span class="cm-sep">|</span>
-        <span class="cm-item cm-pink">PERSONAL &amp; CLIENT WORKS</span>
+        <span class="cm-item cm-pink" id="worksMetaWorks">PERSONAL &amp; CLIENT WORKS</span>
       </div>
     </div>
 
     <!-- Client Selection Boxes -->
     <div class="client-boxes-wrap reveal reveal-delay-1">
-      <div class="client-boxes-label">SELECT A COLLECTION OR CLIENT :</div>
+      <div class="client-boxes-label" id="worksSelectLabel">SELECT A COLLECTION OR CLIENT :</div>
       <div class="client-boxes" id="clientBoxes">
         <!-- Collection Box: Personal Project -->
         <button type="button" class="client-box" data-client="personal" id="clientBoxPersonal" aria-label="Select Personal Project">
@@ -89,9 +89,9 @@
           </div>
           <div class="client-box-content">
             <div class="client-box-top-row">
-              <span class="client-box-tag">ORIGINAL</span>
+              <span class="client-box-tag" id="tagPersonal">ORIGINAL</span>
             </div>
-            <h3 class="client-box-title">Personal Project</h3>
+            <h3 class="client-box-title" id="titlePersonal">Personal Project</h3>
             <span class="client-box-sub">@iaexamax</span>
             <div class="client-box-footer">
               <span class="client-box-count" id="personalWorksCount">22 WORKS</span>
@@ -108,12 +108,12 @@
           </div>
           <div class="client-box-content">
             <div class="client-box-top-row">
-              <span class="client-box-tag">CLIENT</span>
+              <span class="client-box-tag" id="tagAihara">CLIENT</span>
             </div>
             <h3 class="client-box-title">Aihara Ch.</h3>
             <span class="client-box-sub">@Aihara-wan</span>
             <div class="client-box-footer">
-              <span class="client-box-count">4 WORKS</span>
+              <span class="client-box-count" id="aiharaWorksCount">4 WORKS</span>
               <span class="client-box-arrow">→</span>
             </div>
           </div>
@@ -127,12 +127,12 @@
           </div>
           <div class="client-box-content">
             <div class="client-box-top-row">
-              <span class="client-box-tag">CLIENT</span>
+              <span class="client-box-tag" id="tagHiro">CLIENT</span>
             </div>
             <h3 class="client-box-title">HiroKitsuNyx</h3>
             <span class="client-box-sub">@HiroNeyka</span>
             <div class="client-box-footer">
-              <span class="client-box-count">2 WORKS</span>
+              <span class="client-box-count" id="hiroWorksCount">2 WORKS</span>
               <span class="client-box-arrow">→</span>
             </div>
           </div>
@@ -142,7 +142,7 @@
         <div class="client-box client-box-placeholder" aria-hidden="true">
           <div class="client-box-placeholder-inner">
             <span class="client-box-plus">+</span>
-            <span class="client-box-placeholder-text">MORE SOON</span>
+            <span class="client-box-placeholder-text" id="worksPlaceholderText">MORE SOON</span>
           </div>
         </div>
       </div>
@@ -150,7 +150,7 @@
       <!-- Hint when no client is selected -->
       <div class="client-select-hint" id="clientSelectHint">
         <span class="hint-icon">↳</span>
-        <span class="hint-text">SELECT A COLLECTION ABOVE TO VIEW WORKS</span>
+        <span class="hint-text" id="worksHintText">SELECT A COLLECTION ABOVE TO VIEW WORKS</span>
       </div>
     </div>
 
@@ -207,28 +207,28 @@
           <!-- PANE 1: OVERVIEW -->
           <div class="about-pane active" id="paneOverview" role="tabpanel" aria-labelledby="tabOverview">
             <p class="about-desc">
-              Amax is a Thailand-based motion designer specializing in fluid animation and precise audio-visual synchronization, operating as a versatile solo creator who independently builds and composites both custom 3D and 2D assets.<br />
+              Amax is a motion designer from Thailand. He makes smooth animations that match music and sound. As a solo creator, he builds both 2D and 3D graphics by himself.<br />
               <br />
-              While his design process begins by studying and merging diverse references, he is constantly experimenting to break away from conventional formulas and craft a unique visual style.<br />
+              He learns from many different styles, but he always tries new ideas to make his work fresh and unique.<br />
               <br />
-              Although complex narrative storytelling is an area he is still actively developing, his core strength lies in delivering powerful aesthetic impact and rhythmic flow.<br />
+              He is still practicing story writing. His greatest strength is making videos that look cool, energetic, and move to the beat.<br />
               <br />
-              To maintain high-quality output and manage burnout, Amax adopts a sustainable, quality-over-speed approach that strictly prioritizes his physical and mental well-being; consequently, his project timelines are carefully paced—ranging from a single day to over a year—ensuring every piece receives the dedicated time, rest, and meticulous care it truly requires.
+              Amax cares about good quality and staying healthy. He does not rush his work. Depending on the project, he may take from one day to over a year to finish, making sure every video is made with care.
             </p>
           </div>
 
           <!-- PANE 2: BACKGROUND -->
           <div class="about-pane" id="paneBackground" role="tabpanel" aria-labelledby="tabBackground">
             <p class="about-desc">
-              Amax is a Thailand-based motion designer.<br />
+              Amax is a motion designer from Thailand.<br />
               <br />
-              Starting his creative journey in AMV editing a few years ago, he developed a deep fascination with motion design. He draws continuous inspiration from creative videos across Japan and China. While he started as an admirer from afar, his editing style is heavily influenced by these video, and he hopes to connect with those creators in the future. In late 2025, he expanded his workflow into 3D production for the first time, exploring new dimensions of visual depth and camera dynamics.<br />
+              He started making videos four years ago by editing anime music videos (AMVs). In 2024, he loved watching motion design creators from Japan and China, and their work inspired him a lot. In late 2025, he started learning 3D for the first time, making motion graphics with references from Japanese and Chinese creators.<br />
               <br />
-              His creative interests also extend into the virtual club scene. After experiencing Japanese clubs within VRChat, he developed a passion for DJing and VJing. His dream is to gain hands-on experience within VRChat clubs and eventually build a virtual club of his own.<br />
+              In 2026, he also discovered virtual club culture. After visiting music clubs in VRChat, he became very interested in DJing and VJing. His dream is to perform in VRChat clubs and build his own virtual club one day.<br />
               <br />
-              Beyond motion design, he has a wide range of interests, including music production, 3D modeling, and illustration. His original goal was to become a game developer; while that specific ambition has faded over time, he lives by the principle that once a goal is set, it should never be abandoned and he views his current interests as things that can all be leveraged to help him achieve his goal of becoming a game developer.<br />
+              Besides motion design, he also likes making music, 3D modeling, and drawing. His first dream was to make video games. He believes that once you set a goal, you should never give up. He uses all these skills to help him make games in the future.<br />
               <br />
-              Over the past four years, his portfolio has grown through select commissions, personal projects, and creative collaborations. While still humble in scale, his work on social media reflects his genuine dedication to the craft—always creating in hopes of connecting with those who appreciate his vision.
+              Over the last four years, he has worked for clients, friends, and himself. He always works hard on his art, hoping to share his work with people who enjoy his style.
             </p>
           </div>
         </div>
@@ -236,11 +236,11 @@
         <div class="about-stats">
           <div class="stat">
             <span class="stat-num" data-target="20" id="statProjects">20+</span>
-            <span class="stat-label">PROJECTS</span>
+            <span class="stat-label" id="statProjectsLabel">PROJECTS</span>
           </div>
           <div class="stat">
             <span class="stat-num" data-target="4" id="statYears">4+</span>
-            <span class="stat-label">YEARS EXP.</span>
+            <span class="stat-label" id="statYearsLabel">YEARS EXP.</span>
           </div>
         </div>
       </div>
@@ -258,32 +258,32 @@
     <div class="contact-inner">
       <div class="contact-header reveal">
         <div class="contact-header-top">
-          <span class="contact-year">DIRECT INQUIRIES &amp; COLLABORATION</span>
+          <span class="contact-year" id="contactYearTag">DIRECT INQUIRIES &amp; COLLABORATION</span>
         </div>
-        <h2 class="contact-title">CONTACT</h2>
+        <h2 class="contact-title" id="contactTitle">CONTACT</h2>
       </div>
 
       <!-- EMAIL SENDER FORM -->
       <form id="contactForm" class="contact-form reveal reveal-delay-2" novalidate>
         <div class="form-row">
           <div class="form-group">
-            <label for="contactName" class="form-label">NAME</label>
+            <label for="contactName" class="form-label" id="contactLabelName">NAME</label>
             <input type="text" id="contactName" name="name" class="form-input" placeholder="Your name or organization" required autocomplete="name" />
           </div>
           <div class="form-group">
-            <label for="contactEmail" class="form-label">EMAIL</label>
+            <label for="contactEmail" class="form-label" id="contactLabelEmail">EMAIL</label>
             <input type="email" id="contactEmail" name="email" class="form-input" placeholder="Your email address" required autocomplete="email" />
           </div>
         </div>
 
         <div class="form-group">
-          <label for="contactInquiry" class="form-label">WORK INQUIRIES</label>
+          <label for="contactInquiry" class="form-label" id="contactLabelInquiry">WORK INQUIRIES</label>
           <textarea id="contactInquiry" name="inquiry" class="form-textarea" rows="4" placeholder="Tell me about your project, timeline, deliverables, or questions..." required></textarea>
         </div>
 
         <div class="form-bottom-row">
           <button type="submit" id="contactSubmitBtn" class="contact-submit-btn">
-            <span class="btn-text">SEND</span>
+            <span class="btn-text" id="contactBtnText">SEND</span>
             <span class="btn-arrow" aria-hidden="true">→</span>
             <span class="btn-spinner" aria-hidden="true"></span>
           </button>
@@ -371,12 +371,23 @@
   </div>
 
   <!-- ═══════════════════════════════
-       WORK STATUS WIDGET
+       FIXED BOTTOM WIDGETS (STATUS & LANGUAGE)
   ═══════════════════════════════════ -->
-  <div class="status-widget">
-    <div class="status-indicator">
-      <span>WORK STATUS</span>
-      <div class="status-dot green" id="workStatusDot" title="Available for Work"></div>
+  <div class="bottom-widgets" id="bottomWidgets">
+    <div class="status-widget">
+      <div class="status-indicator">
+        <span id="workStatusLabel">WORK STATUS</span>
+        <div class="status-dot green" id="workStatusDot" title="Available for Work"></div>
+      </div>
+    </div>
+    <div class="lang-widget" id="langWidget" role="group" aria-label="Language selection">
+      <button type="button" class="lang-btn active" data-lang="en" id="langBtnEn" aria-label="English">EN</button>
+      <span class="lang-sep">/</span>
+      <button type="button" class="lang-btn" data-lang="th" id="langBtnTh" aria-label="Thai">ไทย</button>
+      <span class="lang-sep">/</span>
+      <button type="button" class="lang-btn" data-lang="jp" id="langBtnJp" aria-label="Japanese">日本語</button>
+      <span class="lang-sep">/</span>
+      <button type="button" class="lang-btn" data-lang="cn" id="langBtnCn" aria-label="Chinese">中文</button>
     </div>
   </div>
 
