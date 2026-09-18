@@ -1156,20 +1156,32 @@ function renderClientShowcase(clientKey) {
   const countEl = document.getElementById("clientWorkCount");
   const gridEl = document.getElementById("clientGalleryGrid");
 
-  const currentT = (typeof I18N_DATA !== "undefined" && I18N_DATA[currentAppLang]) ? I18N_DATA[currentAppLang] : {
-    worksCountSuffix: "WORKS",
-    worksBadgeVideo: "VIDEO",
-    worksBadgeImage: "IMAGE",
-    worksPlayVideo: "PLAY VIDEO ▶",
-    worksViewArtwork: "VIEW ARTWORK",
-    worksPersonalTitle: "Personal Project",
-    worksPersonalDesc: data.desc
-  };
+  const currentT =
+    typeof I18N_DATA !== "undefined" && I18N_DATA[currentAppLang]
+      ? I18N_DATA[currentAppLang]
+      : {
+          worksCountSuffix: "WORKS",
+          worksBadgeVideo: "VIDEO",
+          worksBadgeImage: "IMAGE",
+          worksPlayVideo: "PLAY VIDEO ▶",
+          worksViewArtwork: "VIEW ARTWORK",
+          worksPersonalTitle: "Personal Project",
+          worksPersonalDesc: data.desc,
+        };
 
-  if (nameEl) nameEl.textContent = (clientKey === "personal" && currentT.worksPersonalTitle) ? currentT.worksPersonalTitle : data.name;
+  if (nameEl)
+    nameEl.textContent =
+      clientKey === "personal" && currentT.worksPersonalTitle
+        ? currentT.worksPersonalTitle
+        : data.name;
   if (avatarEl) avatarEl.textContent = data.avatar || data.name.charAt(0);
-  if (descEl) descEl.textContent = (clientKey === "personal" && currentT.worksPersonalDesc) ? currentT.worksPersonalDesc : data.desc;
-  if (countEl) countEl.textContent = `${data.works.length} ${currentT.worksCountSuffix || "WORKS"}`;
+  if (descEl)
+    descEl.textContent =
+      clientKey === "personal" && currentT.worksPersonalDesc
+        ? currentT.worksPersonalDesc
+        : data.desc;
+  if (countEl)
+    countEl.textContent = `${data.works.length} ${currentT.worksCountSuffix || "WORKS"}`;
 
   if (linksWrapEl) {
     if (data.links && data.links.length > 0) {
@@ -1219,7 +1231,7 @@ function renderClientShowcase(clientKey) {
           `
           }
           <div class="client-work-overlay">
-            <span class="client-work-zoom-btn">${work.videoId ? (currentT.worksPlayVideo || "PLAY VIDEO ▶") : (currentT.worksViewArtwork || "VIEW ARTWORK")}</span>
+            <span class="client-work-zoom-btn">${work.videoId ? currentT.worksPlayVideo || "PLAY VIDEO ▶" : currentT.worksViewArtwork || "VIEW ARTWORK"}</span>
           </div>
         </div>
         <div class="client-work-info">
@@ -1325,8 +1337,14 @@ function updateImageModal() {
   const videoBtn = document.getElementById("imageModalVideoLink");
   if (videoBtn) {
     if (work.videoId) {
-      const currentT = (typeof I18N_DATA !== "undefined" && I18N_DATA[currentAppLang]) ? I18N_DATA[currentAppLang] : null;
-      videoBtn.textContent = (currentT && currentT.worksPlayVideo) ? currentT.worksPlayVideo : "PLAY VIDEO ▶";
+      const currentT =
+        typeof I18N_DATA !== "undefined" && I18N_DATA[currentAppLang]
+          ? I18N_DATA[currentAppLang]
+          : null;
+      videoBtn.textContent =
+        currentT && currentT.worksPlayVideo
+          ? currentT.worksPlayVideo
+          : "PLAY VIDEO ▶";
       videoBtn.style.display = "inline-flex";
       videoBtn.onclick = (e) => {
         e.preventDefault();
@@ -1423,15 +1441,16 @@ const I18N_DATA = {
     worksViewArtwork: "VIEW ARTWORK",
     worksBadgeVideo: "VIDEO",
     worksBadgeImage: "IMAGE",
-    worksPersonalDesc: "Original motion design, typography PVs, visual experiments, and animated showcase reels.",
+    worksPersonalDesc:
+      "Original motion design, typography PVs, visual experiments, and animated showcase reels.",
     // About section
     aboutTitle: "ABOUT",
     tabOverview: "OVERVIEW",
     tabBackground: "BACKGROUND",
     statProjects: "PROJECTS",
     statYears: "YEARS EXP.",
-    aboutOverview: `Amax is a motion designer from Thailand. He makes smooth animations that match music and sound. As a solo creator, he builds both 2D and 3D graphics by himself.<br /><br />He learns from many different styles, but he always tries new ideas to make his work fresh and unique.<br /><br />He is still practicing story writing. His greatest strength is making videos that look cool, energetic, and move to the beat.<br /><br />Amax cares about good quality and staying healthy. He does not rush his work. Depending on the project, he may take from one day to over a year to finish, making sure every video is made with care.`,
-    aboutBackground: `Amax is a motion designer from Thailand.<br /><br />He started making videos four years ago by editing anime music videos (AMVs). In 2024, he loved watching motion design creators from Japan and China, and their work inspired him a lot. In late 2025, he started learning 3D for the first time, making motion graphics with references from Japanese and Chinese creators.<br /><br />In 2026, he also discovered virtual club culture. After visiting music clubs in VRChat, he became very interested in DJing and VJing. His dream is to perform in VRChat clubs and build his own virtual club one day.<br /><br />Besides motion design, he also likes making music, 3D modeling, and drawing. His first dream was to make video games. He believes that once you set a goal, you should never give up. He uses all these skills to help him make games in the future.<br /><br />Over the last four years, he has worked for clients, friends, and himself. He always works hard on his art, hoping to share his work with people who enjoy his style.`,
+    aboutOverview: `Amax is a motion designer from Thailand. He makes smooth animations that match music and sound. As a solo creator who has never collaborated with anyone, he creates both 2D and 3D graphics entirely by himself, but that is also why he lacks experience working with others.<br /><br />He learns from many different styles, but he always tries new ideas to make his work fresh and unique.<br /><br />He is still practicing story writing. His greatest strength is making videos that look cool, energetic, and move to the beat.<br /><br />Amax cares about good quality and staying healthy. He does not rush his work. Depending on the project, he may take from one day to over a year to finish, making sure every piece of work he creates turns out great for him.`,
+    aboutBackground: `Amax is a motion designer from Thailand.<br /><br />He started making videos by editing anime music videos (AMVs), and in 2024, he loved watching motion design creators from Japan and China, and their work inspired him a lot. Later, in late 2025, he started learning 3D for the first time, making motion graphics with references from Japanese and Chinese creators.<br /><br />In 2026, he also discovered virtual club culture. After visiting music clubs in VRChat, he became very interested in DJing and VJing. His dream is to perform in VRChat clubs and build his own virtual club one day.<br /><br />Besides motion design, he also likes making music, 3D modeling, and drawing. His first dream was to make video games. He believes that once you set a goal, you should never give up. He uses all these skills to help him make games in the future.<br /><br />Over the last four years, he has worked for clients, friends, and himself. He always works hard on his art, hoping to share his work with people who enjoy his style.`,
     // Contact section
     contactYearTag: "DIRECT INQUIRIES & COLLABORATION",
     contactTitle: "CONTACT",
@@ -1440,7 +1459,8 @@ const I18N_DATA = {
     contactLabelInquiry: "WORK INQUIRIES",
     contactPlaceholderName: "Your name or organization",
     contactPlaceholderEmail: "Your email address",
-    contactPlaceholderInquiry: "Tell me about your project, timeline, deliverables, or questions...",
+    contactPlaceholderInquiry:
+      "Tell me about your project, timeline, deliverables, or questions...",
     contactBtnText: "SEND",
     // Work Status
     workStatusLabel: "WORK STATUS",
@@ -1469,15 +1489,16 @@ const I18N_DATA = {
     worksViewArtwork: "ดูภาพผลงาน",
     worksBadgeVideo: "วิดีโอ",
     worksBadgeImage: "รูปภาพ",
-    worksPersonalDesc: "ผลงานโมชันดีไซน์ออริจินัล, ไทโปกราฟี PV, งานทดลองภาพ และแอนิเมชัน",
+    worksPersonalDesc:
+      "ผลงานโมชันดีไซน์ออริจินัล, ไทโปกราฟี PV, งานทดลองภาพ และแอนิเมชัน",
     // About section
     aboutTitle: "เกี่ยวกับ",
     tabOverview: "ภาพรวม",
     tabBackground: "ประวัติ",
     statProjects: "โปรเจกต์",
     statYears: "ปีประสบการณ์",
-    aboutOverview: `Amax เป็นโมชันดีไซเนอร์จากประเทศไทย เขาถนัดการทำแอนิเมชันที่ลื่นไหลและตรงตามจังหวะเพลง ในฐานะครีเอเตอร์เดี่ยว เขาสร้างสรรค์กราฟิกทั้ง 2D และ 3D ด้วยตัวเองทั้งหมด<br /><br />เขาเรียนรู้จากหลากหลายสไตล์ และชอบลองไอเดียใหม่ๆ เสมอ เพื่อให้ผลงานดูสดใหม่และมีเอกลักษณ์เฉพาะตัว<br /><br />เขายังคงฝึกฝนด้านการเล่าเรื่องอยู่ แต่จุดเด่นที่สุดของเขาคือการทำวิดีโอที่ดูเท่ ทรงพลัง และเคลื่อนไหวตามจังหวะได้อย่างลงตัว<br /><br />Amax ให้ความสำคัญกับงานที่มีคุณภาพและสุขภาพที่ดี เขาทำงานอย่างตั้งใจโดยไม่เร่งรีบ ในแต่ละโปรเจกต์อาจใช้เวลาตั้งแต่ 1 วัน ไปจนถึงมากกว่า 1 ปี เพื่อให้มั่นใจว่าทุกชิ้นงานได้รับการดูแลอย่างประณีต`,
-    aboutBackground: `Amax เป็นโมชันดีไซเนอร์จากประเทศไทย<br /><br />เขาเริ่มต้นทำวิดีโอเมื่อ 4 ปีก่อนจากการตัดต่อคลิป AMV อนิเมะ ในปี 2024 เขาหลงใหลและติดตามผลงานของครีเอเตอร์โมชันดีไซน์จากญี่ปุ่นและจีน ซึ่งเป็นแรงบันดาลใจให้เขาอย่างมาก ในช่วงปลายปี 2025 เขาเริ่มเรียนรู้การทำ 3D เป็นครั้งแรก และสร้างสรรค์งานโมชันโดยนำเรฟเฟอเรนซ์จากครีเอเตอร์ญี่ปุ่นและจีนมาต่อยอด<br /><br />ในปี 2026 เขาได้เปิดโลกสู่ Virtual Club หลังจากการไปสัมผัสคลับดนตรีใน VRChat เขาก็สนใจด้าน DJ และ VJ อย่างมาก ความฝันของเขาคือการได้ขึ้นแสดงในคลับ VRChat และสร้างเวอร์ชวลคลับของตัวเองขึ้นมาในอนาคต<br /><br />นอกจากโมชันดีไซน์แล้ว เขายังชอบทำเพลง ปั้นโมเดล 3D และวาดรูป ความฝันแรกของเขาคือการเป็นนักพัฒนาเกม เขาเชื่อเสมอว่าเมื่อตั้งเป้าหมายแล้วต้องไม่ยอมแพ้ และนำทักษะทั้งหมดที่เรียนรู้มาช่วยสร้างเกมในอนาคต<br /><br />ตลอด 4 ปีที่ผ่านมา เขาได้ทำงานทั้งสำหรับลูกค้า เพื่อน และโปรเจกต์ส่วนตัว เขาทุ่มเทสร้างสรรค์ผลงานเสมอ โดยหวังว่าจะได้แบ่งปันงานศิลปะนี้ให้กับทุกคนที่ชื่นชอบสไตล์ของเขา`,
+    aboutOverview: `Amax เป็นโมชันดีไซเนอร์จากประเทศไทย เขาถนัดการทำแอนิเมชันที่ลื่นไหลและตรงตามจังหวะเพลง ในฐานะครีเอเตอร์เดี่ยว ที่ไม่เคยร่วมงานกับใคร เขาจึงสามารถสร้างสรรค์กราฟิกทั้ง 2D และ 3D ด้วยตัวเองทั้งหมด แต่ก็เป็นเหตุผลที่เขาขาดประสบการณ์การทำงานร่วมกับผู้อื่นเช่นเดียวกัน<br /><br />เขาเรียนรู้จากหลากหลายสไตล์ และชอบลองไอเดียใหม่ๆ เสมอ เพื่อให้ผลงานดูสดใหม่และมีเอกลักษณ์เฉพาะตัว<br /><br />เขายังคงฝึกฝนด้านการเล่าเรื่องอยู่ แต่จุดเด่นที่สุดของเขาคือการทำวิดีโอที่ดูเท่ ทรงพลัง และเคลื่อนไหวตามจังหวะได้อย่างลงตัว<br /><br />Amax ให้ความสำคัญกับงานที่มีคุณภาพและสุขภาพที่ดี เขาทำงานอย่างตั้งใจโดยไม่เร่งรีบ ในแต่ละโปรเจกต์อาจใช้เวลาตั้งแต่ 1 วัน ไปจนถึงมากกว่า 1 ปี เพื่อให้มั่นใจว่าทุกชิ้นงานที่ทำจะออกมาดีสำหรับเขา`,
+    aboutBackground: `Amax เป็นโมชันดีไซเนอร์จากประเทศไทย<br /><br />เขาเริ่มต้นทำวิดีโอจากการตัดต่อคลิป AMV อนิเมะ และ ในปี 2024 เขาหลงใหลและติดตามผลงานของครีเอเตอร์โมชันดีไซน์จากญี่ปุ่นและจีน ซึ่งเป็นแรงบันดาลใจให้เขาอย่างมาก ต่อมา ในช่วงปลายปี 2025 เขาเริ่มเรียนรู้การทำ 3D เป็นครั้งแรก และสร้างสรรค์งานโมชันโดยนำเรฟเฟอเรนซ์จากครีเอเตอร์ญี่ปุ่นและจีนมาต่อยอด<br /><br />ในปี 2026 เขาได้เปิดโลกสู่ Virtual Club หลังจากการไปสัมผัสคลับดนตรีใน VRChat เขาก็สนใจด้าน DJ และ VJ อย่างมาก ความฝันของเขาคือการได้ขึ้นแสดงในคลับ VRChat และสร้างเวอร์ชวลคลับของตัวเองขึ้นมาในอนาคต<br /><br />นอกจากโมชันดีไซน์แล้ว เขายังชอบทำเพลง ปั้นโมเดล 3D และวาดรูป ความฝันแรกของเขาคือการเป็นนักพัฒนาเกม เขาเชื่อเสมอว่าเมื่อตั้งเป้าหมายแล้วต้องไม่ยอมแพ้ และนำทักษะทั้งหมดที่เรียนรู้มาช่วยสร้างเกมในอนาคต<br /><br />ตลอด 4 ปีที่ผ่านมา เขาได้ทำงานทั้งสำหรับลูกค้า เพื่อน และโปรเจกต์ส่วนตัว เขาทุ่มเทสร้างสรรค์ผลงานเสมอ โดยหวังว่าจะได้แบ่งปันงานศิลปะนี้ให้กับทุกคนที่ชื่นชอบสไตล์ของเขา`,
     // Contact section
     contactYearTag: "ติดต่องาน & ร่วมงาน",
     contactTitle: "ติดต่อ",
@@ -1486,7 +1507,8 @@ const I18N_DATA = {
     contactLabelInquiry: "รายละเอียดงาน",
     contactPlaceholderName: "ชื่อของคุณหรือองค์กร",
     contactPlaceholderEmail: "ที่อยู่อีเมลของคุณ",
-    contactPlaceholderInquiry: "บอกเล่าเกี่ยวกับโปรเจกต์ ระยะเวลา สิ่งที่ต้องการ หรือคำถามของคุณ...",
+    contactPlaceholderInquiry:
+      "บอกเล่าเกี่ยวกับโปรเจกต์ ระยะเวลา สิ่งที่ต้องการ หรือคำถามของคุณ...",
     contactBtnText: "ส่งข้อความ",
     // Work Status
     workStatusLabel: "สถานะงาน",
@@ -1515,15 +1537,16 @@ const I18N_DATA = {
     worksViewArtwork: "作品を見る",
     worksBadgeVideo: "動画",
     worksBadgeImage: "画像",
-    worksPersonalDesc: "オリジナルモーションデザイン、タイポグラフィPV、ビジュアル実験、アニメーション制作。",
+    worksPersonalDesc:
+      "オリジナルモーションデザイン、タイポグラフィPV、ビジュアル実験、アニメーション制作。",
     // About section
     aboutTitle: "概要",
     tabOverview: "概要",
     tabBackground: "経歴",
     statProjects: "実績数",
     statYears: "経験年数",
-    aboutOverview: `Amaxはタイ出身のモーションデザイナーです。音楽やサウンドに合わせた滑らかなアニメーション制作を得意とし、ソロクリエイターとして2D・3Dのグラフィックス制作から合成までを自身で行っています。<br /><br />様々な表現から学びつつ、常に新しいアイデアを取り入れ、新鮮で独自性のあるスタイルを追求しています。<br /><br />ストーリーテリングは現在も学びの途中ですが、最大の強みはクールでエネルギッシュ、そしてビートにシンクロした映像表現です。<br /><br />作品のクオリティと健康を大切にしており、無理に急ぐことはしません。プロジェクトに応じて1日から1年以上じっくり時間をかけ、一つひとつの作品に愛情とこだわりを込めて制作しています。`,
-    aboutBackground: `Amaxはタイ出身のモーションデザイナーです。<br /><br />4年前にアニメのAMV（アニメ・ミュージック・ビデオ）編集から動画制作を始めました。2024年には日本や中国のモーションデザインクリエイターの作品に魅了され、大きなインスピレーションを受けました。そして2025年末に初めて3Dの制作を始め、日本や中国のクリエイターをリファレンスにしたモーション作品を手掛けました。<br /><br />2026年にはバーチャルクラブ文化の魅力に出会いました。VRChat内の音楽クラブを体験したことをきっかけにDJやVJに興味を持ち、いつかVRChatクラブでパフォーマンスすること、そして自分自身のバーチャルクラブを作ることを夢見ています。<br /><br />モーションデザインのほか、作曲、3Dモデリング、イラスト制作なども行っています。最初の夢はゲームクリエイターになることでした。「一度決めた目標は決して諦めない」という信念のもと、これらすべてのスキルを活かして将来ゲームを制作したいと考えています。<br /><br />この4年間で、クライアントワーク、友人への制作、そして個人作品を手掛けてきました。自分のスタイルを気に入ってくれる人たちと作品を共有できるよう、常に心を込めて制作に取り組んでいます。`,
+    aboutOverview: `Amaxはタイ出身のモーションデザイナーです。音楽やサウンドに合わせた滑らかなアニメーション制作を得意とし、これまで誰とも共同制作をしたことがないソロクリエイターとして、2D・3Dのグラフィックス制作をすべて一人で完結できますが、それは同時に他者との共同作業の経験が不足している理由でもあります。<br /><br />様々な表現から学びつつ、常に新しいアイデアを取り入れ、新鮮で独自性のあるスタイルを追求しています。<br /><br />ストーリーテリングは現在も学びの途中ですが、最大の強みはクールでエネルギッシュ、そしてビートにシンクロした映像表現です。<br /><br />作品のクオリティと健康を大切にしており、無理に急ぐことはしません。プロジェクトに応じて1日から1年以上じっくり時間をかけ、制作するすべての作品が自分にとって納得のいく良い仕上がりになるようにしています。`,
+    aboutBackground: `Amaxはタイ出身のモーションデザイナーです。<br /><br />アニメのAMV（アニメ・ミュージック・ビデオ）編集から動画制作を始め、2024年には日本や中国のモーションデザインクリエイターの作品に魅了され、大きなインスピレーションを受けました。その後、2025年末に初めて3Dの制作を始め、日本や中国のクリエイターをリファレンスにしたモーション作品を手掛けました。<br /><br />2026年にはバーチャルクラブ文化の魅力に出会いました。VRChat内の音楽クラブを体験したことをきっかけにDJやVJに興味を持ち、いつかVRChatクラブでパフォーマンスすること、そして自分自身のバーチャルクラブを作ることを夢見ています。<br /><br />モーションデザインのほか、作曲、3Dモデリング、イラスト制作なども行っています。最初の夢はゲームクリエイターになることでした。「一度決めた目標は決して諦めない」という信念のもと、これらすべてのスキルを活かして将来ゲームを制作したいと考えています。<br /><br />この4年間で、クライアントワーク、友人への制作、そして個人作品を手掛けてきました。自分のスタイルを気に入ってくれる人たちと作品を共有できるよう、常に心を込めて制作に取り組んでいます。`,
     // Contact section
     contactYearTag: "お仕事のご相談・共同制作",
     contactTitle: "連絡先",
@@ -1532,7 +1555,8 @@ const I18N_DATA = {
     contactLabelInquiry: "ご依頼内容",
     contactPlaceholderName: "お名前または貴社名",
     contactPlaceholderEmail: "メールアドレス",
-    contactPlaceholderInquiry: "プロジェクトの概要、スケジュール、ご予算、ご質問などをお書きください...",
+    contactPlaceholderInquiry:
+      "プロジェクトの概要、スケジュール、ご予算、ご質問などをお書きください...",
     contactBtnText: "送信する",
     // Work Status
     workStatusLabel: "稼働ステータス",
@@ -1561,15 +1585,16 @@ const I18N_DATA = {
     worksViewArtwork: "查看作品",
     worksBadgeVideo: "视频",
     worksBadgeImage: "图片",
-    worksPersonalDesc: "原创动态设计、文字排版 PV、视觉概念实验及精选动画合集。",
+    worksPersonalDesc:
+      "原创动态设计、文字排版 PV、视觉概念实验及精选动画合集。",
     // About section
     aboutTitle: "关于",
     tabOverview: "概述",
     tabBackground: "背景",
     statProjects: "累计项目",
     statYears: "年经验",
-    aboutOverview: `Amax 是一位来自泰国的动态设计师（Motion Designer）。他擅长制作流畅且与音乐节奏高度契合的动画。作为一名独立创作者，他能够全流程独立完成 2D 和 3D 视觉制作。<br /><br />他广泛汲取各种风格的灵感，并勇于尝试新想法，力求让自己的作品始终保持新颖与独特性。<br /><br />虽然复杂的叙事表达仍是他正在不断练习的领域，但他最大的优势在于打造酷炫、充满活力且与节拍完美契合的动态视觉。<br /><br />Amax 非常注重作品的质量与身心健康，从不盲目赶工。根据项目的不同，制作周期从一天到一年以上不等，只为确保每一件作品都倾注了足够的心思与精细打磨。`,
-    aboutBackground: `Amax 是一位来自泰国的动态设计师。<br /><br />大约四年前，他通过制作动漫 AMV 开启了视频创作之路。2024 年，他深深喜欢上来自日本和中国创作者的优秀动态设计作品，并获得了极大的启发。在 2025 年底，他首次开始学习 3D 制作，并参考中日创作者的风格打造属于自己的动态作品。<br /><br />到了 2026 年，他又爱上了虚拟俱乐部（Virtual Club）文化。在体验了 VRChat 中的音乐俱乐部后，他对 DJ 和 VJ 产生了浓厚兴趣。他的梦想是在 VRChat 俱乐部中进行演出，并在未来打造一个属于自己的虚拟俱乐部。<br /><br />除了动态设计，他还热爱音乐制作、3D 建模和插画。他最初的梦想是成为一名游戏开发者。他坚信一旦确立了目标就绝不轻言放弃，并希望将目前掌握的全部技能，转化为未来制作独立游戏的基石。<br /><br />在过去的四年里，他完成了多项客户约稿、朋友合作及个人作品。他始终全心投入于艺术创作，期待与喜欢这种风格的朋友们分享自己的作品。`,
+    aboutOverview: `Amax 是一位来自泰国的动态设计师（Motion Designer）。他擅长制作流畅且与音乐节奏高度契合的动画。作为一名从未与他人合作过的独立创作者，他能够全流程独立完成 2D 和 3D 视觉制作，但这也是他缺乏与他人协同合作经验的原因。<br /><br />他广泛汲取各种风格的灵感，并勇于尝试新想法，力求让自己的作品始终保持新颖与独特性。<br /><br />虽然复杂的叙事表达仍是他正在不断练习的领域，但他最大的优势在于打造酷炫、充满活力且与节拍完美契合的动态视觉。<br /><br />Amax 非常注重作品的质量与身心健康，从不盲目赶工。根据项目的不同，制作周期从一天到一年以上不等，只为确保自己制作的每一件作品都能达到令自己满意的最佳效果。`,
+    aboutBackground: `Amax 是一位来自泰国的动态设计师。<br /><br />他通过制作动漫 AMV 开启了视频创作之路，并在 2024 年深深喜欢上来自日本和中国创作者的优秀动态设计作品，获得了极大的启发。随后在 2025 年底，他首次开始学习 3D 制作，并参考中日创作者的风格打造属于自己的动态作品。<br /><br />到了 2026 年，他又爱上了虚拟俱乐部（Virtual Club）文化。在体验了 VRChat 中的音乐俱乐部后，他对 DJ 和 VJ 产生了浓厚兴趣。他的梦想是在 VRChat 俱乐部中进行演出，并在未来打造一个属于自己的虚拟俱乐部。<br /><br />除了动态设计，他还热爱音乐制作、3D 建模和插画。他最初的梦想是成为一名游戏开发者。他坚信一旦确立了目标就绝不轻言放弃，并希望将目前掌握的全部技能，转化为未来制作独立游戏的基石。<br /><br />在过去的四年里，他完成了多项客户约稿、朋友合作及个人作品。他始终全心投入于艺术创作，期待与喜欢这种风格的朋友们分享自己的作品。`,
     // Contact section
     contactYearTag: "商业合作与项目洽谈",
     contactTitle: "联系",
@@ -1578,7 +1603,8 @@ const I18N_DATA = {
     contactLabelInquiry: "项目需求",
     contactPlaceholderName: "您的姓名或机构名称",
     contactPlaceholderEmail: "您的电子邮箱",
-    contactPlaceholderInquiry: "请简述您的项目需求、时间周期、交付内容或任何疑问...",
+    contactPlaceholderInquiry:
+      "请简述您的项目需求、时间周期、交付内容或任何疑问...",
     contactBtnText: "发送信息",
     // Work Status
     workStatusLabel: "工作状态",
@@ -1634,16 +1660,19 @@ function applyLanguage(lang) {
 
   const personalWorksCount = document.getElementById("personalWorksCount");
   const pLen = (CLIENT_COLLECTIONS.personal?.works || []).length || 22;
-  if (personalWorksCount) personalWorksCount.textContent = `${pLen} ${t.worksCountSuffix}`;
+  if (personalWorksCount)
+    personalWorksCount.textContent = `${pLen} ${t.worksCountSuffix}`;
 
   const aiharaWorksCount = document.getElementById("aiharaWorksCount");
-  if (aiharaWorksCount) aiharaWorksCount.textContent = `4 ${t.worksCountSuffix}`;
+  if (aiharaWorksCount)
+    aiharaWorksCount.textContent = `4 ${t.worksCountSuffix}`;
 
   const hiroWorksCount = document.getElementById("hiroWorksCount");
   if (hiroWorksCount) hiroWorksCount.textContent = `2 ${t.worksCountSuffix}`;
 
   const worksPlaceholderText = document.getElementById("worksPlaceholderText");
-  if (worksPlaceholderText) worksPlaceholderText.textContent = t.worksPlaceholderText;
+  if (worksPlaceholderText)
+    worksPlaceholderText.textContent = t.worksPlaceholderText;
 
   const worksHintText = document.getElementById("worksHintText");
   if (worksHintText) worksHintText.textContent = t.worksHintText;
@@ -1685,14 +1714,18 @@ function applyLanguage(lang) {
   const contactLabelEmail = document.getElementById("contactLabelEmail");
   if (contactLabelEmail) contactLabelEmail.textContent = t.contactLabelEmail;
   const contactLabelInquiry = document.getElementById("contactLabelInquiry");
-  if (contactLabelInquiry) contactLabelInquiry.textContent = t.contactLabelInquiry;
+  if (contactLabelInquiry)
+    contactLabelInquiry.textContent = t.contactLabelInquiry;
 
   const contactName = document.getElementById("contactName");
-  if (contactName) contactName.setAttribute("placeholder", t.contactPlaceholderName);
+  if (contactName)
+    contactName.setAttribute("placeholder", t.contactPlaceholderName);
   const contactEmail = document.getElementById("contactEmail");
-  if (contactEmail) contactEmail.setAttribute("placeholder", t.contactPlaceholderEmail);
+  if (contactEmail)
+    contactEmail.setAttribute("placeholder", t.contactPlaceholderEmail);
   const contactInquiry = document.getElementById("contactInquiry");
-  if (contactInquiry) contactInquiry.setAttribute("placeholder", t.contactPlaceholderInquiry);
+  if (contactInquiry)
+    contactInquiry.setAttribute("placeholder", t.contactPlaceholderInquiry);
 
   const contactBtnText = document.getElementById("contactBtnText");
   if (contactBtnText) contactBtnText.textContent = t.contactBtnText;
