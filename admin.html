@@ -164,15 +164,15 @@
       <!-- HERO STATS STRIP -->
       <section class="stats-strip">
         <div class="stat-card">
-          <div class="stat-icon">📁</div>
+          <div class="stat-icon"><img src="img/icons/folder.png" alt="folder" class="stat-icon-img" /></div>
           <div class="stat-body">
             <div class="stat-value" id="statTotalWorks">0</div>
-            <div class="stat-label" id="statTotalWorksLabel">TOTAL CLIENT WORKS</div>
+            <div class="stat-label" id="statTotalWorksLabel">TOTAL WORKS</div>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon">🎬</div>
+          <div class="stat-icon"><img src="img/icons/video.png" alt="video" class="stat-icon-img" /></div>
           <div class="stat-body">
             <div class="stat-value" id="statVideosCount">0</div>
             <div class="stat-label">VIDEO WORKS</div>
@@ -180,7 +180,7 @@
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon">🖼️</div>
+          <div class="stat-icon"><img src="img/icons/image.png" alt="image" class="stat-icon-img" /></div>
           <div class="stat-body">
             <div class="stat-value" id="statImagesCount">0</div>
             <div class="stat-label">IMAGE WORKS</div>
@@ -188,7 +188,7 @@
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon">🌿</div>
+          <div class="stat-icon"><img src="img/icons/sync.png" alt="sync" class="stat-icon-img" /></div>
           <div class="stat-body">
             <div class="stat-value stat-git" id="statGitState">CLEAN</div>
             <div class="stat-label" id="statLastCommit">HEAD: --</div>
@@ -226,8 +226,8 @@
         <div class="client-profile-right">
           <div class="client-type-filters" role="group" aria-label="Filter works by type">
             <button type="button" class="type-filter-btn active" data-type="all">ALL (<span id="countFilterAll">0</span>)</button>
-            <button type="button" class="type-filter-btn" data-type="video">🎬 VIDEOS (<span id="countFilterVideo">0</span>)</button>
-            <button type="button" class="type-filter-btn" data-type="image">🖼️ IMAGES (<span id="countFilterImage">0</span>)</button>
+            <button type="button" class="type-filter-btn" data-type="video"><img src="img/icons/video.png" class="btn-filter-icon" alt="" /><span>VIDEOS (<span id="countFilterVideo">0</span>)</span></button>
+            <button type="button" class="type-filter-btn" data-type="image"><img src="img/icons/image.png" class="btn-filter-icon" alt="" /><span>IMAGES (<span id="countFilterImage">0</span>)</span></button>
           </div>
         </div>
       </section>
@@ -278,7 +278,7 @@
 
         <div class="toolbar-actions">
           <button type="button" class="btn btn-outline" id="btnScanChannel">
-            <span class="icon">📡</span>
+            <img src="img/icons/sync.png" class="btn-icon-svg" alt="" />
             <span>SCAN YOUTUBE CHANNEL</span>
           </button>
 
@@ -293,7 +293,7 @@
           </button>
 
           <button type="button" class="btn btn-success btn-glow" id="btnSaveAndCommit">
-            <span class="icon">💾</span>
+            <img src="img/icons/sync.png" class="btn-icon-svg" alt="" />
             <span>SAVE &amp; COMMIT</span>
           </button>
         </div>
@@ -315,7 +315,7 @@
         </div>
 
         <div class="empty-state" id="emptyState" style="display: none;">
-          <div class="empty-icon">📂</div>
+          <div class="empty-icon"><img src="img/icons/folder.png" class="empty-icon-img" alt="" /></div>
           <div class="empty-title">No works found</div>
           <div class="empty-desc">Try clearing your search query or add a new work above.</div>
         </div>
@@ -456,7 +456,7 @@
             <label class="type-radio-card">
               <input type="radio" name="workType" value="video" id="radioTypeVideo" checked />
               <div class="type-radio-content">
-                <span class="radio-icon">🎬</span>
+                <img src="img/icons/video.png" class="radio-icon-img" alt="Video" />
                 <div>
                   <strong>YouTube Video</strong>
                   <small>Playable motion design / PV / AMV</small>
@@ -467,7 +467,7 @@
             <label class="type-radio-card">
               <input type="radio" name="workType" value="image" id="radioTypeImage" />
               <div class="type-radio-content">
-                <span class="radio-icon">🖼️</span>
+                <img src="img/icons/image.png" class="radio-icon-img" alt="Image" />
                 <div>
                   <strong>Image Artwork</strong>
                   <small>Thumbnail, Banner, Illustration</small>

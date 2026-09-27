@@ -823,8 +823,8 @@
       row.dataset.index = realIndex;
 
       const typeBadge = isImage
-        ? `<span class="work-type-badge type-image">🖼️ IMAGE</span>`
-        : `<span class="work-type-badge type-video">🎬 VIDEO</span>`;
+        ? `<span class="work-type-badge type-image"><img src="img/icons/image.png" class="badge-icon-img" alt="" /> IMAGE</span>`
+        : `<span class="work-type-badge type-video"><img src="img/icons/video.png" class="badge-icon-img" alt="" /> VIDEO</span>`;
 
       let sourceMarkup = "";
       if (isImage) {
