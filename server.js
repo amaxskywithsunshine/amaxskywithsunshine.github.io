@@ -2,6 +2,18 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const https = require("https");
+const crypto = require("crypto");
+const fs = require("fs");
+
+const { getSystemHWID, verifyHWID } = require("./hwid");
+const {
+  getCatalog,
+  saveCatalogAndCommit,
+  pushToRemote,
+  getGitStatus,
+  fetchVideoMetadata,
+  extractVideoId,
+} = require("./catalog-manager");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,11 +22,40 @@ const HANDLE = process.env.YOUTUBE_HANDLE || "iaexamax";
 const UPLOADS_PLAYLIST_ID =
   process.env.YOUTUBE_UPLOADS_PLAYLIST_ID || "UUuDkWnsBiTKlsecae0D11Ag";
 const API_KEY = process.env.YOUTUBE_API_KEY || "";
+const ADMIN_KEY = process.env.ADMIN_KEY || "amax2026";
+const ALLOWED_HWID = process.env.ALLOWED_HWID || "";
 
-// Serve static files from the current directory
+// In-memory active auth sessions: Map<token, { createdAt, clientFingerprint, ip }>
+const activeSessions = new Map();
+
+// Rate limiter for login: Map<ip, { attempts, lockUntil }>
+const failedLoginAttempts = new Map();
+
+// Parse JSON request bodies
+app.use(express.json({ limit: "2mb" }));
+
+// Security middleware: Protect sensitive dotfiles (.env, .git)
+app.use((req, res, next) => {
+  const normalized = req.path.toLowerCase();
+  if (
+    normalized.startsWith("/.git") ||
+    normalized.startsWith("/.env") ||
+    normalized.startsWith("/.vscode")
+  ) {
+    return res.status(403).json({ error: "Access denied to protected files" });
+  }
+  next();
+});
+
+// Serve static assets from project root
 app.use(express.static(__dirname));
 
-// Expose config to the frontend
+// Route for backend admin console
+app.get(["/admin", "/admin.html"], (req, res) => {
+  res.sendFile(path.join(__dirname, "admin.html"));
+});
+
+// Expose public config to the frontend
 app.get("/config", (req, res) => {
   res.json({
     YOUTUBE_HANDLE: process.env.YOUTUBE_HANDLE || HANDLE,
@@ -25,6 +66,288 @@ app.get("/config", (req, res) => {
   });
 });
 
+// ══════════════════════════════════════════════════════════════
+// SECURITY & AUTHENTICATION MIDDLEWARE
+// ══════════════════════════════════════════════════════════════
+function requireAdminAuth(req, res, next) {
+  // 1. Verify Server Hardware ID
+  const hwCheck = verifyHWID(ALLOWED_HWID);
+  if (!hwCheck.allowed) {
+    console.warn(`[SECURITY ALERT] HWID verification failed: Detected ${hwCheck.currentHwid}, Allowed ${ALLOWED_HWID}`);
+    return res.status(403).json({
+      error: "HARDWARE_UNAUTHORIZED",
+      message: `Console locked: Server is running on unauthorized hardware (${hwCheck.currentHwid}).`,
+    });
+  }
+
+  // 2. Verify Session Token
+  const token = req.headers["x-admin-token"] || req.query.token;
+  if (!token || !activeSessions.has(token)) {
+    return res.status(401).json({
+      error: "UNAUTHORIZED",
+      message: "Admin authentication required. Please login.",
+    });
+  }
+
+  const session = activeSessions.get(token);
+  // Session expires after 24 hours
+  if (Date.now() - session.createdAt > 24 * 60 * 60 * 1000) {
+    activeSessions.delete(token);
+    return res.status(401).json({
+      error: "SESSION_EXPIRED",
+      message: "Session has expired. Please log in again.",
+    });
+  }
+
+  req.adminSession = session;
+  next();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN AUTHENTICATION ENDPOINTS
+// ══════════════════════════════════════════════════════════════
+
+// Auth status & hardware diagnostics
+app.get("/api/admin/auth/status", (req, res) => {
+  const hwCheck = verifyHWID(ALLOWED_HWID);
+  const token = req.headers["x-admin-token"] || req.query.token;
+  const isAuthenticated = token && activeSessions.has(token);
+
+  res.json({
+    authenticated: Boolean(isAuthenticated),
+    hwidValid: hwCheck.allowed,
+    hwidReason: hwCheck.reason,
+    currentHwid: hwCheck.currentHwid,
+    allowedHwid: ALLOWED_HWID,
+    systemInfo: hwCheck.systemInfo,
+    git: getGitStatus(),
+  });
+});
+
+// Login endpoint
+app.post("/api/admin/auth/login", (req, res) => {
+  const clientIp = req.ip || req.connection.remoteAddress || "127.0.0.1";
+  const now = Date.now();
+
+  // Rate limiting check
+  const attempts = failedLoginAttempts.get(clientIp);
+  if (attempts && attempts.lockUntil > now) {
+    const remainingSecs = Math.ceil((attempts.lockUntil - now) / 1000);
+    return res.status(429).json({
+      error: "RATE_LIMITED",
+      message: `Too many failed attempts. Try again in ${remainingSecs} seconds.`,
+    });
+  }
+
+  // 1. Hardware ID Check
+  const hwCheck = verifyHWID(ALLOWED_HWID);
+  if (!hwCheck.allowed) {
+    return res.status(403).json({
+      error: "HARDWARE_UNAUTHORIZED",
+      message: `Access denied: Server is running on unauthorized hardware (${hwCheck.currentHwid}).`,
+    });
+  }
+
+  const { adminKey, clientFingerprint } = req.body || {};
+
+  // 2. Admin Key Check
+  if (!adminKey || adminKey !== ADMIN_KEY) {
+    const current = failedLoginAttempts.get(clientIp) || { attempts: 0, lockUntil: 0 };
+    current.attempts += 1;
+    if (current.attempts >= 5) {
+      current.lockUntil = now + 10 * 60 * 1000; // 10 min lock
+    }
+    failedLoginAttempts.set(clientIp, current);
+
+    return res.status(401).json({
+      error: "INVALID_CREDENTIALS",
+      message: "Incorrect Admin Access Key.",
+    });
+  }
+
+  // Success: Clear failed attempts
+  failedLoginAttempts.delete(clientIp);
+
+  // Generate secure token
+  const token = crypto.randomBytes(32).toString("hex");
+  activeSessions.set(token, {
+    createdAt: now,
+    clientFingerprint: clientFingerprint || "unknown",
+    ip: clientIp,
+  });
+
+  res.json({
+    success: true,
+    token,
+    currentHwid: hwCheck.currentHwid,
+    systemInfo: hwCheck.systemInfo,
+  });
+});
+
+// Logout endpoint
+app.post("/api/admin/auth/logout", (req, res) => {
+  const token = req.headers["x-admin-token"] || req.query.token;
+  if (token) {
+    activeSessions.delete(token);
+  }
+  res.json({ success: true, message: "Logged out successfully" });
+});
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN CATALOG & GIT API (PROTECTED)
+// ══════════════════════════════════════════════════════════════
+
+// Get current catalog and git status
+app.get("/api/admin/catalog", requireAdminAuth, (req, res) => {
+  const catalog = getCatalog();
+  const git = getGitStatus();
+  res.json({
+    catalog,
+    gitStatus: git,
+  });
+});
+
+// Save catalog and trigger automated Git Commit
+app.post("/api/admin/catalog/save", requireAdminAuth, (req, res) => {
+  const { items, commitMessage, push } = req.body || {};
+
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ error: "Invalid catalog format. Must be an array." });
+  }
+
+  try {
+    const result = saveCatalogAndCommit(items, {
+      commitMessage,
+      push: Boolean(push),
+    });
+
+    // Invalidate local in-memory video cache
+    videoCache.items = null;
+    videoCache.timestamp = 0;
+
+    res.json(result);
+  } catch (err) {
+    console.error("[CATALOG SAVE ERROR]", err);
+    res.status(500).json({ error: "SAVE_FAILED", message: err.message });
+  }
+});
+
+// Push to remote repository (main)
+app.post("/api/admin/git/push", requireAdminAuth, (req, res) => {
+  const result = pushToRemote();
+  res.json(result);
+});
+
+// Get Git repository status
+app.get("/api/admin/git/status", requireAdminAuth, (req, res) => {
+  res.json(getGitStatus());
+});
+
+// Fetch single video metadata from YouTube
+app.get("/api/admin/youtube/video-info", requireAdminAuth, async (req, res) => {
+  const query = req.query.url || req.query.id;
+  if (!query) {
+    return res.status(400).json({ error: "Missing video url or id parameter" });
+  }
+
+  try {
+    const meta = await fetchVideoMetadata(query);
+    res.json(meta);
+  } catch (err) {
+    res.status(500).json({ error: "METADATA_FAILED", message: err.message });
+  }
+});
+
+// Scan YouTube Channel for new uploads not in catalog
+app.get("/api/admin/youtube/channel-sync", requireAdminAuth, (req, res) => {
+  const currentCatalog = getCatalog();
+  const catalogIds = new Set(currentCatalog.map((item) => item.id));
+  const apiKey = process.env.YOUTUBE_API_KEY || API_KEY || "";
+  const playlistId = process.env.YOUTUBE_UPLOADS_PLAYLIST_ID || UPLOADS_PLAYLIST_ID;
+
+  function processUploads(uploads) {
+    const newVideos = uploads.filter((v) => !catalogIds.has(v.id));
+    res.json({
+      totalChannelVideos: uploads.length,
+      inCatalogCount: currentCatalog.length,
+      newVideosCount: newVideos.length,
+      newVideos,
+    });
+  }
+
+  if (apiKey) {
+    const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`;
+    https
+      .get(apiUrl, { headers: { Referer: "https://amaxskywithsunshine.github.io/" } }, (apiRes) => {
+        if (apiRes.statusCode === 200) {
+          let data = "";
+          apiRes.on("data", (chunk) => (data += chunk));
+          apiRes.on("end", () => {
+            try {
+              const json = JSON.parse(data);
+              const items = (json.items || []).map((v) => ({
+                id: v.snippet.resourceId.videoId,
+                title: decodeHtmlEntities(v.snippet.title),
+                pubDate: v.snippet.publishedAt,
+                thumbnail:
+                  v.snippet.thumbnails?.high?.url ||
+                  v.snippet.thumbnails?.default?.url ||
+                  `https://img.youtube.com/vi/${v.snippet.resourceId.videoId}/hqdefault.jpg`,
+              }));
+              return processUploads(items);
+            } catch (e) {}
+            fetchFromRSSFallback();
+          });
+        } else {
+          fetchFromRSSFallback();
+        }
+      })
+      .on("error", () => fetchFromRSSFallback());
+  } else {
+    fetchFromRSSFallback();
+  }
+
+  function fetchFromRSSFallback() {
+    const targetChannelId = process.env.YOUTUBE_CHANNEL_ID || CHANNEL_ID;
+    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${targetChannelId}`;
+    https
+      .get(rssUrl, (ytRes) => {
+        if (ytRes.statusCode !== 200) {
+          return processUploads([]);
+        }
+        let xml = "";
+        ytRes.on("data", (chunk) => (xml += chunk));
+        ytRes.on("end", () => {
+          try {
+            const entries = xml.split("<entry>").slice(1);
+            const liveItems = entries
+              .map((entry) => {
+                const idMatch = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+                const titleMatch = entry.match(/<title>([^<]+)<\/title>/);
+                const pubMatch = entry.match(/<published>([^<]+)<\/published>/);
+                const vid = idMatch ? idMatch[1] : "";
+                return {
+                  id: vid,
+                  title: decodeHtmlEntities(titleMatch ? titleMatch[1] : ""),
+                  pubDate: pubMatch ? pubMatch[1] : "",
+                  thumbnail: `https://img.youtube.com/vi/${vid}/hqdefault.jpg`,
+                };
+              })
+              .filter((item) => item.id.length === 11);
+            processUploads(liveItems);
+          } catch (e) {
+            processUploads([]);
+          }
+        });
+      })
+      .on("error", () => processUploads([]));
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// PUBLIC VIDEO FEED WITH LIVE CATALOG FALLBACK
+// ══════════════════════════════════════════════════════════════
+
 // In-memory cache for fetched YouTube videos
 let videoCache = {
   items: null,
@@ -32,6 +355,7 @@ let videoCache = {
 };
 
 function decodeHtmlEntities(str) {
+  if (!str) return "";
   return str
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
@@ -39,6 +363,36 @@ function decodeHtmlEntities(str) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'");
+}
+
+function mergeWithLiveCatalog(liveList) {
+  const seen = new Set();
+  const result = [];
+  const catalogList = getCatalog();
+
+  (liveList || []).forEach((item) => {
+    const vid = item.link ? item.link.split("v=").pop() : item.id || "";
+    if (vid && !seen.has(vid)) {
+      seen.add(vid);
+      result.push(item);
+    }
+  });
+
+  catalogList.forEach((item) => {
+    if (!seen.has(item.id)) {
+      seen.add(item.id);
+      result.push({
+        title: item.title,
+        pubDate: item.pubDate,
+        link: `https://www.youtube.com/watch?v=${item.id}`,
+        thumbnail: {
+          url: `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`,
+        },
+      });
+    }
+  });
+
+  return result;
 }
 
 // Fetch user's videos dynamically from YouTube (API or RSS feed)
@@ -52,7 +406,6 @@ app.get("/api/videos", (req, res) => {
   const playlistId =
     process.env.YOUTUBE_UPLOADS_PLAYLIST_ID || UPLOADS_PLAYLIST_ID;
 
-  // If API key is available, use YouTube Data API v3; otherwise use RSS feed directly
   if (apiKey) {
     const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`;
 
@@ -80,9 +433,10 @@ app.get("/api/videos", (req, res) => {
                 },
               }));
               if (items.length > 0) {
-                videoCache.items = items;
+                const merged = mergeWithLiveCatalog(items);
+                videoCache.items = merged;
                 videoCache.timestamp = now;
-                return res.json({ status: "ok", source: "youtube_api", items });
+                return res.json({ status: "ok", source: "youtube_api_merged", items: merged });
               }
             } catch (e) {}
             fetchFromRSS();
@@ -90,131 +444,12 @@ app.get("/api/videos", (req, res) => {
         } else {
           fetchFromRSS();
         }
-      },
+      }
     );
 
     apiReq.on("error", () => fetchFromRSS());
   } else {
     fetchFromRSS();
-  }
-
-  const CATALOG_VIDEOS = [
-    {
-      id: "AdU297GBNvg",
-      title: "visuals:AZURE2026",
-      pubDate: "2026-07-07T07:53:15Z",
-    },
-    {
-      id: "rpY9ydbisP4",
-      title: "visuals:AZURE2026 [ Discarded ]",
-      pubDate: "2026-06-11T16:26:26Z",
-    },
-    {
-      id: "Rwc5zKMN1xM",
-      title: "visuals:NO_WORRIES.",
-      pubDate: "2026-05-31T15:03:05Z",
-    },
-    {
-      id: "mm-pWXxyT6k",
-      title: "visuals:Height.",
-      pubDate: "2026-05-31T13:49:22Z",
-    },
-    {
-      id: "N0SML3Qotaw",
-      title: "banner:HIRO.",
-      pubDate: "2026-05-31T13:08:11Z",
-    },
-    {
-      id: "zIEbQMFPSMs",
-      title: "remake:AMOS",
-      pubDate: "2026-03-15T13:54:37Z",
-    },
-    {
-      id: "0eXpsDlfUII",
-      title: "reels:2024-2025",
-      pubDate: "2026-03-08T02:10:51Z",
-    },
-    { id: "ZVTB6703DnE", title: "HBD:amax.", pubDate: "2026-02-02T09:11:09Z" },
-    {
-      id: "Q-Fg1dh8s_I",
-      title: "HBD:sxcstyles2025.",
-      pubDate: "2025-08-17T04:02:46Z",
-    },
-    { id: "4gGzsHAM4mA", title: "amv:News.", pubDate: "2024-10-21T10:21:34Z" },
-    {
-      id: "NiYcw0yX2VY",
-      title: "文字PV:not_enough.",
-      pubDate: "2024-09-12T03:43:59Z",
-    },
-    {
-      id: "QpnHcE5G0ks",
-      title: "文字PV:all_alone.",
-      pubDate: "2024-06-10T09:03:54Z",
-    },
-    {
-      id: "R3zzz9GDyfs",
-      title: "amv:Untitled.",
-      pubDate: "2024-05-13T17:43:31Z",
-    },
-    {
-      id: "P5uiNuZG46s",
-      title: "amv:Daisey.",
-      pubDate: "2024-02-29T06:37:30Z",
-    },
-    { id: "XgDKkSS0aPw", title: "amv:dot.", pubDate: "2024-02-05T00:59:57Z" },
-    {
-      id: "gNO7aiqYkSQ",
-      title: "visuals:busy.",
-      pubDate: "2024-01-07T11:14:44Z",
-    },
-    { id: "zVkIiLFjrWU", title: "miley", pubDate: "2023-12-09T15:07:36Z" },
-    { id: "Rc__qEAHGAU", title: "amv:Story.", pubDate: "2023-10-27T14:12:59Z" },
-    {
-      id: "Taiw_SjScNY",
-      title: "HBD:sxcstyles",
-      pubDate: "2023-07-22T06:01:41Z",
-    },
-    {
-      id: "ot68zIJmfyY",
-      title: "intro:HiroNeyka.",
-      pubDate: "2023-06-10T09:08:34Z",
-    },
-    {
-      id: "r5wQP7NbVmQ",
-      title: "fantro:Nerumi-S",
-      pubDate: "2023-05-29T10:29:48Z",
-    },
-    {
-      id: "x8C_vZsPIFc",
-      title: "amv:amax&witty.",
-      pubDate: "2023-05-20T12:13:08Z",
-    },
-  ];
-
-  function mergeWithCatalog(liveList) {
-    const seen = new Set();
-    const result = [];
-    (liveList || []).forEach((item) => {
-      const vid = item.link ? item.link.split("v=").pop() : item.id || "";
-      if (vid && !seen.has(vid)) {
-        seen.add(vid);
-        result.push(item);
-      }
-    });
-    CATALOG_VIDEOS.forEach((item) => {
-      if (!seen.has(item.id)) {
-        seen.add(item.id);
-        result.push({
-          title: item.title,
-          pubDate: item.pubDate,
-          link: `https://www.youtube.com/watch?v=${item.id}`,
-          thumbnail: {
-            url: `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`,
-          },
-        });
-      }
-    });
-    return result;
   }
 
   function fetchFromRSS() {
@@ -234,7 +469,7 @@ app.get("/api/videos", (req, res) => {
           return res.json({
             status: "ok",
             source: "catalog_fallback",
-            items: mergeWithCatalog([]),
+            items: mergeWithLiveCatalog([]),
           });
         }
 
@@ -245,9 +480,7 @@ app.get("/api/videos", (req, res) => {
             const entries = xml.split("<entry>").slice(1);
             const liveItems = entries
               .map((entry) => {
-                const idMatch = entry.match(
-                  /<yt:videoId>([^<]+)<\/yt:videoId>/,
-                );
+                const idMatch = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
                 const titleMatch = entry.match(/<title>([^<]+)<\/title>/);
                 const pubMatch = entry.match(/<published>([^<]+)<\/published>/);
                 const vid = idMatch ? idMatch[1] : "";
@@ -264,7 +497,7 @@ app.get("/api/videos", (req, res) => {
               })
               .filter((item) => item.link.length > 28);
 
-            const merged = mergeWithCatalog(liveItems);
+            const merged = mergeWithLiveCatalog(liveItems);
 
             if (merged.length > 0) {
               videoCache.items = merged;
@@ -286,12 +519,12 @@ app.get("/api/videos", (req, res) => {
             res.json({
               status: "ok",
               source: "catalog_fallback",
-              items: mergeWithCatalog([]),
+              items: mergeWithLiveCatalog([]),
             });
           }
         });
       })
-      .on("error", (err) => {
+      .on("error", () => {
         if (videoCache.items)
           return res.json({
             status: "ok",
@@ -301,7 +534,7 @@ app.get("/api/videos", (req, res) => {
         res.json({
           status: "ok",
           source: "catalog_fallback",
-          items: mergeWithCatalog([]),
+          items: mergeWithLiveCatalog([]),
         });
       });
   }
@@ -313,5 +546,10 @@ app.get("*", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  const hw = getSystemHWID();
+  console.log(`\n======================================================`);
+  console.log(`🚀 AMAX Portfolio Server running on http://localhost:${PORT}`);
+  console.log(`🔐 Admin Console: http://localhost:${PORT}/admin`);
+  console.log(`🛡️ Hardware ID: ${hw.hwid} (Host: ${hw.hostname})`);
+  console.log(`======================================================\n`);
 });

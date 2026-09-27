@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMAX — Catalog & Hardware Security Console</title>
+  <link rel="icon" type="image/png" href="img/LOGO_BIG.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- BACKGROUND GLOWS -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- ════════════════════════════════════════════════
+       VIEW 1: SECURITY GATE / HARDWARE AUTHENTICATION
+  ════════════════════════════════════════════════ -->
+  <main id="authView" class="auth-view">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo-badge">
+          <img src="img/LOGO.png" alt="amax logo" class="auth-logo" />
+        </div>
+        <div class="security-radar">
+          <div class="radar-pulse"></div>
+          <span class="radar-icon">🔒</span>
+        </div>
+        <h1 class="auth-title">HARDWARE SECURITY GATE</h1>
+        <p class="auth-subtitle">amax motion portfolio catalog administration</p>
+      </div>
+
+      <!-- HARDWARE DIAGNOSTICS WIDGET -->
+      <div class="hw-diagnostics" id="hwDiagnostics">
+        <div class="hw-diag-row">
+          <span class="hw-label">SERVER HARDWARE ID :</span>
+          <span class="hw-val hw-mono" id="diagHwid">DETECTING...</span>
+        </div>
+        <div class="hw-diag-row">
+          <span class="hw-label">HOST MACHINE :</span>
+          <span class="hw-val" id="diagHost">--</span>
+        </div>
+        <div class="hw-diag-row">
+          <span class="hw-label">HARDWARE STATUS :</span>
+          <span class="hw-status-badge checking" id="diagStatusBadge">
+            <span class="status-dot"></span> <span id="diagStatusText">VERIFYING HARDWARE...</span>
+          </span>
+        </div>
+        <div class="hw-diag-row">
+          <span class="hw-label">CLIENT DEVICE :</span>
+          <span class="hw-val hw-mono" id="diagClientFp">COMPUTING...</span>
+        </div>
+      </div>
+
+      <!-- HARDWARE MISMATCH WARNING (HIDDEN BY DEFAULT) -->
+      <div class="alert-box error" id="hwMismatchAlert" style="display: none;">
+        <div class="alert-title">⚠️ HARDWARE ACCESS RESTRICTED</div>
+        <div class="alert-desc" id="hwMismatchDesc">
+          This backend console is hardware-locked. The current host machine does not match the authorized HWID signature.
+        </div>
+      </div>
+
+      <!-- NO BACKEND WARNING (IF RUN ON STATIC HOSTING) -->
+      <div class="alert-box warning" id="staticServerAlert" style="display: none;">
+        <div class="alert-title">📡 BACKEND SERVER REQUIRED</div>
+        <div class="alert-desc">
+          The Admin Console requires the local Express backend server running on your machine (<code class="hw-mono">node server.js</code>). Static GitHub Pages cannot modify repository files.
+        </div>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm" class="auth-form" autocomplete="off">
+        <div class="form-group">
+          <label for="adminKeyInput" class="form-label">
+            ADMIN ACCESS PASSCODE
+            <span class="label-hint">(from .env)</span>
+          </label>
+          <div class="input-password-wrap">
+            <input
+              type="password"
+              id="adminKeyInput"
+              class="form-input"
+              placeholder="Enter master admin key..."
+              required
+              autofocus
+            />
+            <button type="button" class="btn-toggle-pw" id="btnTogglePw" aria-label="Toggle password visibility">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-actions">
+          <button type="submit" class="btn btn-primary btn-block btn-glow" id="btnLogin">
+            <span class="btn-text">AUTHENTICATE &amp; ENTER CONSOLE</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+
+        <div class="auth-error-msg" id="loginErrorMsg"></div>
+      </form>
+
+      <div class="auth-footer">
+        <div class="sec-pill">
+          <span class="sec-dot"></span>
+          <span>MULTI-LAYER ENCRYPTION &bull; HWID BOUND &bull; GIT INTEGRATED</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ════════════════════════════════════════════════
+       VIEW 2: CATALOG MANAGEMENT DASHBOARD
+  ════════════════════════════════════════════════ -->
+  <div id="dashboardView" class="dashboard-view" style="display: none;">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="admin-navbar">
+      <div class="navbar-left">
+        <div class="brand-group">
+          <img src="img/LOGO.png" alt="logo" class="navbar-logo" />
+          <div class="brand-text">
+            <span class="brand-title">AMAX CONSOLE</span>
+            <span class="brand-badge">CATALOG MANAGER</span>
+          </div>
+        </div>
+
+        <div class="navbar-status-pill verified" id="navHwidBadge">
+          <span class="status-pulse-dot"></span>
+          <span id="navHwidText">HWID VERIFIED : WIN-251F</span>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <a href="/" target="_blank" class="btn btn-ghost btn-sm" id="btnViewLiveSite">
+          <span>VIEW LIVE SITE</span>
+          <span class="icon-external">↗</span>
+        </a>
+
+        <button type="button" class="btn btn-outline btn-sm" id="btnGitHistory">
+          <span>GIT LOGS</span>
+          <span class="badge-branch" id="navBranchBadge">main</span>
+        </button>
+
+        <button type="button" class="btn btn-outline btn-sm" id="btnSecDashboard">
+          <span>SECURITY</span>
+          <span class="icon-shield">🛡️</span>
+        </button>
+
+        <button type="button" class="btn btn-danger-ghost btn-sm" id="btnLogout">
+          <span>LOCK &bull; LOGOUT</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="dashboard-main">
+
+      <!-- HERO STATS STRIP -->
+      <section class="stats-strip">
+        <div class="stat-card">
+          <div class="stat-icon">🎬</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statTotalVideos">0</div>
+            <div class="stat-label">VIDEOS IN CATALOG</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🌿</div>
+          <div class="stat-body">
+            <div class="stat-value stat-git" id="statGitState">CLEAN</div>
+            <div class="stat-label" id="statLastCommit">HEAD: --</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">📡</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statYtStatus">READY</div>
+            <div class="stat-label">YOUTUBE SYNC (@iaexamax)</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">💻</div>
+          <div class="stat-body">
+            <div class="stat-value hw-mono stat-hwid" id="statHwidShort">HWID-OK</div>
+            <div class="stat-label" id="statHostLabel">HOST: iTxAmax</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PENDING CHANGES BANNER (SHOWN WHEN MODIFIED) -->
+      <div class="changes-banner" id="changesBanner" style="display: none;">
+        <div class="changes-banner-left">
+          <span class="changes-badge">PENDING COMMITS</span>
+          <span class="changes-text" id="changesBannerText">You have unsaved catalog modifications.</span>
+        </div>
+        <div class="changes-banner-right">
+          <button type="button" class="btn btn-sm btn-ghost" id="btnRevertChanges">REVERT</button>
+          <button type="button" class="btn btn-sm btn-success btn-glow" id="btnQuickCommit">
+            COMMIT CHANGES NOW &rarr;
+          </button>
+        </div>
+      </div>
+
+      <!-- YOUTUBE SCANNER BANNER (DISCOVER NEW UPLOADS) -->
+      <div class="yt-scan-banner" id="ytScanBanner" style="display: none;">
+        <div class="yt-scan-header">
+          <div class="yt-scan-title-wrap">
+            <span class="yt-scan-icon">🔔</span>
+            <span class="yt-scan-title" id="ytScanTitle">NEW YOUTUBE UPLOADS FOUND</span>
+          </div>
+          <div class="yt-scan-actions">
+            <button type="button" class="btn btn-xs btn-primary" id="btnAddAllYtVideos">ADD ALL TO CATALOG</button>
+            <button type="button" class="btn btn-xs btn-ghost" id="btnDismissYtBanner">DISMISS</button>
+          </div>
+        </div>
+        <div class="yt-scan-list" id="ytScanList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- CATALOG CONTROLS TOOLBAR -->
+      <section class="catalog-toolbar">
+        <div class="toolbar-search-wrap">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="catalogSearch"
+            class="toolbar-search"
+            placeholder="Search catalog by title, video ID, or category..."
+          />
+          <button type="button" class="btn-clear-search" id="btnClearSearch" style="display: none;">✕</button>
+        </div>
+
+        <div class="toolbar-actions">
+          <button type="button" class="btn btn-outline" id="btnScanChannel">
+            <span class="icon">📡</span>
+            <span>SCAN YOUTUBE CHANNEL</span>
+          </button>
+
+          <button type="button" class="btn btn-outline" id="btnPushRemote">
+            <span class="icon">⬆</span>
+            <span>PUSH TO GITHUB</span>
+          </button>
+
+          <button type="button" class="btn btn-primary" id="btnOpenAddModal">
+            <span class="icon">+</span>
+            <span>ADD VIDEO</span>
+          </button>
+
+          <button type="button" class="btn btn-success btn-glow" id="btnSaveAndCommit">
+            <span class="icon">💾</span>
+            <span>SAVE &amp; COMMIT</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- CATALOG LIST VIEW -->
+      <section class="catalog-list-section">
+        <div class="catalog-list-header">
+          <div class="col-drag">#</div>
+          <div class="col-thumb">THUMBNAIL</div>
+          <div class="col-title">TITLE &amp; CATEGORY</div>
+          <div class="col-id">VIDEO ID</div>
+          <div class="col-date">PUBLISHED</div>
+          <div class="col-actions">ACTIONS</div>
+        </div>
+
+        <div class="catalog-items-container" id="catalogContainer">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <div class="empty-icon">📂</div>
+          <div class="empty-title">No videos found</div>
+          <div class="empty-desc">Try clearing your search query or add a new video above.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       MODAL 1: ADD / EDIT VIDEO MODAL
+  ════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="videoModalBackdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="videoModalTitle">ADD VIDEO TO CATALOG</h3>
+        <button type="button" class="modal-close" id="btnCloseVideoModal">&times;</button>
+      </div>
+
+      <form id="videoForm" class="modal-body" autocomplete="off">
+        <input type="hidden" id="videoEditIndex" value="-1" />
+
+        <!-- URL / ID INPUT -->
+        <div class="form-group">
+          <label for="inputVideoUrl" class="form-label">
+            YOUTUBE VIDEO LINK OR ID
+            <span class="label-hint">(e.g. https://youtu.be/... or AdU297GBNvg)</span>
+          </label>
+          <div class="input-with-action">
+            <input
+              type="text"
+              id="inputVideoUrl"
+              class="form-input"
+              placeholder="Paste YouTube URL or 11-char Video ID..."
+              required
+            />
+            <button type="button" class="btn btn-outline" id="btnFetchMeta">
+              AUTO-FETCH INFO
+            </button>
+          </div>
+        </div>
+
+        <!-- VIDEO TITLE -->
+        <div class="form-group">
+          <label for="inputVideoTitle" class="form-label">VIDEO TITLE</label>
+          <input
+            type="text"
+            id="inputVideoTitle"
+            class="form-input"
+            placeholder="e.g. visuals:AZURE2026 or 文字PV:not_enough."
+            required
+          />
+        </div>
+
+        <!-- CATEGORY PREVIEW & PUBLISH DATE -->
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label">DETECTED CATEGORY</label>
+            <div class="category-preview-pill" id="catPreviewBadge">Motion Graphic</div>
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="inputVideoDate" class="form-label">PUBLISHED DATE</label>
+            <input
+              type="date"
+              id="inputVideoDate"
+              class="form-input"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- LIVE PREVIEW CARD -->
+        <div class="preview-box">
+          <div class="preview-label">PORTFOLIO CARD PREVIEW</div>
+          <div class="preview-card" id="previewCard">
+            <div class="preview-thumb-wrap">
+              <img src="img/personal_preview.jpg" alt="preview" id="previewThumb" class="preview-thumb" />
+              <div class="preview-play-icon">▶</div>
+            </div>
+            <div class="preview-info">
+              <div class="preview-badge" id="previewBadge">Motion Graphic</div>
+              <div class="preview-title" id="previewTitle">Enter a title above...</div>
+              <div class="preview-date" id="previewDate">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="btnCancelVideo">CANCEL</button>
+          <button type="submit" class="btn btn-primary btn-glow" id="btnSaveVideo">
+            SAVE VIDEO TO CATALOG
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       MODAL 2: GIT COMMIT & PUSH CONFIRMATION
+  ════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="commitModalBackdrop" style="display: none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">CONFIRM GIT COMMIT</h3>
+        <button type="button" class="modal-close" id="btnCloseCommitModal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="commit-intro">
+          This operation will update <code class="hw-mono">catalog.json</code>, synchronize <code class="hw-mono">script.js</code>, update fallback counts in <code class="hw-mono">index.html</code>, validate JavaScript syntax, and create a Git commit.
+        </p>
+
+        <!-- CHANGES SUMMARY -->
+        <div class="commit-summary-box" id="commitSummaryBox">
+          <div class="summary-item">
+            <span class="summary-label">Catalog Items :</span>
+            <span class="summary-val" id="summaryTotal">22 videos</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Target Files :</span>
+            <span class="summary-val hw-mono">catalog.json, script.js, index.html</span>
+          </div>
+        </div>
+
+        <!-- COMMIT MESSAGE INPUT -->
+        <div class="form-group">
+          <label for="commitMessageInput" class="form-label">
+            CONVENTIONAL COMMIT MESSAGE
+            <span class="label-hint">(Rule: Conventional Commits)</span>
+          </label>
+          <input
+            type="text"
+            id="commitMessageInput"
+            class="form-input hw-mono"
+            placeholder="feat(catalog): update portfolio catalog..."
+          />
+        </div>
+
+        <!-- PUSH TO REMOTE CHECKBOX -->
+        <div class="form-check-group">
+          <label class="checkbox-container">
+            <input type="checkbox" id="checkPushRemote" checked />
+            <span class="checkmark"></span>
+            <span class="check-text">
+              <strong>Push immediately to GitHub (<code class="hw-mono">origin main</code>)</strong>
+              <small class="check-sub">Deploys changes to live GitHub Pages</small>
+            </span>
+          </label>
+        </div>
+
+        <!-- LIVE TERMINAL / OUTPUT STREAM -->
+        <div class="terminal-box" id="commitTerminalBox" style="display: none;">
+          <div class="terminal-bar">
+            <div class="term-dots">
+              <span class="term-dot red"></span>
+              <span class="term-dot yellow"></span>
+              <span class="term-dot green"></span>
+            </div>
+            <span class="terminal-title">GIT CONSOLE OUTPUT</span>
+          </div>
+          <pre class="terminal-content" id="commitTerminalOutput"></pre>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="btnCancelCommit">CANCEL</button>
+          <button type="button" class="btn btn-success btn-glow" id="btnExecuteCommit">
+            <span class="icon">🚀</span>
+            <span>EXECUTE COMMIT &amp; SAVE</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       DRAWER 1: GIT HISTORY & STATUS
+  ════════════════════════════════════════════════ -->
+  <div class="drawer-backdrop" id="gitDrawerBackdrop" style="display: none;">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <h3 class="drawer-title">GIT REPOSITORY STATUS</h3>
+        <button type="button" class="drawer-close" id="btnCloseGitDrawer">&times;</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="git-status-summary">
+          <div class="g-row">
+            <span class="g-lbl">Branch:</span>
+            <span class="g-val hw-mono" id="drawerBranch">main</span>
+          </div>
+          <div class="g-row">
+            <span class="g-lbl">Status:</span>
+            <span class="g-val" id="drawerStatusText">Checking...</span>
+          </div>
+          <div class="g-row">
+            <span class="g-lbl">Latest Commit:</span>
+            <span class="g-val hw-mono" id="drawerLatestCommit">--</span>
+          </div>
+        </div>
+
+        <div class="drawer-actions">
+          <button type="button" class="btn btn-outline btn-block" id="btnDrawerPush">
+            <span>PUSH TO REMOTE (<code class="hw-mono">origin main</code>)</span>
+          </button>
+        </div>
+
+        <h4 class="drawer-subheading">RECENT COMMITS</h4>
+        <div class="commit-history-list" id="commitHistoryList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       DRAWER 2: SECURITY & HARDWARE AUDIT
+  ════════════════════════════════════════════════ -->
+  <div class="drawer-backdrop" id="secDrawerBackdrop" style="display: none;">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <h3 class="drawer-title">HARDWARE SECURITY AUDIT</h3>
+        <button type="button" class="drawer-close" id="btnCloseSecDrawer">&times;</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="sec-card">
+          <div class="sec-card-header">
+            <span class="sec-badge-icon">🛡️</span>
+            <div>
+              <div class="sec-card-title">SERVER HARDWARE IDENTIFIER</div>
+              <div class="sec-card-sub">Hardware signature verified on host</div>
+            </div>
+          </div>
+          <div class="sec-hwid-box hw-mono" id="secServerHwid">HWID-WIN-XXXX</div>
+        </div>
+
+        <div class="sec-details-list">
+          <div class="sec-detail-row">
+            <span class="sec-lbl">Host Machine Name :</span>
+            <span class="sec-val hw-mono" id="secHostname">--</span>
+          </div>
+          <div class="sec-detail-row">
+            <span class="sec-lbl">Primary Physical MAC :</span>
+            <span class="sec-val hw-mono" id="secMac">--</span>
+          </div>
+          <div class="sec-detail-row">
+            <span class="sec-lbl">Processor Model :</span>
+            <span class="sec-val" id="secCpu">--</span>
+          </div>
+          <div class="sec-detail-row">
+            <span class="sec-lbl">Operating System :</span>
+            <span class="sec-val hw-mono" id="secOs">--</span>
+          </div>
+          <div class="sec-detail-row">
+            <span class="sec-lbl">Client Fingerprint :</span>
+            <span class="sec-val hw-mono" id="secClientFp">--</span>
+          </div>
+          <div class="sec-detail-row">
+            <span class="sec-lbl">Allowed HWID in .env :</span>
+            <span class="sec-val hw-mono" id="secAllowedHwid">--</span>
+          </div>
+        </div>
+
+        <div class="sec-info-banner">
+          🔒 <strong>Hardware Binding Protection</strong> ensures catalog mutations and git commits can ONLY be executed by this verified physical workstation. Any cloned repository on an unauthorized machine is permanently locked from the admin console.
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       MODAL 3: VIDEO PLAYER TEST MODAL
+  ════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="playerModalBackdrop" style="display: none;">
+    <div class="modal-card modal-player">
+      <div class="modal-header">
+        <h3 class="modal-title" id="playerModalTitle">VIDEO PREVIEW</h3>
+        <button type="button" class="modal-close" id="btnClosePlayerModal">&times;</button>
+      </div>
+      <div class="player-iframe-wrap" id="playerIframeWrap"></div>
+    </div>
+  </div>
+
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- SCRIPTS -->
+  <script src="admin.js"></script>
+</body>
+</html>

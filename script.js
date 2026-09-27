@@ -397,7 +397,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeModal();
 });
 
-const CATALOG_VIDEOS = [
+let CATALOG_VIDEOS = [
   {
     id: "AdU297GBNvg",
     title: "visuals:AZURE2026",
@@ -561,6 +561,17 @@ async function loadVideos() {
 
   let items = null;
   let method = null;
+
+  // ── Sync with catalog.json if available (works on both local server and GitHub Pages) ──
+  try {
+    const catRes = await fetch(`catalog.json?t=${Date.now()}`, { signal: AbortSignal.timeout(3000) });
+    if (catRes.ok) {
+      const catData = await catRes.json();
+      if (Array.isArray(catData) && catData.length > 0) {
+        CATALOG_VIDEOS = catData;
+      }
+    }
+  } catch (e) {}
 
   // ── Method 1: Local / Express Backend API (bypasses browser CORS completely) ──
   try {
