@@ -9,9 +9,11 @@ const https = require("https");
 
 const CATALOG_PATH = path.join(__dirname, "catalog.json");
 const CLIENTS_PATH = path.join(__dirname, "clients.json");
+const PROFILE_PATH = path.join(__dirname, "site-profile.json");
 const SCRIPT_PATH = path.join(__dirname, "script.js");
 const INDEX_PATH = path.join(__dirname, "index.html");
 const CLIENT_IMAGES_DIR = path.join(__dirname, "img", "clients");
+const IMG_DIR = path.join(__dirname, "img");
 
 function extractVideoId(urlOrId) {
   if (!urlOrId) return "";
@@ -434,14 +436,195 @@ function fallbackOEmbed(vid, resolve) {
     });
 }
 
+function getProfile() {
+  try {
+    if (fs.existsSync(PROFILE_PATH)) {
+      const raw = fs.readFileSync(PROFILE_PATH, "utf8");
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error("[PROFILE] Error reading site-profile.json:", err.message);
+  }
+  return {
+    aboutAvatar: "img/about_avatar.jpg",
+    aboutOverview: "",
+    aboutBackground: "",
+    mainLinks: [],
+  };
+}
+
+function saveUploadedAvatar(originalName, base64Data) {
+  const fileName = "about_avatar.jpg";
+  const filePath = path.join(IMG_DIR, fileName);
+
+  const cleanBase64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, "");
+  fs.writeFileSync(filePath, Buffer.from(cleanBase64, "base64"));
+
+  return `img/${fileName}`;
+}
+
+function getAllWorks() {
+  const clients = getClients();
+  const allWorks = [];
+
+  for (const [key, client] of Object.entries(clients)) {
+    const works = client.works || [];
+    works.forEach((w, idx) => {
+      const isVideo = w.type === "video" || Boolean(w.videoId);
+      const vid = extractVideoId(w.videoId || w.id);
+      allWorks.push({
+        id: w.id || vid || `${key}_${idx}`,
+        title: w.title || "Untitled Work",
+        type: isVideo ? "video" : "image",
+        category: w.category || (isVideo ? "Motion Graphic" : "Artwork"),
+        pubDate: w.pubDate || "",
+        videoId: vid || "",
+        src: w.src || (vid ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg` : ""),
+        clientKey: key,
+        clientName: client.name || key,
+        clientStatus: client.status || "online",
+        clientAvatar: client.avatar || key[0].toUpperCase(),
+      });
+    });
+  }
+
+  allWorks.sort((a, b) => {
+    if (a.pubDate && b.pubDate) {
+      return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+    }
+    return 0;
+  });
+
+  return allWorks;
+}
+
+function saveProfileAndCommit(profileData, options = {}) {
+  if (!profileData || typeof profileData !== "object") {
+    throw new Error("Invalid profile data format. Must be an object.");
+  }
+
+  // 1. Write site-profile.json
+  fs.writeFileSync(PROFILE_PATH, JSON.stringify(profileData, null, 2) + "\n", "utf8");
+
+  // 2. Sync into script.js (I18N_DATA.en.aboutOverview and aboutBackground)
+  if (fs.existsSync(SCRIPT_PATH)) {
+    let script = fs.readFileSync(SCRIPT_PATH, "utf8");
+    if (profileData.aboutOverview) {
+      script = script.replace(
+        /(aboutOverview:\s*`)([\s\S]*?)(`,)/,
+        `$1${profileData.aboutOverview}$3`
+      );
+    }
+    if (profileData.aboutBackground) {
+      script = script.replace(
+        /(aboutBackground:\s*`)([\s\S]*?)(`,)/,
+        `$1${profileData.aboutBackground}$3`
+      );
+    }
+    fs.writeFileSync(SCRIPT_PATH, script, "utf8");
+
+    try {
+      execSync(`node --check "${SCRIPT_PATH}"`, { encoding: "utf8" });
+    } catch (syntaxErr) {
+      console.error("[PROFILE] script.js syntax error after sync:", syntaxErr.message);
+    }
+  }
+
+  // 3. Sync index.html fallback
+  if (fs.existsSync(INDEX_PATH)) {
+    let html = fs.readFileSync(INDEX_PATH, "utf8");
+    if (profileData.aboutOverview) {
+      html = html.replace(
+        /(<div class="about-pane active" id="paneOverview"[^>]*>[\s\S]*?<p class="about-desc">)[\s\S]*?(<\/p>)/,
+        `$1\n              ${profileData.aboutOverview}\n            $2`
+      );
+    }
+    if (profileData.aboutBackground) {
+      html = html.replace(
+        /(<div class="about-pane" id="paneBackground"[^>]*>[\s\S]*?<p class="about-desc">)[\s\S]*?(<\/p>)/,
+        `$1\n              ${profileData.aboutBackground}\n            $2`
+      );
+    }
+    if (profileData.aboutAvatar) {
+      html = html.replace(
+        /(<img src=")[^"]*(" alt="amax" class="about-full-img" id="aboutAvatarImg"\s*\/>)/,
+        `$1${profileData.aboutAvatar}$2`
+      );
+    }
+    fs.writeFileSync(INDEX_PATH, html, "utf8");
+  }
+
+  // 4. Git commit
+  let commitResult = {
+    committed: false,
+    commitHash: null,
+    message: "",
+    pushed: false,
+    pushOutput: "",
+  };
+
+  try {
+    execSync('git add "site-profile.json" "index.html" "script.js" "img/about_avatar.jpg"', {
+      cwd: __dirname,
+      encoding: "utf8",
+    });
+
+    const statusOutput = execSync("git status --porcelain", {
+      cwd: __dirname,
+      encoding: "utf8",
+    }).trim();
+
+    if (statusOutput.length > 0) {
+      const commitMsg =
+        options.commitMessage && options.commitMessage.trim().length > 0
+          ? options.commitMessage.trim()
+          : "docs(profile): update amax overview, background, and avatar";
+
+      execSync(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`, {
+        cwd: __dirname,
+        encoding: "utf8",
+      });
+
+      const hash = execSync("git rev-parse --short HEAD", {
+        cwd: __dirname,
+        encoding: "utf8",
+      }).trim();
+
+      commitResult.committed = true;
+      commitResult.commitHash = hash;
+      commitResult.message = commitMsg;
+    }
+
+    if (options.push) {
+      const pushRes = pushToRemote();
+      commitResult.pushed = pushRes.success;
+      commitResult.pushOutput = pushRes.output || pushRes.error;
+    }
+  } catch (gitErr) {
+    console.error("[PROFILE GIT COMMIT ERROR]", gitErr.message);
+    commitResult.error = gitErr.message;
+  }
+
+  return {
+    success: true,
+    profile: profileData,
+    commit: commitResult,
+    gitStatus: getGitStatus(),
+  };
+}
+
 module.exports = {
   extractVideoId,
   getCatalog,
   getClients,
+  getProfile,
+  getAllWorks,
   getAvailableImages,
   saveUploadedImage,
+  saveUploadedAvatar,
   saveClientsAndCommit,
   saveCatalogAndCommit,
+  saveProfileAndCommit,
   pushToRemote,
   getGitStatus,
   fetchVideoMetadata,

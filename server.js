@@ -9,10 +9,14 @@ const { getSystemHWID, verifyHWID } = require("./hwid");
 const {
   getCatalog,
   getClients,
-  saveCatalogAndCommit,
-  saveClientsAndCommit,
+  getProfile,
+  getAllWorks,
   getAvailableImages,
+  saveClientsAndCommit,
+  saveCatalogAndCommit,
+  saveProfileAndCommit,
   saveUploadedImage,
+  saveUploadedAvatar,
   pushToRemote,
   getGitStatus,
   fetchVideoMetadata,
@@ -35,8 +39,8 @@ const activeSessions = new Map();
 // Rate limiter for login: Map<ip, { attempts, lockUntil }>
 const failedLoginAttempts = new Map();
 
-// Parse JSON request bodies
-app.use(express.json({ limit: "2mb" }));
+// Parse JSON request bodies (supporting base64 image & avatar uploads)
+app.use(express.json({ limit: "25mb" }));
 
 // Security middleware: Protect sensitive dotfiles (.env, .git)
 app.use((req, res, next) => {
@@ -57,6 +61,11 @@ app.use(express.static(__dirname));
 // Route for backend admin console
 app.get(["/admin", "/admin.html"], (req, res) => {
   res.sendFile(path.join(__dirname, "admin.html"));
+});
+
+// Routes for separated public pages (/home, /works, /about, /contact)
+app.get(["/home", "/works", "/about", "/contact"], (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 // Expose public config to the frontend
@@ -323,6 +332,72 @@ app.post("/api/admin/git/push", requireAdminAuth, (req, res) => {
 // Get Git repository status
 app.get("/api/admin/git/status", requireAdminAuth, (req, res) => {
   res.json(getGitStatus());
+});
+
+// ══════════════════════════════════════════════════════════════
+// SITE PROFILE & AMAX BIO MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+
+// Public endpoint for frontend site profile
+app.get("/api/site/profile", (req, res) => {
+  res.json(getProfile());
+});
+
+// Get site profile (About description, avatar, main links)
+app.get("/api/admin/profile", requireAdminAuth, (req, res) => {
+  res.json({
+    profile: getProfile(),
+    gitStatus: getGitStatus(),
+  });
+});
+
+// Save site profile & commit
+app.post("/api/admin/profile", requireAdminAuth, (req, res) => {
+  const { profile, commitMessage, push } = req.body || {};
+  if (!profile || typeof profile !== "object") {
+    return res.status(400).json({ error: "Invalid profile data format" });
+  }
+
+  try {
+    const result = saveProfileAndCommit(profile, {
+      commitMessage,
+      push: Boolean(push),
+    });
+    res.json(result);
+  } catch (err) {
+    console.error("[PROFILE SAVE ERROR]", err);
+    res.status(500).json({ error: "SAVE_FAILED", message: err.message });
+  }
+});
+
+// Upload new avatar image for Amax (<img src="img/about_avatar.jpg">)
+app.post("/api/admin/upload-avatar", requireAdminAuth, (req, res) => {
+  const { fileName, fileData } = req.body || {};
+  if (!fileName || !fileData) {
+    return res.status(400).json({ error: "Missing fileName or fileData" });
+  }
+
+  try {
+    const relativePath = saveUploadedAvatar(fileName, fileData);
+    res.json({
+      success: true,
+      path: relativePath,
+      profile: getProfile(),
+    });
+  } catch (err) {
+    console.error("[AVATAR UPLOAD ERROR]", err);
+    res.status(500).json({ error: "UPLOAD_FAILED", message: err.message });
+  }
+});
+
+// Get unified list of all works across all collections
+app.get("/api/admin/all-works", requireAdminAuth, (req, res) => {
+  const works = getAllWorks();
+  res.json({
+    works,
+    total: works.length,
+    gitStatus: getGitStatus(),
+  });
 });
 
 // Fetch single video metadata from YouTube

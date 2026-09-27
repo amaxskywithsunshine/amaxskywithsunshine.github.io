@@ -32,17 +32,90 @@ let currentPage = "home"; // hoisted — used by updateNavbar before router init
 function updateNavbar() {
   if (!navbar) return;
   const scrollY = window.scrollY;
-  navbar.classList.toggle("scrolled", scrollY > 60);
 
-  // On the About page: the window is always at scrollY=0 (SPA),
-  // so we manage visibility separately via the about-panes listener.
-  // On other pages, always show navbar.
+  // On the About page:
+  // Scroll direction controls visibility (scroll down hides, scroll up shows).
+  // Don't override nav-hidden on window scroll while on About.
   if (typeof currentPage !== "undefined" && currentPage === "about") {
-    // Visibility controlled by about-panes scroll — don't override here
+    navbar.classList.toggle("scrolled", scrollY > 60 || navbar.classList.contains("scrolled"));
     return;
   }
+
   navbar.classList.remove("nav-hidden");
+  navbar.classList.toggle("scrolled", scrollY > 60);
 }
+
+// Mouse wheel listener on About page:
+// - Scroll DOWN -> hide navbar
+// - Scroll UP -> show navbar
+// - Scrolling inside .about-panes does NOT change navbar state
+// - Scrolling outside .about-panes does NOT scroll the page (page stays locked in place)
+window.addEventListener(
+  "wheel",
+  (e) => {
+    if (currentPage !== "about") return;
+
+    // If mouse is inside .about-panes, do not alter navbar state
+    if (e.target && e.target.closest && e.target.closest(".about-panes")) {
+      return;
+    }
+
+    // Lock page in place: prevent page from scrolling/moving
+    e.preventDefault();
+
+    if (e.deltaY > 0) {
+      // User scrolled DOWN -> hide navbar
+      if (navbar) {
+        navbar.classList.add("nav-hidden");
+      }
+    } else if (e.deltaY < 0) {
+      // User scrolled UP -> show navbar
+      if (navbar) {
+        navbar.classList.remove("nav-hidden");
+        navbar.classList.add("scrolled");
+      }
+    }
+  },
+  { passive: false },
+);
+
+// Touch listeners for mobile swipe gestures on About page
+let aboutTouchStartY = 0;
+window.addEventListener(
+  "touchstart",
+  (e) => {
+    if (currentPage === "about" && e.touches.length > 0) {
+      aboutTouchStartY = e.touches[0].clientY;
+    }
+  },
+  { passive: true },
+);
+
+window.addEventListener(
+  "touchmove",
+  (e) => {
+    if (currentPage === "about" && e.touches.length > 0) {
+      // If touch is inside .about-panes, do not alter navbar state
+      if (e.target && e.target.closest && e.target.closest(".about-panes")) {
+        return;
+      }
+      if (e.cancelable) e.preventDefault();
+      const currentY = e.touches[0].clientY;
+      const delta = aboutTouchStartY - currentY;
+      if (delta > 10) {
+        // Swiping up (scrolling down) -> hide navbar
+        if (navbar) navbar.classList.add("nav-hidden");
+      } else if (delta < -10) {
+        // Swiping down (scrolling up) -> show navbar
+        if (navbar) {
+          navbar.classList.remove("nav-hidden");
+          navbar.classList.add("scrolled");
+        }
+      }
+    }
+  },
+  { passive: false },
+);
 
 window.addEventListener(
   "scroll",
@@ -230,7 +303,9 @@ const introSection = document.getElementById("intro");
 const introOverlay = document.getElementById("introOverlay");
 
 function handleIntroScroll() {
-  const introH = introSection.offsetHeight;
+  if (currentPage !== "home") return;
+  if (!introSection || !introOverlay) return;
+  const introH = introSection.offsetHeight || window.innerHeight;
   const progress = Math.min(1, Math.max(0, window.scrollY / (introH * 0.75)));
 
   // Fade out the light (dark overlay)
@@ -239,9 +314,20 @@ function handleIntroScroll() {
   // Also dim canvas light via scrollFade
   scrollFade = progress;
 
+  // Move bottom-widgets up when scrolling down on home so it stays cleanly above home-bottom-bar
+  const bottomWidgets = document.getElementById("bottomWidgets");
+  const homeBottomBar = document.getElementById("homeBottomBar");
+  if (bottomWidgets) {
+    const barH = homeBottomBar ? homeBottomBar.offsetHeight + 18 : 72;
+    const shift = Math.min(barH, window.scrollY);
+    bottomWidgets.style.transform = `translateY(-${shift}px)`;
+  }
+
   // Hide scroll hint once scrolled
-  if (progress > 0.05) scrollHint.classList.remove("visible");
-  else scrollHint.classList.add("visible");
+  if (scrollHint) {
+    if (progress > 0.05) scrollHint.classList.remove("visible");
+    else scrollHint.classList.add("visible");
+  }
 }
 
 /* ════════════════════════════════════════════
@@ -1488,6 +1574,7 @@ let currentAppLang = "en";
 const I18N_DATA = {
   en: {
     // Navigation
+    navHome: "HOME",
     navWorks: "WORKS",
     navAbout: "ABOUT",
     navContact: "CONTACT",
@@ -1533,9 +1620,12 @@ const I18N_DATA = {
     // Work Status
     workStatusLabel: "WORK STATUS",
     workStatusTooltip: "Available for Work",
+    creditDev: "Developer: amax / Antigravity",
+    creditDesigner: "Designer: amax",
   },
   th: {
     // Navigation
+    navHome: "หน้าแรก",
     navWorks: "ผลงาน",
     navAbout: "เกี่ยวกับ",
     navContact: "ติดต่อ",
@@ -1581,9 +1671,12 @@ const I18N_DATA = {
     // Work Status
     workStatusLabel: "สถานะงาน",
     workStatusTooltip: "พร้อมรับงาน",
+    creditDev: "ผู้พัฒนา: amax / Antigravity",
+    creditDesigner: "ผู้ออกแบบ: amax",
   },
   jp: {
     // Navigation
+    navHome: "ホーム",
     navWorks: "作品",
     navAbout: "概要",
     navContact: "連絡先",
@@ -1629,9 +1722,12 @@ const I18N_DATA = {
     // Work Status
     workStatusLabel: "稼働ステータス",
     workStatusTooltip: "お仕事募集中",
+    creditDev: "開発者: amax / Antigravity",
+    creditDesigner: "デザイナー: amax",
   },
   cn: {
     // Navigation
+    navHome: "首页",
     navWorks: "作品",
     navAbout: "关于",
     navContact: "联系",
@@ -1677,6 +1773,8 @@ const I18N_DATA = {
     // Work Status
     workStatusLabel: "工作状态",
     workStatusTooltip: "开放承接中",
+    creditDev: "开发者: amax / Antigravity",
+    creditDesigner: "设计者: amax",
   },
 };
 
@@ -1693,12 +1791,20 @@ function applyLanguage(lang) {
   });
 
   // Update Navigation
+  const navHome = document.getElementById("navHome");
+  if (navHome) navHome.textContent = t.navHome;
   const navWorks = document.getElementById("navWorks");
   if (navWorks) navWorks.textContent = t.navWorks;
   const navAbout = document.getElementById("navAbout");
   if (navAbout) navAbout.textContent = t.navAbout;
   const navContact = document.getElementById("navContact");
   if (navContact) navContact.textContent = t.navContact;
+
+  // Update Home Bottom Credits
+  const creditDev = document.getElementById("creditDev");
+  if (creditDev) creditDev.textContent = t.creditDev;
+  const creditDesigner = document.getElementById("creditDesigner");
+  if (creditDesigner) creditDesigner.textContent = t.creditDesigner;
 
   // Update Scroll hint
   const scrollHint = document.querySelector("#scrollHint span");
@@ -1881,42 +1987,35 @@ function navigateTo(pageKey, updateHistory = true) {
 
   // 5. Scroll instantly to top
   window.scrollTo({ top: 0, behavior: "instant" });
+  document.body.classList.toggle("page-about", targetKey === "about");
 
   // 6. Trigger reveal observer
   setTimeout(() => {
     if (typeof checkReveal === "function") checkReveal();
   }, 40);
 
-  // 7. If entering home, trigger spotlight light sequence
+  // 7. If entering home, trigger spotlight light sequence and reset hero overlay
+  const bottomWidgets = document.getElementById("bottomWidgets");
+  if (bottomWidgets && targetKey !== "home") {
+    bottomWidgets.style.transform = "none";
+  }
+
   if (targetKey === "home") {
     lightTarget = 1;
+    lightAlpha = 1;
+    scrollFade = 0;
+    if (introOverlay) introOverlay.style.opacity = "0";
+    if (introBg) introBg.classList.add("visible");
+    if (introText) introText.classList.add("visible");
+    if (barcode) barcode.classList.add("visible");
+    if (tagsRow) tagsRow.classList.add("visible");
+    if (bottomWidgets) bottomWidgets.style.transform = "none";
     if (typeof startIntroSequence === "function") startIntroSequence();
   }
   // 8. Navbar behavior per page
   if (navbar) {
     navbar.classList.remove("nav-hidden");
     navbar.classList.toggle("scrolled", window.scrollY > 60);
-
-    if (targetKey === "about") {
-      // Hide navbar immediately when entering About page
-      navbar.classList.add("nav-hidden");
-
-      // Re-attach scroll listener on about-panes (use a flag to avoid duplicates)
-      setTimeout(() => {
-        const aboutPanes = document.querySelector(".about-panes");
-        if (!aboutPanes || aboutPanes._navListenerAttached) return;
-        aboutPanes._navListenerAttached = true;
-        aboutPanes.addEventListener("scroll", function () {
-          if (aboutPanes.scrollLeft > 8) {
-            navbar.classList.remove("nav-hidden");
-            navbar.classList.add("scrolled");
-          } else {
-            navbar.classList.add("nav-hidden");
-            navbar.classList.remove("scrolled");
-          }
-        }, { passive: true });
-      }, 60);
-    }
   }
 }
 
