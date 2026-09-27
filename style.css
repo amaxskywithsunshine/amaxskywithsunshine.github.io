@@ -1861,7 +1861,7 @@ body::-webkit-scrollbar { display: none; }
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #555;
+  background: #ff4d4f;
   flex-shrink: 0;
 }
 .status-dot.green {

@@ -36,12 +36,37 @@ function getMachineGuid() {
 function getPrimaryMac() {
   try {
     const interfaces = os.networkInterfaces();
-    const macs = Object.values(interfaces)
+    // Exclude virtual adapter prefixes: Hyper-V (00:15:5d), VMware (00:05:69, 00:0c:29, 00:50:56), VirtualBox (08:00:27), QEMU (52:54:00)
+    const virtualMacPrefixes = ["00:15:5d", "00:05:69", "00:0c:29", "00:50:56", "08:00:27", "52:54:00"];
+    const virtualNames = ["vethernet", "wsl", "virtual", "vmware", "vbox", "loopback", "tap", "tun"];
+
+    const validMacs = [];
+
+    for (const [name, addrs] of Object.entries(interfaces)) {
+      const lowerName = name.toLowerCase();
+      if (virtualNames.some((v) => lowerName.includes(v))) continue;
+
+      for (const addr of addrs) {
+        if (!addr || !addr.mac) continue;
+        const mac = addr.mac.toLowerCase();
+        if (mac === "00:00:00:00:00:00" || mac.startsWith("00:00")) continue;
+        if (virtualMacPrefixes.some((p) => mac.startsWith(p))) continue;
+        validMacs.push(mac);
+      }
+    }
+
+    if (validMacs.length > 0) {
+      validMacs.sort();
+      return validMacs[0];
+    }
+
+    // Fallback if only virtual adapters exist
+    const allMacs = Object.values(interfaces)
       .flat()
-      .map((i) => i?.mac)
+      .map((i) => i?.mac?.toLowerCase())
       .filter((m) => m && m !== "00:00:00:00:00:00" && !m.startsWith("00:00"))
       .sort();
-    return macs[0] || "00:00:00:00:00:00";
+    return allMacs[0] || "00:00:00:00:00:00";
   } catch (e) {
     return "00:00:00:00:00:00";
   }

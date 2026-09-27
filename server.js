@@ -15,8 +15,17 @@ const {
   saveClientsAndCommit,
   saveCatalogAndCommit,
   saveProfileAndCommit,
+  saveAboutAndCommit,
+  saveSocialLinksAndCommit,
+  getContacts,
+  saveContactMessage,
+  toggleContactRead,
+  deleteContactMessage,
   saveUploadedImage,
+  saveUploadedVideo,
   saveUploadedAvatar,
+  saveUploadedClientAvatar,
+  saveUploadedCatalogCover,
   pushToRemote,
   getGitStatus,
   fetchVideoMetadata,
@@ -39,8 +48,8 @@ const activeSessions = new Map();
 // Rate limiter for login: Map<ip, { attempts, lockUntil }>
 const failedLoginAttempts = new Map();
 
-// Parse JSON request bodies (supporting base64 image & avatar uploads)
-app.use(express.json({ limit: "25mb" }));
+// Parse JSON request bodies (supporting base64 video, image & avatar uploads up to 20MB)
+app.use(express.json({ limit: "35mb" }));
 
 // Security middleware: Protect sensitive dotfiles (.env, .git)
 app.use((req, res, next) => {
@@ -139,7 +148,37 @@ app.get("/api/admin/auth/status", (req, res) => {
   });
 });
 
-// Login endpoint
+// HWID Auto-Login endpoint: Instant login without password when connecting from verified HWID machine
+app.post("/api/admin/auth/hwid-login", (req, res) => {
+  const hwCheck = verifyHWID(ALLOWED_HWID);
+  if (!hwCheck.allowed) {
+    return res.status(403).json({
+      error: "HARDWARE_NOT_VERIFIED",
+      message: `Hardware signature mismatch (${hwCheck.currentHwid}). Please enter admin passcode.`,
+      currentHwid: hwCheck.currentHwid,
+    });
+  }
+
+  const clientIp = req.ip || req.connection.remoteAddress || "127.0.0.1";
+  const now = Date.now();
+  const token = crypto.randomBytes(32).toString("hex");
+  activeSessions.set(token, {
+    createdAt: now,
+    clientFingerprint: req.body?.clientFingerprint || "hwid-auto",
+    ip: clientIp,
+    authType: "HWID",
+  });
+
+  res.json({
+    success: true,
+    token,
+    currentHwid: hwCheck.currentHwid,
+    systemInfo: hwCheck.systemInfo,
+    message: "Logged in via verified Hardware ID.",
+  });
+});
+
+// Login endpoint with password fallback
 app.post("/api/admin/auth/login", (req, res) => {
   const clientIp = req.ip || req.connection.remoteAddress || "127.0.0.1";
   const now = Date.now();
@@ -161,16 +200,9 @@ app.post("/api/admin/auth/login", (req, res) => {
     }
   }
 
-  // 1. Hardware ID Check
   const hwCheck = verifyHWID(ALLOWED_HWID);
-  if (!hwCheck.allowed) {
-    return res.status(403).json({
-      error: "HARDWARE_UNAUTHORIZED",
-      message: `Access denied: Server is running on unauthorized hardware (${hwCheck.currentHwid}).`,
-    });
-  }
 
-  // 2. Admin Key Check (requires non-empty ADMIN_KEY in .env)
+  // Admin Key Check (requires non-empty ADMIN_KEY in .env)
   if (!ADMIN_KEY || !adminKey || adminKey !== ADMIN_KEY) {
     const current = failedLoginAttempts.get(clientIp) || {
       attempts: 0,
@@ -197,6 +229,8 @@ app.post("/api/admin/auth/login", (req, res) => {
     createdAt: now,
     clientFingerprint: clientFingerprint || "unknown",
     ip: clientIp,
+    hwidVerified: hwCheck.allowed,
+    authType: "PASSWORD",
   });
 
   res.json({
@@ -323,6 +357,70 @@ app.post("/api/admin/upload-image", requireAdminAuth, (req, res) => {
   }
 });
 
+// Upload video for a client (Max 20MB limit enforced)
+app.post("/api/admin/upload-video", requireAdminAuth, (req, res) => {
+  const { clientKey, fileName, fileData } = req.body || {};
+  if (!clientKey || !fileName || !fileData) {
+    return res
+      .status(400)
+      .json({ error: "Missing clientKey, fileName, or fileData" });
+  }
+
+  try {
+    const relativePath = saveUploadedVideo(clientKey, fileName, fileData);
+    res.json({
+      success: true,
+      path: relativePath,
+      type: "video",
+    });
+  } catch (err) {
+    console.error("[VIDEO UPLOAD ERROR]", err);
+    res.status(400).json({ error: "UPLOAD_FAILED", message: err.message });
+  }
+});
+
+// Upload avatar image for a client
+app.post("/api/admin/upload-client-avatar", requireAdminAuth, (req, res) => {
+  const { clientKey, fileName, fileData } = req.body || {};
+  if (!clientKey || !fileName || !fileData) {
+    return res
+      .status(400)
+      .json({ error: "Missing clientKey, fileName, or fileData" });
+  }
+
+  try {
+    const relativePath = saveUploadedClientAvatar(clientKey, fileName, fileData);
+    res.json({
+      success: true,
+      path: relativePath,
+    });
+  } catch (err) {
+    console.error("[CLIENT AVATAR UPLOAD ERROR]", err);
+    res.status(400).json({ error: "UPLOAD_FAILED", message: err.message });
+  }
+});
+
+// Upload catalog cover / preview image for a client
+app.post("/api/admin/upload-catalog-cover", requireAdminAuth, (req, res) => {
+  const { clientKey, fileName, fileData } = req.body || {};
+  if (!clientKey || !fileName || !fileData) {
+    return res
+      .status(400)
+      .json({ error: "Missing clientKey, fileName, or fileData" });
+  }
+
+  try {
+    const relativePath = saveUploadedCatalogCover(clientKey, fileName, fileData);
+    res.json({
+      success: true,
+      path: relativePath,
+    });
+  } catch (err) {
+    console.error("[CATALOG COVER UPLOAD ERROR]", err);
+    res.status(400).json({ error: "UPLOAD_FAILED", message: err.message });
+  }
+});
+
 // Push to remote repository (main)
 app.post("/api/admin/git/push", requireAdminAuth, (req, res) => {
   const result = pushToRemote();
@@ -343,35 +441,145 @@ app.get("/api/site/profile", (req, res) => {
   res.json(getProfile());
 });
 
-// Get site profile (About description, avatar, main links)
-app.get("/api/admin/profile", requireAdminAuth, (req, res) => {
+// ── TRANSLATION API (Auto-translate EN -> TH, JP, CN) ──
+async function translateText(text, targetLang, sourceLang = "en") {
+  if (!text || !text.trim()) return "";
+  const tl = targetLang === "jp" ? "ja" : targetLang === "cn" ? "zh-CN" : targetLang;
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Translation API error: ${resp.status}`);
+  const data = await resp.json();
+  if (Array.isArray(data) && Array.isArray(data[0])) {
+    return data[0].map((s) => (s && s[0] ? s[0] : "")).join("");
+  }
+  return text;
+}
+
+app.post("/api/admin/translate", requireAdminAuth, async (req, res) => {
+  const { text, targetLangs = ["th", "jp", "cn"], sourceLang = "en" } = req.body || {};
+  if (!text || typeof text !== "string") {
+    return res.status(400).json({ error: "Missing text to translate" });
+  }
+
+  try {
+    const translations = {};
+    for (const tl of targetLangs) {
+      translations[tl] = await translateText(text, tl, sourceLang);
+    }
+    res.json({ success: true, translations });
+  } catch (err) {
+    console.error("[TRANSLATION ERROR]", err);
+    res.status(500).json({ error: "TRANSLATION_FAILED", message: err.message });
+  }
+});
+
+// ── CONTACT INBOX API ──
+// Public endpoint: Save inquiry to local inbox
+app.post("/api/contact", (req, res) => {
+  const { name, email, inquiry, message, timestamp } = req.body || {};
+  const inquiryText = (inquiry || message || "").trim();
+  if (!name && !email && !inquiryText) {
+    return res.status(400).json({ error: "Empty contact inquiry" });
+  }
+  try {
+    const item = saveContactMessage({ name, email, inquiry: inquiryText, timestamp });
+    res.json({ success: true, message: "Inquiry saved to local inbox", item });
+  } catch (err) {
+    console.error("[CONTACT POST ERROR]", err);
+    res.status(500).json({ error: "FAILED_TO_SAVE_CONTACT", message: err.message });
+  }
+});
+
+app.get("/api/admin/contacts", requireAdminAuth, (req, res) => {
+  res.json({ success: true, contacts: getContacts() });
+});
+
+app.post("/api/admin/contacts/toggle-read", requireAdminAuth, (req, res) => {
+  const { id, read, isRead } = req.body || {};
+  if (!id) return res.status(400).json({ error: "Missing message id" });
+  const targetRead = isRead !== undefined ? isRead : read;
+  const updated = toggleContactRead(id, targetRead);
+  if (!updated) return res.status(404).json({ error: "Message not found" });
+  res.json({ success: true, item: updated, contacts: getContacts() });
+});
+
+app.delete("/api/admin/contacts/:id", requireAdminAuth, (req, res) => {
+  const id = req.params.id;
+  deleteContactMessage(id);
+  res.json({ success: true, contacts: getContacts() });
+});
+
+// ── ABOUT SECTION MANAGER API ──
+app.get("/api/admin/about", requireAdminAuth, (req, res) => {
+  const profile = getProfile();
   res.json({
-    profile: getProfile(),
+    success: true,
+    avatar: profile.aboutAvatar || "img/about_avatar.jpg",
+    workStatus: profile.workStatus || "available",
+    overview: profile.about?.overview || {},
+    background: profile.about?.background || {},
+    profile,
     gitStatus: getGitStatus(),
   });
 });
 
-// Save site profile & commit
-app.post("/api/admin/profile", requireAdminAuth, (req, res) => {
-  const { profile, commitMessage, push } = req.body || {};
-  if (!profile || typeof profile !== "object") {
-    return res.status(400).json({ error: "Invalid profile data format" });
+app.post("/api/admin/about", requireAdminAuth, (req, res) => {
+  const body = req.body || {};
+  const aboutData = (body.aboutData && typeof body.aboutData === "object") ? body.aboutData : body;
+  const { commitMessage, push } = body;
+
+  try {
+    const result = saveAboutAndCommit(aboutData, { commitMessage, push: Boolean(push) });
+    res.json(result);
+  } catch (err) {
+    console.error("[ABOUT SAVE ERROR]", err);
+    res.status(500).json({ error: "SAVE_FAILED", message: err.message });
+  }
+});
+
+// Quick toggle for Homepage Work Status (Available / Unavailable)
+app.post("/api/admin/work-status", requireAdminAuth, (req, res) => {
+  const { status, isAvailable } = req.body || {};
+  const workStatus =
+    status === "available" || isAvailable === true || status === true
+      ? "available"
+      : "unavailable";
+
+  try {
+    const result = saveAboutAndCommit(
+      { workStatus },
+      { commitMessage: `chore: update work status to ${workStatus}` }
+    );
+    res.json({ success: true, workStatus, ...result });
+  } catch (err) {
+    console.error("[WORK STATUS UPDATE ERROR]", err);
+    res.status(500).json({ error: "SAVE_FAILED", message: err.message });
+  }
+});
+
+// ── SOCIAL MEDIA LINKS API ──
+app.get("/api/admin/social-links", requireAdminAuth, (req, res) => {
+  const profile = getProfile();
+  res.json({ success: true, links: profile.mainLinks || [] });
+});
+
+app.post("/api/admin/social-links", requireAdminAuth, (req, res) => {
+  const { links, commitMessage, push } = req.body || {};
+  if (!Array.isArray(links)) {
+    return res.status(400).json({ error: "Invalid links format. Must be an array." });
   }
 
   try {
-    const result = saveProfileAndCommit(profile, {
-      commitMessage,
-      push: Boolean(push),
-    });
+    const result = saveSocialLinksAndCommit(links, { commitMessage, push: Boolean(push) });
     res.json(result);
   } catch (err) {
-    console.error("[PROFILE SAVE ERROR]", err);
+    console.error("[SOCIAL SAVE ERROR]", err);
     res.status(500).json({ error: "SAVE_FAILED", message: err.message });
   }
 });
 
 // Upload new avatar image for Amax (<img src="img/about_avatar.jpg">)
-app.post("/api/admin/upload-avatar", requireAdminAuth, (req, res) => {
+app.post("/api/admin/upload-about-avatar", requireAdminAuth, (req, res) => {
   const { fileName, fileData } = req.body || {};
   if (!fileName || !fileData) {
     return res.status(400).json({ error: "Missing fileName or fileData" });
@@ -386,6 +594,34 @@ app.post("/api/admin/upload-avatar", requireAdminAuth, (req, res) => {
     });
   } catch (err) {
     console.error("[AVATAR UPLOAD ERROR]", err);
+    res.status(500).json({ error: "UPLOAD_FAILED", message: err.message });
+  }
+});
+
+// Backwards-compatible routes
+app.get("/api/admin/profile", requireAdminAuth, (req, res) => {
+  res.json({
+    profile: getProfile(),
+    gitStatus: getGitStatus(),
+  });
+});
+
+app.post("/api/admin/profile", requireAdminAuth, (req, res) => {
+  const { profile, commitMessage, push } = req.body || {};
+  try {
+    const result = saveProfileAndCommit(profile, { commitMessage, push: Boolean(push) });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: "SAVE_FAILED", message: err.message });
+  }
+});
+
+app.post("/api/admin/upload-avatar", requireAdminAuth, (req, res) => {
+  const { fileName, fileData } = req.body || {};
+  try {
+    const relativePath = saveUploadedAvatar(fileName, fileData);
+    res.json({ success: true, path: relativePath, profile: getProfile() });
+  } catch (err) {
     res.status(500).json({ error: "UPLOAD_FAILED", message: err.message });
   }
 });

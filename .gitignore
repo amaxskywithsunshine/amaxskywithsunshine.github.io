@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 .vscode/
+contacts.json
 
 # ── Dependencies ─────────────────────────────
 node_modules/

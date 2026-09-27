@@ -49,6 +49,8 @@
   const btnTogglePw = document.getElementById("btnTogglePw");
   const btnLogin = document.getElementById("btnLogin");
   const loginErrorMsg = document.getElementById("loginErrorMsg");
+  const hwidAutoBox = document.getElementById("hwidAutoBox");
+  const btnHwidAutoLogin = document.getElementById("btnHwidAutoLogin");
   const diagHwid = document.getElementById("diagHwid");
   const diagHost = document.getElementById("diagHost");
   const diagStatusBadge = document.getElementById("diagStatusBadge");
@@ -62,6 +64,8 @@
   const navHwidBadge = document.getElementById("navHwidBadge");
   const navHwidText = document.getElementById("navHwidText");
   const navBranchBadge = document.getElementById("navBranchBadge");
+  const navWorkStatusToggle = document.getElementById("navWorkStatusToggle");
+  const navWorkStatusLabel = document.getElementById("navWorkStatusLabel");
   const statTotalWorks = document.getElementById("statTotalWorks");
   const statTotalWorksLabel = document.getElementById("statTotalWorksLabel");
   const statVideosCount = document.getElementById("statVideosCount");
@@ -135,6 +139,11 @@
   const groupPublishDate = document.getElementById("groupPublishDate");
   const inputVideoUrl = document.getElementById("inputVideoUrl");
   const btnFetchMeta = document.getElementById("btnFetchMeta");
+  const videoFileUploadInput = document.getElementById("videoFileUploadInput");
+  const videoUploadStatus = document.getElementById("videoUploadStatus");
+  const inputVideoThumbSrc = document.getElementById("inputVideoThumbSrc");
+  const fileUploadVideoThumb = document.getElementById("fileUploadVideoThumb");
+  const videoThumbUploadStatus = document.getElementById("videoThumbUploadStatus");
   const selectExistingImage = document.getElementById("selectExistingImage");
   const fileUploadInput = document.getElementById("fileUploadInput");
   const inputImageSrc = document.getElementById("inputImageSrc");
@@ -332,6 +341,11 @@
     // Login Form Submit
     if (loginForm) loginForm.addEventListener("submit", handleLogin);
 
+    // HWID Auto-Login Button
+    if (btnHwidAutoLogin) {
+      btnHwidAutoLogin.addEventListener("click", attemptHwidAutoLogin);
+    }
+
     // Logout
     if (btnLogout) btnLogout.addEventListener("click", handleLogout);
 
@@ -358,9 +372,13 @@
 
       updateHardwareUI(data);
 
-      if (data.authenticated && state.hwidValid) {
+      if (data.authenticated) {
         enterDashboard();
+      } else if (state.hwidValid) {
+        if (hwidAutoBox) hwidAutoBox.style.display = "block";
+        await attemptHwidAutoLogin();
       } else {
+        if (hwidAutoBox) hwidAutoBox.style.display = "none";
         exitDashboard();
       }
     } catch (err) {
@@ -370,6 +388,35 @@
         diagStatusText.textContent = "SERVER OFFLINE";
       }
       if (diagHwid) diagHwid.textContent = "OFFLINE (RUN 'node server.js')";
+    }
+  }
+
+  async function attemptHwidAutoLogin() {
+    try {
+      if (btnHwidAutoLogin) {
+        btnHwidAutoLogin.disabled = true;
+        const textSpan = btnHwidAutoLogin.querySelector(".btn-text");
+        if (textSpan) textSpan.textContent = "AUTHENTICATING VIA HWID...";
+      }
+      const res = await apiRequest("/api/admin/auth/hwid-login", {
+        method: "POST",
+        body: { clientFingerprint: state.clientFingerprint },
+      });
+      if (res.success && res.token) {
+        state.token = res.token;
+        state.authenticated = true;
+        localStorage.setItem("amax_admin_token", res.token);
+        showToast("Hardware signature verified. Auto-logged in!", "success");
+        enterDashboard();
+      }
+    } catch (e) {
+      console.log("[HWID AUTO-LOGIN]", e.message);
+    } finally {
+      if (btnHwidAutoLogin) {
+        btnHwidAutoLogin.disabled = false;
+        const textSpan = btnHwidAutoLogin.querySelector(".btn-text");
+        if (textSpan) textSpan.textContent = "ENTER CONSOLE (HWID VERIFIED)";
+      }
     }
   }
 
@@ -477,6 +524,8 @@
     authView.style.display = "none";
     dashboardView.style.display = "flex";
     loadAllClients();
+    loadWorkStatus();
+    if (typeof updateInboxBadge === "function") updateInboxBadge();
   }
 
   function exitDashboard() {
@@ -571,8 +620,8 @@
       const isOriginal = key === "personal";
       const tagText = isOriginal ? "ORIGINAL" : "CLIENT";
 
-      const isOnline = client.status !== 'offline';
-      const statusLabel = isOnline ? 'ONLINE' : 'OFFLINE';
+      const isOnline = client.status !== "offline";
+      const statusLabel = isOnline ? "ONLINE" : "OFFLINE";
 
       const card = document.createElement("button");
       card.type = "button";
@@ -587,7 +636,7 @@
           <div class="client-box-top-row">
             <span class="client-box-tag">${tagText}</span>
             <span class="client-box-status">
-              <span class="status-dot-sm" style="background:${isOnline ? '' : '#555'}"></span> ${statusLabel}
+              <span class="status-dot-sm" style="background:${isOnline ? "" : "#ff4d4f"}"></span> ${statusLabel}
             </span>
           </div>
           <h3 class="client-box-title">${client.name || key}</h3>
@@ -750,8 +799,14 @@
     const works = client.works || [];
 
     if (activeClientAvatar) {
-      activeClientAvatar.textContent =
-        client.avatar || state.activeClientKey.charAt(0).toUpperCase();
+      const av = client.avatar || state.activeClientKey.charAt(0).toUpperCase();
+      const isImg =
+        av.includes("/") || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(av);
+      if (isImg) {
+        activeClientAvatar.innerHTML = `<img src="${av}" alt="${client.name || ""}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.onerror=null;this.parentElement.textContent='?'" />`;
+      } else {
+        activeClientAvatar.textContent = av;
+      }
     }
     if (activeClientName)
       activeClientName.textContent = client.name || state.activeClientKey;
@@ -764,13 +819,13 @@
     }
 
     // Sync ONLINE/OFFLINE toggle in profile banner
-    const statusCheck = document.getElementById('clientStatusCheck');
-    const statusLabel = document.getElementById('clientStatusLabel');
+    const statusCheck = document.getElementById("clientStatusCheck");
+    const statusLabel = document.getElementById("clientStatusLabel");
     if (statusCheck) {
-      const isOnline = client.status !== 'offline';
+      const isOnline = client.status !== "offline";
       statusCheck.checked = isOnline;
       if (statusLabel) {
-        statusLabel.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+        statusLabel.textContent = isOnline ? "ONLINE" : "OFFLINE";
       }
     }
 
@@ -780,23 +835,24 @@
         activeClientLinks.innerHTML = client.links
           .map(
             (link) => `
-            <a href="${link.url || '#'}" target="_blank" rel="noopener" class="client-icon-btn" title="${link.platform || ''}${link.label ? `: ${link.label}` : ''}">
-              ${link.icon ? `<img src="${link.icon}" alt="${link.platform || 'Link'}" class="client-link-icon" />` : `<span class="icon-fallback">${(link.platform || 'L').charAt(0)}</span>`}
+            <a href="${link.url || "#"}" target="_blank" rel="noopener" class="client-icon-btn" title="${link.platform || ""}${link.label ? `: ${link.label}` : ""}">
+              ${link.icon ? `<img src="${link.icon}" alt="${link.platform || "Link"}" class="client-link-icon" />` : `<span class="icon-fallback">${(link.platform || "L").charAt(0)}</span>`}
             </a>
           `,
           )
-          .join('');
+          .join("");
       } else {
-        activeClientLinks.innerHTML = '<span style="color:#555;font-size:11px;">No links added.</span>';
+        activeClientLinks.innerHTML =
+          '<span style="color:#555;font-size:11px;">No links added.</span>';
       }
     }
 
     // Update filter counts for active client
     const videoWorks = works.filter(
-      (w) => w.type === 'video' || (!w.type && (w.videoId || w.id)),
+      (w) => w.type === "video" || (!w.type && (w.videoId || w.id)),
     );
     const imageWorks = works.filter(
-      (w) => w.type === 'image' || (!w.videoId && !w.id && w.src),
+      (w) => w.type === "image" || (!w.videoId && !w.id && w.src),
     );
 
     if (countFilterAll) countFilterAll.textContent = works.length;
@@ -1090,6 +1146,19 @@
 
     // Image file upload
     fileUploadInput.addEventListener("change", handleImageUpload);
+
+    // Video file upload (Max 20MB)
+    if (videoFileUploadInput) {
+      videoFileUploadInput.addEventListener("change", handleVideoUpload);
+    }
+
+    // Video custom thumbnail upload & input
+    if (fileUploadVideoThumb) {
+      fileUploadVideoThumb.addEventListener("change", handleVideoThumbUpload);
+    }
+    if (inputVideoThumbSrc) {
+      inputVideoThumbSrc.addEventListener("input", updatePreviewCard);
+    }
   }
 
   function updateWorkTypeVisibility() {
@@ -1138,6 +1207,14 @@
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 20 * 1024 * 1024) {
+      showToast(
+        `Image size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds 20MB limit.`,
+        "error",
+      );
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = async (evt) => {
       const base64Data = evt.target.result;
@@ -1167,6 +1244,101 @@
     reader.readAsDataURL(file);
   }
 
+  async function handleVideoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      showToast(
+        `Video size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds 20MB limit.`,
+        "error",
+      );
+      if (videoUploadStatus)
+        videoUploadStatus.textContent = "⚠️ Exceeds 20MB limit";
+      return;
+    }
+
+    if (videoUploadStatus) {
+      videoUploadStatus.textContent = `Uploading ${(file.size / 1024 / 1024).toFixed(1)}MB...`;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        showToast("Uploading video file (Max 20MB)...", "info");
+        const res = await apiRequest("/api/admin/upload-video", {
+          method: "POST",
+          body: {
+            clientKey: state.activeClientKey,
+            fileName: file.name,
+            fileData: evt.target.result,
+          },
+        });
+
+        if (res.success && res.path) {
+          inputVideoUrl.value = res.path;
+          if (!inputVideoTitle.value.trim()) {
+            inputVideoTitle.value = file.name.replace(/\.[^/.]+$/, "");
+          }
+          if (videoUploadStatus) {
+            videoUploadStatus.textContent = `✓ Uploaded: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+          }
+          updatePreviewCard();
+          showToast(`Video uploaded: ${res.path}`, "success");
+        }
+      } catch (err) {
+        if (videoUploadStatus) videoUploadStatus.textContent = "Upload failed";
+        showToast(`Video upload failed: ${err.message}`, "error");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Video custom thumbnail upload (Max 20MB)
+  function handleVideoThumbUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      showToast("Thumbnail exceeds 20MB limit.", "error");
+      if (videoThumbUploadStatus)
+        videoThumbUploadStatus.textContent = "⚠️ Exceeds 20MB limit";
+      return;
+    }
+
+    if (videoThumbUploadStatus) {
+      videoThumbUploadStatus.textContent = `Uploading ${(file.size / 1024 / 1024).toFixed(1)}MB...`;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        showToast("Uploading custom thumbnail...", "info");
+        const res = await apiRequest("/api/admin/upload-image", {
+          method: "POST",
+          body: {
+            clientKey: state.activeClientKey,
+            fileName: file.name,
+            fileData: evt.target.result,
+          },
+        });
+
+        if (res.success && res.path) {
+          if (inputVideoThumbSrc) inputVideoThumbSrc.value = res.path;
+          if (videoThumbUploadStatus) {
+            videoThumbUploadStatus.textContent = `✓ Uploaded: ${file.name}`;
+          }
+          updatePreviewCard();
+          showToast(`Custom thumbnail uploaded: ${res.path}`, "success");
+        }
+      } catch (err) {
+        if (videoThumbUploadStatus) videoThumbUploadStatus.textContent = "Upload failed";
+        showToast(`Thumbnail upload failed: ${err.message}`, "error");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
   // ── ADD & EDIT WORK MODAL ──
   btnOpenAddModal.addEventListener("click", () => {
     openAddModal();
@@ -1186,6 +1358,10 @@
 
     inputVideoUrl.value = "";
     inputImageSrc.value = "";
+    if (inputVideoThumbSrc) inputVideoThumbSrc.value = "";
+    if (fileUploadVideoThumb) fileUploadVideoThumb.value = "";
+    if (videoThumbUploadStatus)
+      videoThumbUploadStatus.textContent = "No custom thumbnail (uses video thumb/preview)";
     selectExistingImage.value = "";
     inputVideoTitle.value = "";
     inputCategory.value =
@@ -1193,6 +1369,8 @@
         ? "Stream Thumbnail"
         : "Motion Graphic";
     inputVideoDate.value = new Date().toISOString().split("T")[0];
+    if (videoUploadStatus)
+      videoUploadStatus.textContent = "No local video selected";
 
     updateWorkTypeVisibility();
     videoModalBackdrop.style.display = "flex";
@@ -1213,10 +1391,38 @@
       inputImageSrc.value = item.src || "";
       selectExistingImage.value = item.src || "";
       inputVideoUrl.value = "";
+      if (inputVideoThumbSrc) inputVideoThumbSrc.value = "";
+      if (videoThumbUploadStatus)
+        videoThumbUploadStatus.textContent = "No custom thumbnail";
+      if (videoUploadStatus)
+        videoUploadStatus.textContent = "No local video selected";
     } else {
       radioTypeVideo.checked = true;
       inputVideoUrl.value = item.videoId || item.id || "";
       inputImageSrc.value = item.src || "";
+      if (inputVideoThumbSrc) {
+        if (item.src && !item.src.includes("img.youtube.com/vi/")) {
+          inputVideoThumbSrc.value = item.src;
+          if (videoThumbUploadStatus) {
+            videoThumbUploadStatus.textContent = `✓ Custom thumbnail: ${item.src.split("/").pop()}`;
+          }
+        } else {
+          inputVideoThumbSrc.value = "";
+          if (videoThumbUploadStatus) {
+            videoThumbUploadStatus.textContent = "Default video thumbnail";
+          }
+        }
+      }
+      if (videoUploadStatus) {
+        if (
+          item.isLocalVideo ||
+          (item.videoId && item.videoId.startsWith("video/"))
+        ) {
+          videoUploadStatus.textContent = `✓ Local video: ${item.videoId.split("/").pop()}`;
+        } else {
+          videoUploadStatus.textContent = "YouTube video";
+        }
+      }
     }
 
     inputVideoTitle.value = item.title || "";
@@ -1262,8 +1468,16 @@
       previewThumb.src = src || "img/personal_preview.jpg";
       if (previewPlayIcon) previewPlayIcon.style.display = "none";
     } else {
-      const vid = extractVideoId(inputVideoUrl.value);
-      if (vid) {
+      const val = inputVideoUrl.value.trim();
+      const customThumb = inputVideoThumbSrc ? inputVideoThumbSrc.value.trim() : "";
+      const isLocal =
+        val.startsWith("video/") || /\.(mp4|webm|mov|m4v)$/i.test(val);
+      const vid = isLocal ? val : extractVideoId(val);
+      if (customThumb) {
+        previewThumb.src = customThumb;
+      } else if (isLocal) {
+        previewThumb.src = "img/personal_preview.jpg";
+      } else if (vid) {
         previewThumb.src = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
       } else {
         previewThumb.src = "img/personal_preview.jpg";
@@ -1337,9 +1551,22 @@
         src: src,
       };
     } else {
-      const vid = extractVideoId(inputVideoUrl.value);
+      const val = inputVideoUrl.value.trim();
+      if (!val) {
+        showToast(
+          "Please enter a YouTube link or upload a video file.",
+          "error",
+        );
+        return;
+      }
+      const isLocal =
+        val.startsWith("video/") || /\.(mp4|webm|mov|m4v)$/i.test(val);
+      const vid = isLocal ? val : extractVideoId(val);
       if (!vid) {
-        showToast("Valid YouTube Video ID or URL is required.", "error");
+        showToast(
+          "Valid YouTube Video ID or video file path is required.",
+          "error",
+        );
         return;
       }
       const date = inputVideoDate.value
@@ -1351,8 +1578,13 @@
         title: title,
         category: category,
         type: "video",
+        isLocalVideo: isLocal,
         pubDate: date,
-        src: `https://img.youtube.com/vi/${vid}/hqdefault.jpg`,
+        src: inputVideoThumbSrc?.value.trim()
+          ? inputVideoThumbSrc.value.trim()
+          : (isLocal
+              ? inputImageSrc.value.trim() || "img/personal_preview.jpg"
+              : `https://img.youtube.com/vi/${vid}/hqdefault.jpg`),
       };
     }
 
@@ -1586,9 +1818,44 @@
     }
   });
 
+  // ── CONFIRM PUSH TO GITHUB MODAL ──
+  const confirmPushModalBackdrop = document.getElementById(
+    "confirmPushModalBackdrop",
+  );
+  const btnClosePushModal = document.getElementById("btnClosePushModal");
+  const btnCancelPushModal = document.getElementById("btnCancelPushModal");
+  const btnConfirmPushAction = document.getElementById("btnConfirmPushAction");
+
+  function openPushConfirmModal() {
+    if (confirmPushModalBackdrop)
+      confirmPushModalBackdrop.style.display = "flex";
+  }
+
+  function closePushConfirmModal() {
+    if (confirmPushModalBackdrop)
+      confirmPushModalBackdrop.style.display = "none";
+  }
+
+  if (btnClosePushModal)
+    btnClosePushModal.addEventListener("click", closePushConfirmModal);
+  if (btnCancelPushModal)
+    btnCancelPushModal.addEventListener("click", closePushConfirmModal);
+  if (confirmPushModalBackdrop) {
+    confirmPushModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === confirmPushModalBackdrop) closePushConfirmModal();
+    });
+  }
+
+  if (btnConfirmPushAction) {
+    btnConfirmPushAction.addEventListener("click", async () => {
+      closePushConfirmModal();
+      await executeGitPush();
+    });
+  }
+
   // ── MANUAL GIT PUSH ──
-  btnPushRemote.addEventListener("click", executeGitPush);
-  btnDrawerPush.addEventListener("click", executeGitPush);
+  btnPushRemote.addEventListener("click", openPushConfirmModal);
+  if (btnDrawerPush) btnDrawerPush.addEventListener("click", openPushConfirmModal);
 
   async function executeGitPush() {
     const btn = btnPushRemote;
@@ -1677,128 +1944,265 @@
   }
 
   // ── CLIENT STATUS TOGGLE (Banner) ──
-  const clientStatusCheck = document.getElementById('clientStatusCheck');
-  const clientStatusLabel = document.getElementById('clientStatusLabel');
+  const clientStatusCheck = document.getElementById("clientStatusCheck");
+  const clientStatusLabel = document.getElementById("clientStatusLabel");
   if (clientStatusCheck) {
-    clientStatusCheck.addEventListener('change', () => {
+    clientStatusCheck.addEventListener("change", () => {
       const client = state.clients[state.activeClientKey];
       if (!client) return;
       const isOnline = clientStatusCheck.checked;
-      client.status = isOnline ? 'online' : 'offline';
-      if (clientStatusLabel) clientStatusLabel.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+      client.status = isOnline ? "online" : "offline";
+      if (clientStatusLabel)
+        clientStatusLabel.textContent = isOnline ? "ONLINE" : "OFFLINE";
       markChanges();
       renderClientTabs();
-      showToast(`Catalog "${client.name}" set to ${isOnline ? 'ONLINE' : 'OFFLINE'}.`, 'info');
+      showToast(
+        `Catalog "${client.name}" set to ${isOnline ? "ONLINE" : "OFFLINE"}.`,
+        "info",
+      );
     });
   }
 
   // ── EDIT CLIENT MODAL ──
-  const editClientModalBackdrop = document.getElementById('editClientModalBackdrop');
-  const editClientForm = document.getElementById('editClientForm');
-  const editClientKeyInput = document.getElementById('editClientKey');
-  const editClientNameInput = document.getElementById('editClientName');
-  const editClientHandleInput = document.getElementById('editClientHandle');
-  const editClientAvatarInput = document.getElementById('editClientAvatar');
-  const editClientDescInput = document.getElementById('editClientDesc');
-  const editClientStatusInput = document.getElementById('editClientStatus');
-  const editClientStatusLabel = document.getElementById('editClientStatusLabel');
-  const editClientLinksList = document.getElementById('editClientLinksList');
-  const btnAddClientLink = document.getElementById('btnAddClientLink');
-  const btnEditClientInfo = document.getElementById('btnEditClientInfo');
-  const btnCloseEditClientModal = document.getElementById('btnCloseEditClientModal');
-  const btnCancelEditClient = document.getElementById('btnCancelEditClient');
+  const editClientModalBackdrop = document.getElementById(
+    "editClientModalBackdrop",
+  );
+  const editClientForm = document.getElementById("editClientForm");
+  const editClientKeyInput = document.getElementById("editClientKey");
+  const editClientNameInput = document.getElementById("editClientName");
+  const editClientHandleInput = document.getElementById("editClientHandle");
+  const editClientAvatarInput = document.getElementById("editClientAvatar");
+  const editClientAvatarPreview = document.getElementById(
+    "editClientAvatarPreview",
+  );
+  const editClientAvatarFile = document.getElementById("editClientAvatarFile");
+  const editClientDescInput = document.getElementById("editClientDesc");
+  const editClientCoverPreview = document.getElementById(
+    "editClientCoverPreview",
+  );
+  const editClientPreviewImgInput = document.getElementById(
+    "editClientPreviewImg",
+  );
+  const editClientCoverFile = document.getElementById("editClientCoverFile");
+  const editClientStatusInput = document.getElementById("editClientStatus");
+  const editClientStatusLabel = document.getElementById(
+    "editClientStatusLabel",
+  );
+  const editClientLinksList = document.getElementById("editClientLinksList");
+  const btnAddClientLink = document.getElementById("btnAddClientLink");
+  const btnEditClientInfo = document.getElementById("btnEditClientInfo");
+  const btnCloseEditClientModal = document.getElementById(
+    "btnCloseEditClientModal",
+  );
+  const btnCancelEditClient = document.getElementById("btnCancelEditClient");
+
+  function syncEditAvatarPreview(val) {
+    if (!editClientAvatarPreview) return;
+    const v = (val || "").trim();
+    const isImg = v.includes("/") || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(v);
+    if (isImg) {
+      editClientAvatarPreview.innerHTML = `<img src="${v}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.onerror=null;this.parentElement.textContent='?'" />`;
+    } else {
+      editClientAvatarPreview.textContent =
+        v || (editClientNameInput?.value?.charAt(0) || "?").toUpperCase();
+    }
+  }
+
+  function syncEditCoverPreview(val) {
+    if (!editClientCoverPreview) return;
+    const v = (val || "").trim();
+    editClientCoverPreview.src = v || "img/personal_preview.jpg";
+  }
 
   function openEditClientModal() {
     const key = state.activeClientKey;
     const client = state.clients[key] || {};
     if (editClientKeyInput) editClientKeyInput.value = key;
-    if (editClientNameInput) editClientNameInput.value = client.name || '';
-    if (editClientHandleInput) editClientHandleInput.value = client.handle || '';
-    if (editClientAvatarInput) editClientAvatarInput.value = client.avatar || '';
-    if (editClientDescInput) editClientDescInput.value = client.desc || '';
-    const isOnline = client.status !== 'offline';
+    if (editClientNameInput) editClientNameInput.value = client.name || "";
+    if (editClientHandleInput)
+      editClientHandleInput.value = client.handle || "";
+    if (editClientAvatarInput)
+      editClientAvatarInput.value = client.avatar || "";
+    syncEditAvatarPreview(client.avatar || client.name?.charAt(0) || "");
+
+    const coverSrc = client.previewImg || "";
+    if (editClientPreviewImgInput) editClientPreviewImgInput.value = coverSrc;
+    syncEditCoverPreview(coverSrc);
+
+    if (editClientDescInput) editClientDescInput.value = client.desc || "";
+    const isOnline = client.status !== "offline";
     if (editClientStatusInput) editClientStatusInput.checked = isOnline;
     syncEditStatusLabel(isOnline);
     renderEditLinkRows(client.links || []);
-    if (editClientModalBackdrop) editClientModalBackdrop.style.display = 'flex';
+    if (editClientModalBackdrop) editClientModalBackdrop.style.display = "flex";
   }
 
   function closeEditClientModal() {
-    if (editClientModalBackdrop) editClientModalBackdrop.style.display = 'none';
+    if (editClientModalBackdrop) editClientModalBackdrop.style.display = "none";
   }
 
   function syncEditStatusLabel(isOnline) {
     if (!editClientStatusLabel) return;
-    editClientStatusLabel.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
-    editClientStatusLabel.className = 'status-toggle-state-label' + (isOnline ? '' : ' offline');
+    editClientStatusLabel.textContent = isOnline ? "ONLINE" : "OFFLINE";
+    editClientStatusLabel.className =
+      "status-toggle-state-label" + (isOnline ? "" : " offline");
+  }
+
+  if (editClientAvatarInput) {
+    editClientAvatarInput.addEventListener("input", () =>
+      syncEditAvatarPreview(editClientAvatarInput.value),
+    );
+  }
+  if (editClientPreviewImgInput) {
+    editClientPreviewImgInput.addEventListener("input", () =>
+      syncEditCoverPreview(editClientPreviewImgInput.value),
+    );
+  }
+
+  if (editClientAvatarFile) {
+    editClientAvatarFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (file.size > 20 * 1024 * 1024) {
+        showToast(`Avatar size exceeds 20MB limit.`, "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          showToast("Uploading avatar...", "info");
+          const res = await apiRequest("/api/admin/upload-client-avatar", {
+            method: "POST",
+            body: {
+              clientKey: editClientKeyInput?.value || state.activeClientKey,
+              fileName: file.name,
+              fileData: evt.target.result,
+            },
+          });
+          if (res.success && res.path) {
+            if (editClientAvatarInput) editClientAvatarInput.value = res.path;
+            syncEditAvatarPreview(res.path);
+            showToast("Avatar image uploaded!", "success");
+          }
+        } catch (err) {
+          showToast(`Avatar upload failed: ${err.message}`, "error");
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (editClientCoverFile) {
+    editClientCoverFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (file.size > 20 * 1024 * 1024) {
+        showToast(`Catalog cover size exceeds 20MB limit.`, "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          showToast("Uploading cover image...", "info");
+          const res = await apiRequest("/api/admin/upload-catalog-cover", {
+            method: "POST",
+            body: {
+              clientKey: editClientKeyInput?.value || state.activeClientKey,
+              fileName: file.name,
+              fileData: evt.target.result,
+            },
+          });
+          if (res.success && res.path) {
+            if (editClientPreviewImgInput)
+              editClientPreviewImgInput.value = res.path;
+            syncEditCoverPreview(res.path);
+            showToast("Catalog cover updated!", "success");
+          }
+        } catch (err) {
+          showToast(`Cover upload failed: ${err.message}`, "error");
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   if (editClientStatusInput) {
-    editClientStatusInput.addEventListener('change', () =>
-      syncEditStatusLabel(editClientStatusInput.checked)
+    editClientStatusInput.addEventListener("change", () =>
+      syncEditStatusLabel(editClientStatusInput.checked),
     );
   }
 
   // Render editable link rows
   function renderEditLinkRows(links) {
     if (!editClientLinksList) return;
-    editClientLinksList.innerHTML = '';
+    editClientLinksList.innerHTML = "";
     links.forEach((link, i) => addEditLinkRow(link, i));
   }
 
   function addEditLinkRow(link = {}, index) {
-    const row = document.createElement('div');
-    row.className = 'link-manager-row';
+    const row = document.createElement("div");
+    row.className = "link-manager-row";
     row.dataset.idx = index !== undefined ? index : Date.now();
     row.innerHTML = `
-      <input type="text" placeholder="Platform (e.g. YouTube)" class="lm-platform" value="${link.platform || ''}" />
-      <input type="url" placeholder="URL (https://...)" class="lm-url" value="${link.url || ''}" />
-      <input type="text" placeholder="Icon path (img/icons/...)" class="lm-icon" value="${link.icon || ''}" />
+      <input type="text" placeholder="Platform (e.g. YouTube)" class="lm-platform" value="${link.platform || ""}" />
+      <input type="url" placeholder="URL (https://...)" class="lm-url" value="${link.url || ""}" />
+      <input type="text" placeholder="Icon path (img/icons/...)" class="lm-icon" value="${link.icon || ""}" />
       <button type="button" class="link-del-btn" title="Remove">×</button>
     `;
-    row.querySelector('.link-del-btn').addEventListener('click', () => row.remove());
+    row
+      .querySelector(".link-del-btn")
+      .addEventListener("click", () => row.remove());
     if (editClientLinksList) editClientLinksList.appendChild(row);
   }
 
   if (btnAddClientLink) {
-    btnAddClientLink.addEventListener('click', () => addEditLinkRow());
+    btnAddClientLink.addEventListener("click", () => addEditLinkRow());
   }
 
   if (btnEditClientInfo) {
-    btnEditClientInfo.addEventListener('click', openEditClientModal);
+    btnEditClientInfo.addEventListener("click", openEditClientModal);
   }
   if (btnCloseEditClientModal) {
-    btnCloseEditClientModal.addEventListener('click', closeEditClientModal);
+    btnCloseEditClientModal.addEventListener("click", closeEditClientModal);
   }
   if (btnCancelEditClient) {
-    btnCancelEditClient.addEventListener('click', closeEditClientModal);
+    btnCancelEditClient.addEventListener("click", closeEditClientModal);
   }
   if (editClientModalBackdrop) {
-    editClientModalBackdrop.addEventListener('click', (e) => {
+    editClientModalBackdrop.addEventListener("click", (e) => {
       if (e.target === editClientModalBackdrop) closeEditClientModal();
     });
   }
 
   if (editClientForm) {
-    editClientForm.addEventListener('submit', (e) => {
+    editClientForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const key = editClientKeyInput ? editClientKeyInput.value : state.activeClientKey;
+      const key = editClientKeyInput
+        ? editClientKeyInput.value
+        : state.activeClientKey;
       const client = state.clients[key];
       if (!client) return;
 
       client.name = editClientNameInput.value.trim() || client.name;
       client.handle = editClientHandleInput.value.trim();
-      client.avatar = editClientAvatarInput.value.trim() || client.name.charAt(0).toUpperCase();
+      client.avatar =
+        editClientAvatarInput.value.trim() ||
+        client.name.charAt(0).toUpperCase();
+      if (editClientPreviewImgInput) {
+        client.previewImg = editClientPreviewImgInput.value.trim();
+      }
       client.desc = editClientDescInput.value.trim();
-      client.status = editClientStatusInput.checked ? 'online' : 'offline';
+      client.status = editClientStatusInput.checked ? "online" : "offline";
 
       // Collect links from rows
-      const rows = editClientLinksList ? editClientLinksList.querySelectorAll('.link-manager-row') : [];
+      const rows = editClientLinksList
+        ? editClientLinksList.querySelectorAll(".link-manager-row")
+        : [];
       const links = [];
       rows.forEach((row) => {
-        const platform = row.querySelector('.lm-platform')?.value.trim() || '';
-        const url = row.querySelector('.lm-url')?.value.trim() || '';
-        const icon = row.querySelector('.lm-icon')?.value.trim() || '';
+        const platform = row.querySelector(".lm-platform")?.value.trim() || "";
+        const url = row.querySelector(".lm-url")?.value.trim() || "";
+        const icon = row.querySelector(".lm-icon")?.value.trim() || "";
         if (url) links.push({ platform, url, icon, label: platform });
       });
       client.links = links;
@@ -1807,147 +2211,733 @@
       closeEditClientModal();
       renderClientTabs();
       updateActiveClientProfile();
-      showToast(`Client "${client.name}" updated! Click SAVE & COMMIT to persist.`, 'success');
+      showToast(
+        `Client "${client.name}" updated! Click SAVE & COMMIT to persist.`,
+        "success",
+      );
     });
   }
 
-  // ── SITE PROFILE MODAL ──
-  const siteProfileModalBackdrop = document.getElementById('siteProfileModalBackdrop');
-  const siteProfileForm = document.getElementById('siteProfileForm');
-  const btnSiteProfile = document.getElementById('btnSiteProfile');
-  const btnCloseSiteProfileModal = document.getElementById('btnCloseSiteProfileModal');
-  const btnCancelSiteProfile = document.getElementById('btnCancelSiteProfile');
-  const siteAvatarFile = document.getElementById('siteAvatarFile');
-  const siteAvatarImg = document.getElementById('siteAvatarImg');
-  const siteAvatarInitial = document.getElementById('siteAvatarInitial');
-  const siteDisplayName = document.getElementById('siteDisplayName');
-  const siteBio = document.getElementById('siteBio');
-  const siteOverviewEn = document.getElementById('siteOverviewEn');
-  const siteBackgroundEn = document.getElementById('siteBackgroundEn');
-  const siteLinksList = document.getElementById('siteLinksList');
-  const btnAddSiteLink = document.getElementById('btnAddSiteLink');
-
-  let siteProfileData = {};
-  let pendingAvatarFile = null;
-
-  async function openSiteProfileModal() {
-    try {
-      const data = await apiRequest('/api/site/profile');
-      siteProfileData = data || {};
-      // Populate form
-      if (siteDisplayName) siteDisplayName.value = data.displayName || '';
-      if (siteBio) siteBio.value = data.bio || '';
-      if (siteOverviewEn) siteOverviewEn.value = (data.about && data.about.overview && data.about.overview.EN) ? data.about.overview.EN : '';
-      if (siteBackgroundEn) siteBackgroundEn.value = (data.about && data.about.background && data.about.background.EN) ? data.about.background.EN : '';
-      // Avatar
-      if (data.avatar && siteAvatarImg) {
-        siteAvatarImg.src = data.avatar;
-        siteAvatarImg.classList.add('visible');
-        if (siteAvatarInitial) siteAvatarInitial.style.display = 'none';
-      } else {
-        if (siteAvatarImg) siteAvatarImg.classList.remove('visible');
-        if (siteAvatarInitial) siteAvatarInitial.style.display = '';
-      }
-      // Populate site links
-      if (siteLinksList) siteLinksList.innerHTML = '';
-      (data.socialLinks || []).forEach((link, i) => addSiteLinkRow(link, i));
-      if (siteProfileModalBackdrop) siteProfileModalBackdrop.style.display = 'flex';
-    } catch (err) {
-      showToast('Could not load site profile: ' + err.message, 'error');
+  // ── NAVBAR WORK STATUS TOGGLE (HOMEPAGE WIDGET) ──
+  function updateNavWorkStatusUI(isAvailable) {
+    if (navWorkStatusToggle) {
+      navWorkStatusToggle.checked = Boolean(isAvailable);
+    }
+    if (navWorkStatusLabel) {
+      navWorkStatusLabel.textContent = isAvailable
+        ? "AVAILABLE FOR WORK"
+        : "CURRENTLY UNAVAILABLE";
+      navWorkStatusLabel.style.color = isAvailable ? "#22c55e" : "#ff4d4f";
     }
   }
 
-  function closeSiteProfileModal() {
-    if (siteProfileModalBackdrop) siteProfileModalBackdrop.style.display = 'none';
-    pendingAvatarFile = null;
+  async function loadWorkStatus() {
+    try {
+      const data = await apiRequest("/api/admin/about");
+      if (data) {
+        const isAvail = data.workStatus !== "unavailable";
+        updateNavWorkStatusUI(isAvail);
+      }
+    } catch (err) {
+      console.warn("Could not load initial work status:", err.message);
+    }
   }
 
-  function addSiteLinkRow(link = {}, index) {
-    const row = document.createElement('div');
-    row.className = 'link-manager-row';
-    row.innerHTML = `
-      <input type="text" placeholder="Platform" class="lm-platform" value="${link.platform || ''}" />
-      <input type="url" placeholder="URL" class="lm-url" value="${link.url || ''}" />
-      <input type="text" placeholder="Icon path" class="lm-icon" value="${link.icon || ''}" />
-      <button type="button" class="link-del-btn" title="Remove">×</button>
-    `;
-    row.querySelector('.link-del-btn').addEventListener('click', () => row.remove());
-    if (siteLinksList) siteLinksList.appendChild(row);
+  if (navWorkStatusToggle) {
+    navWorkStatusToggle.addEventListener("change", async () => {
+      const isAvail = navWorkStatusToggle.checked;
+      updateNavWorkStatusUI(isAvail);
+      try {
+        const res = await apiRequest("/api/admin/work-status", {
+          method: "POST",
+          body: {
+            status: isAvail ? "available" : "unavailable",
+            isAvailable: isAvail,
+          },
+        });
+        if (res.gitStatus) {
+          updateGitStatusUI(res.gitStatus);
+        }
+        showToast(
+          `Work status set to ${isAvail ? "AVAILABLE FOR WORK" : "CURRENTLY UNAVAILABLE"} and committed!`,
+          "success",
+        );
+      } catch (err) {
+        updateNavWorkStatusUI(!isAvail);
+        showToast(`Failed to update work status: ${err.message}`, "error");
+      }
+    });
   }
 
-  if (btnAddSiteLink) {
-    btnAddSiteLink.addEventListener('click', () => addSiteLinkRow());
+  // ── ABOUT SECTION MANAGER ──
+  const aboutManagerModalBackdrop = document.getElementById(
+    "aboutManagerModalBackdrop",
+  );
+  const btnAboutManager = document.getElementById("btnAboutManager");
+  const btnCloseAboutModal = document.getElementById("btnCloseAboutModal");
+  const btnCancelAbout = document.getElementById("btnCancelAbout");
+  const aboutManagerForm = document.getElementById("aboutManagerForm");
+  const btnSaveAbout = document.getElementById("btnSaveAbout");
+  const aboutAvatarThumb =
+    document.getElementById("aboutAvatarThumb") ||
+    document.getElementById("aboutAvatarPreview");
+  const aboutAvatarSrc = document.getElementById("aboutAvatarSrc");
+  const aboutAvatarUpload =
+    document.getElementById("aboutAvatarUpload") ||
+    document.getElementById("aboutAvatarFile");
+  const aboutAvatarStatus = document.getElementById("aboutAvatarStatus");
+  const btnAutoTranslate =
+    document.getElementById("btnAutoTranslate") ||
+    document.getElementById("btnAutoTranslateAbout");
+
+  // Multilingual textareas
+  const aboutOverviewEn = document.getElementById("aboutOverviewEn");
+  const aboutBackgroundEn = document.getElementById("aboutBackgroundEn");
+  const aboutOverviewTh = document.getElementById("aboutOverviewTh");
+  const aboutBackgroundTh = document.getElementById("aboutBackgroundTh");
+  const aboutOverviewJp = document.getElementById("aboutOverviewJp");
+  const aboutBackgroundJp = document.getElementById("aboutBackgroundJp");
+  const aboutOverviewCn = document.getElementById("aboutOverviewCn");
+  const aboutBackgroundCn = document.getElementById("aboutBackgroundCn");
+
+  async function openAboutModal() {
+    try {
+      const data = await apiRequest("/api/admin/about");
+      if (data) {
+        // Sync navbar work status
+        const isAvail = data.workStatus !== "unavailable";
+        updateNavWorkStatusUI(isAvail);
+
+        // Avatar
+        if (data.avatar) {
+          if (aboutAvatarThumb) aboutAvatarThumb.src = data.avatar;
+          if (aboutAvatarSrc) aboutAvatarSrc.value = data.avatar;
+        }
+        if (aboutAvatarStatus) aboutAvatarStatus.textContent = "Ready";
+
+        // Multilingual fields
+        if (aboutOverviewEn) aboutOverviewEn.value = data.overview?.en || "";
+        if (aboutBackgroundEn)
+          aboutBackgroundEn.value = data.background?.en || "";
+        if (aboutOverviewTh) aboutOverviewTh.value = data.overview?.th || "";
+        if (aboutBackgroundTh)
+          aboutBackgroundTh.value = data.background?.th || "";
+        if (aboutOverviewJp) aboutOverviewJp.value = data.overview?.jp || "";
+        if (aboutBackgroundJp)
+          aboutBackgroundJp.value = data.background?.jp || "";
+        if (aboutOverviewCn) aboutOverviewCn.value = data.overview?.cn || "";
+        if (aboutBackgroundCn)
+          aboutBackgroundCn.value = data.background?.cn || "";
+      }
+
+      // Default active tab to English
+      selectAboutLangTab("en");
+
+      if (aboutManagerModalBackdrop) {
+        aboutManagerModalBackdrop.style.display = "flex";
+      }
+    } catch (err) {
+      showToast("Could not load About section: " + err.message, "error");
+    }
   }
 
-  // Avatar file preview
-  if (siteAvatarFile) {
-    siteAvatarFile.addEventListener('change', () => {
-      const file = siteAvatarFile.files[0];
+  function closeAboutModal() {
+    if (aboutManagerModalBackdrop) {
+      aboutManagerModalBackdrop.style.display = "none";
+    }
+  }
+
+  // Language Tabs Switching
+  function selectAboutLangTab(lang) {
+    const tabs = document.querySelectorAll(".about-lang-tab");
+    const panes = document.querySelectorAll(".about-lang-pane");
+    tabs.forEach((tab) => {
+      if (tab.dataset.lang === lang) {
+        tab.classList.add("active");
+      } else {
+        tab.classList.remove("active");
+      }
+    });
+    panes.forEach((pane) => {
+      if (pane.dataset.pane === lang) {
+        pane.classList.add("active");
+        pane.style.display = "flex";
+      } else {
+        pane.classList.remove("active");
+        pane.style.display = "none";
+      }
+    });
+  }
+
+  document.querySelectorAll(".about-lang-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      selectAboutLangTab(tab.dataset.lang);
+    });
+  });
+
+  if (aboutAvatarSrc) {
+    aboutAvatarSrc.addEventListener("input", () => {
+      const val = aboutAvatarSrc.value.trim();
+      if (aboutAvatarThumb && val) {
+        aboutAvatarThumb.src = val;
+      }
+    });
+  }
+
+  // Avatar Upload (Max 20MB)
+  if (aboutAvatarUpload) {
+    aboutAvatarUpload.addEventListener("change", () => {
+      const file = aboutAvatarUpload.files?.[0];
       if (!file) return;
-      pendingAvatarFile = file;
+
+      if (file.size > 20 * 1024 * 1024) {
+        showToast("Avatar image exceeds 20MB limit.", "error");
+        if (aboutAvatarStatus)
+          aboutAvatarStatus.textContent = "⚠️ Exceeds 20MB";
+        return;
+      }
+
+      if (aboutAvatarStatus)
+        aboutAvatarStatus.textContent = `Uploading ${(file.size / 1024 / 1024).toFixed(1)}MB...`;
+
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (siteAvatarImg) {
-          siteAvatarImg.src = ev.target.result;
-          siteAvatarImg.classList.add('visible');
-          if (siteAvatarInitial) siteAvatarInitial.style.display = 'none';
+      reader.onload = async (evt) => {
+        try {
+          const res = await apiRequest("/api/admin/upload-about-avatar", {
+            method: "POST",
+            body: {
+              fileName: file.name,
+              fileData: evt.target.result,
+            },
+          });
+          if (res.success && res.path) {
+            if (aboutAvatarThumb) {
+              aboutAvatarThumb.src = res.path + "?t=" + Date.now();
+            }
+            if (aboutAvatarStatus) {
+              aboutAvatarStatus.textContent = `✓ Uploaded: ${file.name}`;
+            }
+            showToast("About avatar image updated!", "success");
+          }
+        } catch (err) {
+          if (aboutAvatarStatus) aboutAvatarStatus.textContent = "Upload failed";
+          showToast(`Avatar upload failed: ${err.message}`, "error");
         }
       };
       reader.readAsDataURL(file);
     });
   }
 
-  if (btnSiteProfile) btnSiteProfile.addEventListener('click', openSiteProfileModal);
-  if (btnCloseSiteProfileModal) btnCloseSiteProfileModal.addEventListener('click', closeSiteProfileModal);
-  if (btnCancelSiteProfile) btnCancelSiteProfile.addEventListener('click', closeSiteProfileModal);
-  if (siteProfileModalBackdrop) {
-    siteProfileModalBackdrop.addEventListener('click', (e) => {
-      if (e.target === siteProfileModalBackdrop) closeSiteProfileModal();
+  // Auto-Translate Button (Translates English to Thai, Japanese, Chinese)
+  if (btnAutoTranslate) {
+    btnAutoTranslate.addEventListener("click", async () => {
+      const ovEn = aboutOverviewEn ? aboutOverviewEn.value.trim() : "";
+      const bgEn = aboutBackgroundEn ? aboutBackgroundEn.value.trim() : "";
+
+      if (!ovEn && !bgEn) {
+        showToast(
+          "Please enter English Overview or Background first to auto-translate.",
+          "error",
+        );
+        return;
+      }
+
+      btnAutoTranslate.disabled = true;
+      const originalText = btnAutoTranslate.innerHTML;
+      btnAutoTranslate.textContent = "TRANSLATING (TH, JP, CN)...";
+
+      try {
+        if (ovEn) {
+          const resOv = await apiRequest("/api/admin/translate", {
+            method: "POST",
+            body: { text: ovEn },
+          });
+          const t = resOv.translations || {};
+          if (t.th && aboutOverviewTh) aboutOverviewTh.value = t.th;
+          if (t.jp && aboutOverviewJp) aboutOverviewJp.value = t.jp;
+          if (t.cn && aboutOverviewCn) aboutOverviewCn.value = t.cn;
+        }
+
+        if (bgEn) {
+          const resBg = await apiRequest("/api/admin/translate", {
+            method: "POST",
+            body: { text: bgEn },
+          });
+          const t = resBg.translations || {};
+          if (t.th && aboutBackgroundTh) aboutBackgroundTh.value = t.th;
+          if (t.jp && aboutBackgroundJp) aboutBackgroundJp.value = t.jp;
+          if (t.cn && aboutBackgroundCn) aboutBackgroundCn.value = t.cn;
+        }
+
+        showToast(
+          "Auto-translated overview & background to Thai, Japanese, and Chinese!",
+          "success",
+        );
+      } catch (err) {
+        showToast(`Auto-translate failed: ${err.message}`, "error");
+      } finally {
+        btnAutoTranslate.disabled = false;
+        btnAutoTranslate.innerHTML = originalText;
+      }
     });
   }
 
-  if (siteProfileForm) {
-    siteProfileForm.addEventListener('submit', async (e) => {
+  // Submit About Manager Form
+  if (aboutManagerForm) {
+    aboutManagerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const btnSave = document.getElementById('btnSaveSiteProfile');
-      if (btnSave) { btnSave.disabled = true; btnSave.textContent = 'SAVING...'; }
+      if (btnSaveAbout) {
+        btnSaveAbout.disabled = true;
+        btnSaveAbout.textContent = "SAVING & COMMITTING...";
+      }
 
       try {
-        // If there's a pending avatar, upload it first
-        if (pendingAvatarFile) {
-          const fd = new FormData();
-          fd.append('avatar', pendingAvatarFile);
-          await apiRequest('/api/admin/upload-avatar', { method: 'POST', body: fd });
-        }
-
-        // Collect site links
-        const rows = siteLinksList ? siteLinksList.querySelectorAll('.link-manager-row') : [];
-        const socialLinks = [];
-        rows.forEach((row) => {
-          const platform = row.querySelector('.lm-platform')?.value.trim() || '';
-          const url = row.querySelector('.lm-url')?.value.trim() || '';
-          const icon = row.querySelector('.lm-icon')?.value.trim() || '';
-          if (url) socialLinks.push({ platform, url, icon });
-        });
-
+        const avatarSrc = (
+          aboutAvatarSrc?.value.trim() ||
+          aboutAvatarThumb?.getAttribute("src") ||
+          "img/about_avatar.jpg"
+        ).split("?")[0];
         const payload = {
-          displayName: siteDisplayName ? siteDisplayName.value.trim() : '',
-          bio: siteBio ? siteBio.value.trim() : '',
-          about: {
-            overview: { EN: siteOverviewEn ? siteOverviewEn.value.trim() : '' },
-            background: { EN: siteBackgroundEn ? siteBackgroundEn.value.trim() : '' }
+          workStatus: navWorkStatusToggle?.checked
+            ? "available"
+            : "unavailable",
+          avatar: avatarSrc,
+          overview: {
+            en: aboutOverviewEn ? aboutOverviewEn.value.trim() : "",
+            th: aboutOverviewTh ? aboutOverviewTh.value.trim() : "",
+            jp: aboutOverviewJp ? aboutOverviewJp.value.trim() : "",
+            cn: aboutOverviewCn ? aboutOverviewCn.value.trim() : "",
           },
-          socialLinks,
+          background: {
+            en: aboutBackgroundEn ? aboutBackgroundEn.value.trim() : "",
+            th: aboutBackgroundTh ? aboutBackgroundTh.value.trim() : "",
+            jp: aboutBackgroundJp ? aboutBackgroundJp.value.trim() : "",
+            cn: aboutBackgroundCn ? aboutBackgroundCn.value.trim() : "",
+          },
         };
 
-        await apiRequest('/api/admin/profile', { method: 'POST', body: payload });
-        showToast('Site profile saved and committed!', 'success');
-        closeSiteProfileModal();
+        const res = await apiRequest("/api/admin/about", {
+          method: "POST",
+          body: payload,
+        });
+
+        if (res.gitStatus) {
+          updateGitStatusUI(res.gitStatus);
+        }
+
+        showToast(
+          "About section saved & committed to Git!",
+          "success",
+        );
+        closeAboutModal();
       } catch (err) {
-        showToast('Failed to save profile: ' + err.message, 'error');
+        showToast(`Failed to save About section: ${err.message}`, "error");
       } finally {
-        if (btnSave) { btnSave.disabled = false; btnSave.innerHTML = '<img src="img/icons/sync.png" class="btn-icon-svg" alt="" /> SAVE & COMMIT PROFILE'; }
+        if (btnSaveAbout) {
+          btnSaveAbout.disabled = false;
+          btnSaveAbout.innerHTML =
+            '<img src="img/icons/sync.png" class="btn-icon-svg" alt="" /> SAVE &amp; COMMIT ABOUT SECTION';
+        }
       }
+    });
+  }
+
+  if (btnAboutManager)
+    btnAboutManager.addEventListener("click", openAboutModal);
+  if (btnCloseAboutModal)
+    btnCloseAboutModal.addEventListener("click", closeAboutModal);
+  if (btnCancelAbout)
+    btnCancelAbout.addEventListener("click", closeAboutModal);
+  if (aboutManagerModalBackdrop) {
+    aboutManagerModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === aboutManagerModalBackdrop) closeAboutModal();
+    });
+  }
+
+  // ── MAIN SOCIAL MEDIA MANAGER ──
+  const socialManagerModalBackdrop = document.getElementById(
+    "socialManagerModalBackdrop",
+  );
+  const btnSocialManager = document.getElementById("btnSocialManager");
+  const btnCloseSocialModal = document.getElementById("btnCloseSocialModal");
+  const btnCancelSocial = document.getElementById("btnCancelSocial");
+  const socialManagerForm = document.getElementById("socialManagerForm");
+  const btnSaveSocial = document.getElementById("btnSaveSocial");
+  const btnAddMainSocialLink = document.getElementById("btnAddMainSocialLink");
+  const mainSocialLinksList = document.getElementById("mainSocialLinksList");
+
+  const PLATFORM_PRESETS = [
+    {
+      platform: "YouTube",
+      icon: "img/icons/Platform=YouTube, Color=Negative.png",
+      placeholder: "https://www.youtube.com/@channel",
+    },
+    {
+      platform: "Instagram",
+      icon: "img/icons/Platform=Instagram, Color=Negative.png",
+      placeholder: "https://www.instagram.com/username/",
+    },
+    {
+      platform: "Twitter / X",
+      icon: "img/icons/Platform=X (Twitter), Color=Negative.png",
+      placeholder: "https://x.com/username",
+    },
+    {
+      platform: "Twitch",
+      icon: "img/icons/Platform=Twitch, Color=Negative.png",
+      placeholder: "https://www.twitch.tv/username",
+    },
+    {
+      platform: "TikTok",
+      icon: "img/icons/Platform=TikTok, Color=Negative.png",
+      placeholder: "https://www.tiktok.com/@username",
+    },
+    {
+      platform: "Facebook",
+      icon: "img/icons/Platform=Facebook, Color=Negative.png",
+      placeholder: "https://web.facebook.com/username",
+    },
+    {
+      platform: "SoundCloud",
+      icon: "img/icons/Platform=SoundCloud, Color=Negative.png",
+      placeholder: "https://soundcloud.com/username",
+    },
+    {
+      platform: "Discord",
+      icon: "img/icons/Platform=Discord, Color=Negative.png",
+      placeholder: "username.tag (click to copy)",
+    },
+  ];
+
+  async function openSocialModal() {
+    try {
+      const data = await apiRequest("/api/admin/social-links");
+      const links =
+        Array.isArray(data?.links) && data.links.length > 0
+          ? data.links
+          : PLATFORM_PRESETS;
+      renderSocialLinkRows(links);
+      if (socialManagerModalBackdrop) {
+        socialManagerModalBackdrop.style.display = "flex";
+      }
+    } catch (err) {
+      showToast("Could not load social links: " + err.message, "error");
+    }
+  }
+
+  function closeSocialModal() {
+    if (socialManagerModalBackdrop) {
+      socialManagerModalBackdrop.style.display = "none";
+    }
+  }
+
+  function renderSocialLinkRows(links) {
+    if (!mainSocialLinksList) return;
+    mainSocialLinksList.innerHTML = "";
+    links.forEach((link) => {
+      addMainSocialLinkRow(link);
+    });
+  }
+
+  function addMainSocialLinkRow(link = {}) {
+    const row = document.createElement("div");
+    row.className = "link-manager-row";
+    row.style.alignItems = "center";
+    const isDiscord = link.platform === "Discord" || !!link.isDiscord;
+    const urlVal = isDiscord
+      ? link.discordTag || link.url || ""
+      : link.url || "";
+
+    row.innerHTML = `
+      <input type="text" placeholder="Platform (e.g. YouTube, Discord)" class="lm-platform" value="${link.platform || ""}" style="max-width: 140px;" />
+      <input type="text" placeholder="${isDiscord ? "Discord Tag (click to copy)" : "URL (https://...)"}" class="lm-url" value="${urlVal}" style="flex: 2;" />
+      <input type="text" placeholder="Icon path: img/icons/..." class="lm-icon" value="${link.icon || ""}" style="flex: 1.5;" />
+      <button type="button" class="link-del-btn" title="Remove link">×</button>
+    `;
+
+    const platformInput = row.querySelector(".lm-platform");
+    const iconInput = row.querySelector(".lm-icon");
+    const urlInput = row.querySelector(".lm-url");
+
+    platformInput.addEventListener("input", () => {
+      const val = platformInput.value.trim().toLowerCase();
+      const match = PLATFORM_PRESETS.find(
+        (p) =>
+          p.platform.toLowerCase() === val ||
+          p.platform.toLowerCase().includes(val),
+      );
+      if (match && !iconInput.value) {
+        iconInput.value = match.icon;
+      }
+      if (val.includes("discord")) {
+        urlInput.placeholder = "Discord Tag: username.tag";
+      } else {
+        urlInput.placeholder = "URL (https://...)";
+      }
+    });
+
+    row
+      .querySelector(".link-del-btn")
+      .addEventListener("click", () => row.remove());
+    if (mainSocialLinksList) mainSocialLinksList.appendChild(row);
+  }
+
+  if (btnAddMainSocialLink) {
+    btnAddMainSocialLink.addEventListener("click", () => {
+      addMainSocialLinkRow();
+    });
+  }
+
+  if (socialManagerForm) {
+    socialManagerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (btnSaveSocial) {
+        btnSaveSocial.disabled = true;
+        btnSaveSocial.textContent = "SAVING & COMMITTING...";
+      }
+
+      try {
+        const rows = mainSocialLinksList
+          ? mainSocialLinksList.querySelectorAll(".link-manager-row")
+          : [];
+        const links = [];
+        rows.forEach((row) => {
+          const platform =
+            row.querySelector(".lm-platform")?.value.trim() || "";
+          const url = row.querySelector(".lm-url")?.value.trim() || "";
+          const icon = row.querySelector(".lm-icon")?.value.trim() || "";
+          if (platform || url) {
+            const isDiscord = platform.toLowerCase().includes("discord");
+            links.push({
+              platform,
+              url: isDiscord ? "" : url,
+              discordTag: isDiscord ? url : "",
+              isDiscord,
+              icon,
+              label: platform,
+            });
+          }
+        });
+
+        const res = await apiRequest("/api/admin/social-links", {
+          method: "POST",
+          body: { links },
+        });
+
+        if (res.gitStatus) {
+          updateGitStatusUI(res.gitStatus);
+        }
+
+        showToast(
+          "Main social media links saved & committed to Git!",
+          "success",
+        );
+        closeSocialModal();
+      } catch (err) {
+        showToast(`Failed to save social links: ${err.message}`, "error");
+      } finally {
+        if (btnSaveSocial) {
+          btnSaveSocial.disabled = false;
+          btnSaveSocial.innerHTML =
+            '<img src="img/icons/sync.png" class="btn-icon-svg" alt="" /> SAVE &amp; COMMIT SOCIAL LINKS';
+        }
+      }
+    });
+  }
+
+  if (btnSocialManager)
+    btnSocialManager.addEventListener("click", openSocialModal);
+  if (btnCloseSocialModal)
+    btnCloseSocialModal.addEventListener("click", closeSocialModal);
+  if (btnCancelSocial)
+    btnCancelSocial.addEventListener("click", closeSocialModal);
+  if (socialManagerModalBackdrop) {
+    socialManagerModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === socialManagerModalBackdrop) closeSocialModal();
+    });
+  }
+
+  // ── CONTACT INBOX / MESSAGES ──
+  const contactModalBackdrop = document.getElementById("contactModalBackdrop");
+  const btnContactList = document.getElementById("btnContactList");
+  const inboxUnreadBadge = document.getElementById("inboxUnreadBadge");
+  const btnRefreshContacts = document.getElementById("btnRefreshContacts");
+  const btnCloseContactModal = document.getElementById("btnCloseContactModal");
+  const btnCloseContactFooter = document.getElementById(
+    "btnCloseContactFooter",
+  );
+  const contactMessagesContainer = document.getElementById(
+    "contactMessagesContainer",
+  );
+  const contactModalSubtitle = document.getElementById("contactModalSubtitle");
+
+  async function updateInboxBadge() {
+    try {
+      const data = await apiRequest("/api/admin/contacts");
+      const list = Array.isArray(data?.contacts) ? data.contacts : [];
+      const unread = list.filter((m) => !m.isRead && !m.read).length;
+      if (inboxUnreadBadge) {
+        if (unread > 0) {
+          inboxUnreadBadge.textContent = unread;
+          inboxUnreadBadge.style.display = "inline-block";
+        } else {
+          inboxUnreadBadge.style.display = "none";
+        }
+      }
+      return list;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  async function loadContactMessages() {
+    if (!contactMessagesContainer) return;
+    contactMessagesContainer.innerHTML =
+      '<div style="color:#888; padding:20px; text-align:center;">Loading messages...</div>';
+
+    try {
+      const data = await apiRequest("/api/admin/contacts");
+      const list = Array.isArray(data?.contacts) ? data.contacts : [];
+      const unreadCount = list.filter((m) => !m.isRead && !m.read).length;
+
+      if (contactModalSubtitle) {
+        contactModalSubtitle.textContent = `${list.length} total message${list.length === 1 ? "" : "s"} • ${unreadCount} unread`;
+      }
+
+      if (inboxUnreadBadge) {
+        if (unreadCount > 0) {
+          inboxUnreadBadge.textContent = unreadCount;
+          inboxUnreadBadge.style.display = "inline-block";
+        } else {
+          inboxUnreadBadge.style.display = "none";
+        }
+      }
+
+      if (list.length === 0) {
+        contactMessagesContainer.innerHTML = `
+          <div style="padding: 40px 20px; text-align: center; color: #888;">
+            <div style="font-size: 32px; margin-bottom: 12px;">📬</div>
+            <div style="font-size: 15px; font-weight: 500; color: #bbb;">No contact messages yet</div>
+            <div style="font-size: 13px; color: #666; margin-top: 4px;">Inquiries submitted via the Contact form will appear here.</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Sort newest first
+      const sorted = [...list].sort(
+        (a, b) => new Date(b.date) - new Date(a.date),
+      );
+      contactMessagesContainer.innerHTML = "";
+
+      sorted.forEach((msg) => {
+        const isRead = Boolean(msg.read || msg.isRead);
+        const card = document.createElement("div");
+        card.className = `contact-inbox-card ${isRead ? "read" : "unread"}`;
+        card.dataset.id = msg.id;
+
+        const dateStr = msg.date
+          ? new Date(msg.date).toLocaleString()
+          : "Unknown date";
+        card.innerHTML = `
+          <div class="contact-card-header">
+            <div class="contact-sender-info">
+              <span class="contact-sender-name">${escapeHtml(msg.name || "Anonymous")}</span>
+              <a href="mailto:${escapeHtml(msg.email || "")}" class="contact-sender-email">${escapeHtml(msg.email || "")}</a>
+              <span class="contact-badge ${isRead ? "read" : "new"}">${isRead ? "READ" : "NEW INQUIRY"}</span>
+            </div>
+            <div class="contact-date-info">
+              <span class="contact-send-date">📅 ${escapeHtml(dateStr)}</span>
+            </div>
+          </div>
+          <div class="contact-card-body">
+            <div class="contact-message-text">${escapeHtml(msg.inquiry || msg.message || "(No message body)")}</div>
+          </div>
+          <div class="contact-card-actions">
+            <button type="button" class="btn btn-xs btn-outline btn-toggle-read">
+              ${isRead ? "Mark as Unread" : "✓ Mark as Read"}
+            </button>
+            <button type="button" class="btn btn-xs btn-danger-ghost btn-del-contact" title="Delete inquiry">
+              🗑 Delete
+            </button>
+          </div>
+        `;
+
+        // Toggle read
+        card
+          .querySelector(".btn-toggle-read")
+          .addEventListener("click", async () => {
+            try {
+              await apiRequest("/api/admin/contacts/toggle-read", {
+                method: "POST",
+                body: { id: msg.id, isRead: !isRead, read: !isRead },
+              });
+              await loadContactMessages();
+            } catch (err) {
+              showToast("Failed to update message: " + err.message, "error");
+            }
+          });
+
+        // Delete
+        card
+          .querySelector(".btn-del-contact")
+          .addEventListener("click", async () => {
+            if (!confirm(`Delete contact message from "${msg.name}"?`)) return;
+            try {
+              await apiRequest(
+                `/api/admin/contacts/${encodeURIComponent(msg.id)}`,
+                {
+                  method: "DELETE",
+                },
+              );
+              showToast("Contact message deleted.", "info");
+              await loadContactMessages();
+            } catch (err) {
+              showToast("Failed to delete message: " + err.message, "error");
+            }
+          });
+
+        contactMessagesContainer.appendChild(card);
+      });
+    } catch (err) {
+      contactMessagesContainer.innerHTML = `<div style="color:#ff4d4f; padding:20px;">Error loading messages: ${err.message}</div>`;
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function openContactModal() {
+    loadContactMessages();
+    if (contactModalBackdrop) {
+      contactModalBackdrop.style.display = "flex";
+    }
+  }
+
+  function closeContactModal() {
+    if (contactModalBackdrop) {
+      contactModalBackdrop.style.display = "none";
+    }
+  }
+
+  if (btnContactList)
+    btnContactList.addEventListener("click", openContactModal);
+  if (btnRefreshContacts)
+    btnRefreshContacts.addEventListener("click", loadContactMessages);
+  if (btnCloseContactModal)
+    btnCloseContactModal.addEventListener("click", closeContactModal);
+  if (btnCloseContactFooter)
+    btnCloseContactFooter.addEventListener("click", closeContactModal);
+  if (contactModalBackdrop) {
+    contactModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === contactModalBackdrop) closeContactModal();
     });
   }
 
@@ -1956,13 +2946,16 @@
     if (e.key === "Escape") {
       closeAddClientModal();
       closeEditClientModal();
-      closeSiteProfileModal();
+      closeAboutModal();
+      closeSocialModal();
+      closeContactModal();
+      closePushConfirmModal();
       closeVideoModal();
       closeCommitModal();
       closeVideoPlayer();
       closeImageLightbox();
-      gitDrawerBackdrop.style.display = "none";
-      secDrawerBackdrop.style.display = "none";
+      if (gitDrawerBackdrop) gitDrawerBackdrop.style.display = "none";
+      if (secDrawerBackdrop) secDrawerBackdrop.style.display = "none";
     }
   });
 
