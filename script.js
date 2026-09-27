@@ -33,89 +33,16 @@ function updateNavbar() {
   if (!navbar) return;
   const scrollY = window.scrollY;
 
-  // On the About page:
-  // Scroll direction controls visibility (scroll down hides, scroll up shows).
-  // Don't override nav-hidden on window scroll while on About.
+  navbar.classList.remove("nav-hidden");
+
+  // On About page: keep navbar transparent like the home page, never hidden
   if (typeof currentPage !== "undefined" && currentPage === "about") {
-    navbar.classList.toggle("scrolled", scrollY > 60 || navbar.classList.contains("scrolled"));
+    navbar.classList.remove("scrolled");
     return;
   }
 
-  navbar.classList.remove("nav-hidden");
   navbar.classList.toggle("scrolled", scrollY > 60);
 }
-
-// Mouse wheel listener on About page:
-// - Scroll DOWN -> hide navbar
-// - Scroll UP -> show navbar
-// - Scrolling inside .about-panes does NOT change navbar state
-// - Scrolling outside .about-panes does NOT scroll the page (page stays locked in place)
-window.addEventListener(
-  "wheel",
-  (e) => {
-    if (currentPage !== "about") return;
-
-    // If mouse is inside .about-panes, do not alter navbar state
-    if (e.target && e.target.closest && e.target.closest(".about-panes")) {
-      return;
-    }
-
-    // Lock page in place: prevent page from scrolling/moving
-    e.preventDefault();
-
-    if (e.deltaY > 0) {
-      // User scrolled DOWN -> hide navbar
-      if (navbar) {
-        navbar.classList.add("nav-hidden");
-      }
-    } else if (e.deltaY < 0) {
-      // User scrolled UP -> show navbar
-      if (navbar) {
-        navbar.classList.remove("nav-hidden");
-        navbar.classList.add("scrolled");
-      }
-    }
-  },
-  { passive: false },
-);
-
-// Touch listeners for mobile swipe gestures on About page
-let aboutTouchStartY = 0;
-window.addEventListener(
-  "touchstart",
-  (e) => {
-    if (currentPage === "about" && e.touches.length > 0) {
-      aboutTouchStartY = e.touches[0].clientY;
-    }
-  },
-  { passive: true },
-);
-
-window.addEventListener(
-  "touchmove",
-  (e) => {
-    if (currentPage === "about" && e.touches.length > 0) {
-      // If touch is inside .about-panes, do not alter navbar state
-      if (e.target && e.target.closest && e.target.closest(".about-panes")) {
-        return;
-      }
-      if (e.cancelable) e.preventDefault();
-      const currentY = e.touches[0].clientY;
-      const delta = aboutTouchStartY - currentY;
-      if (delta > 10) {
-        // Swiping up (scrolling down) -> hide navbar
-        if (navbar) navbar.classList.add("nav-hidden");
-      } else if (delta < -10) {
-        // Swiping down (scrolling up) -> show navbar
-        if (navbar) {
-          navbar.classList.remove("nav-hidden");
-          navbar.classList.add("scrolled");
-        }
-      }
-    }
-  },
-  { passive: false },
-);
 
 window.addEventListener(
   "scroll",
@@ -2015,7 +1942,11 @@ function navigateTo(pageKey, updateHistory = true) {
   // 8. Navbar behavior per page
   if (navbar) {
     navbar.classList.remove("nav-hidden");
-    navbar.classList.toggle("scrolled", window.scrollY > 60);
+    if (targetKey === "about") {
+      navbar.classList.remove("scrolled");
+    } else {
+      navbar.classList.toggle("scrolled", window.scrollY > 60);
+    }
   }
 }
 
