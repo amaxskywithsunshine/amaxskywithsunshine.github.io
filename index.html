@@ -19,8 +19,11 @@
   <!-- NAVBAR -->
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
-      <img class="nav-logo" src="img/LOGO.png" alt="theskyisshrine logo" id="navLogo" />
+      <a href="#home" class="nav-logo-link" id="navLogoLink" aria-label="Return to Home">
+        <img class="nav-logo" src="img/LOGO.png" alt="theskyisshrine logo" id="navLogo" draggable="false" />
+      </a>
       <div class="nav-links">
+        <a href="#home" id="navHome" class="active">HOME</a>
         <a href="#works" id="navWorks">WORKS</a>
         <a href="#about" id="navAbout">ABOUT</a>
         <a href="#contact" id="navContact">CONTACT</a>
@@ -29,39 +32,80 @@
   </nav>
 
   <!-- ═══════════════════════════════
-       SECTION 1 — INTRO
+       SECTION 1 — INTRO (HOME PAGE)
   ═══════════════════════════════════ -->
-  <section class="intro" id="intro">
-    <!-- Intro Background Image -->
-    <div class="intro-bg" id="introBg">
-      <img src="img/intro_bg.jpg" alt="amax — Motion Design" class="intro-bg-img" id="introBgImg" />
-    </div>
-    <canvas id="lightCanvas"></canvas>
+  <section class="intro page-view active" id="intro">
 
-    <div class="intro-content">
+    <!-- Hero area: fills the full viewport -->
+    <div class="intro-hero-area">
+      <!-- Intro Background Image -->
+      <div class="intro-bg" id="introBg">
+        <img src="img/intro_bg.jpg" alt="amax — Motion Design" class="intro-bg-img" id="introBgImg" draggable="false" />
+      </div>
+      <canvas id="lightCanvas"></canvas>
 
-      <!-- Hero text — bottom left -->
-      <div class="intro-text" id="introText">
-        <h1 class="intro-title">AMAX<br /></h1>
-        <div class="intro-tag">MOTION DESIGN &nbsp;·&nbsp; PORTFOLIO &nbsp;·&nbsp; 2022 - NOW <br />live2d model by miikutea</div>
+      <div class="intro-content">
+
+        <!-- Hero text — bottom left -->
+        <div class="intro-text" id="introText">
+          <h1 class="intro-title">AMAX<br /></h1>
+          <div class="intro-tag">MOTION DESIGN &nbsp;·&nbsp; PORTFOLIO &nbsp;·&nbsp; 2022 - NOW <br />live2d model by miikutea</div>
+        </div>
+
       </div>
 
+      <!-- Scroll-fade overlay: darkens on scroll down -->
+      <div class="intro-overlay" id="introOverlay"></div>
     </div>
 
-    <!-- Scroll-fade overlay: darkens on scroll down -->
-    <div class="intro-overlay" id="introOverlay"></div>
+    <!-- Home Bottom Bar: Social Links, Copyright, and Credits -->
+    <!-- Sits BELOW the 100vh hero — extends the section slightly -->
+    <div class="home-bottom-bar" id="homeBottomBar">
+      <div class="home-bottom-social" id="homeBottomSocial">
+        <a href="https://www.youtube.com/@iaexamax" target="_blank" rel="noopener noreferrer" class="home-social-link" title="YouTube" aria-label="YouTube">
+          <img src="img/icons/Platform=YouTube, Color=Negative.png" alt="YouTube" class="home-social-icon" draggable="false" />
+        </a>
+        <a href="https://www.instagram.com/itxamax/" target="_blank" rel="noopener noreferrer" class="home-social-link" title="Instagram" aria-label="Instagram">
+          <img src="img/icons/Platform=Instagram, Color=Negative.png" alt="Instagram" class="home-social-icon" draggable="false" />
+        </a>
+        <a href="https://x.com/i_AExAmax" target="_blank" rel="noopener noreferrer" class="home-social-link" title="Twitter / X" aria-label="Twitter / X">
+          <img src="img/icons/Platform=X (Twitter), Color=Negative.png" alt="Twitter / X" class="home-social-icon" draggable="false" />
+        </a>
+        <a href="https://www.twitch.tv/iaexamax" target="_blank" rel="noopener noreferrer" class="home-social-link" title="Twitch" aria-label="Twitch">
+          <img src="img/icons/Platform=Twitch, Color=Negative.png" alt="Twitch" class="home-social-icon" draggable="false" />
+        </a>
+        <a href="https://www.tiktok.com/@iaexamax" target="_blank" rel="noopener noreferrer" class="home-social-link" title="TikTok" aria-label="TikTok">
+          <img src="img/icons/Platform=TikTok, Color=Negative.png" alt="TikTok" class="home-social-icon" draggable="false" />
+        </a>
+        <a href="https://web.facebook.com/amaxwastoolazytoedits.somethinginaftereffects" target="_blank" rel="noopener noreferrer" class="home-social-link" title="Facebook" aria-label="Facebook">
+          <img src="img/icons/Platform=Facebook, Color=Negative.png" alt="Facebook" class="home-social-icon" draggable="false" />
+        </a>
+        <a href="https://soundcloud.com/itxamax" target="_blank" rel="noopener noreferrer" class="home-social-link" title="SoundCloud" aria-label="SoundCloud">
+          <img src="img/icons/Platform=SoundCloud, Color=Negative.png" alt="SoundCloud" class="home-social-icon" draggable="false" />
+        </a>
+        <button type="button" class="home-social-link discord-btn" id="homeLinkDiscord" aria-label="Discord: amax.the_skywithsunshine." title="Discord: amax.the_skywithsunshine. (click to copy)" data-discord="amax.the_skywithsunshine.">
+          <img src="img/icons/Platform=Discord, Color=Negative.png" alt="Discord" class="home-social-icon" draggable="false" />
+          <span class="discord-tooltip" id="homeDiscordTooltip">Copied!</span>
+        </button>
+      </div>
 
-    <!-- Scroll hint -->
-    <div class="scroll-hint" id="scrollHint">
-      <span>SCROLL</span>
-      <div class="scroll-line"></div>
+      <div class="home-bottom-center">
+        <span class="home-copyright">&copy; amax</span>
+      </div>
+
+      <div class="home-bottom-credits">
+        <span class="credit-item">Developer: amax Antigravity</span>
+        <span class="credit-sep">&bull;</span>
+        <span class="credit-item">Designer: amax</span>
+      </div>
     </div>
   </section>
+
 
   <!-- ═══════════════════════════════
        SECTION 2 — WORKS (PERSONAL & CLIENT WORKS)
   ═══════════════════════════════════ -->
-  <section class="collection works" id="works">
+  <section class="collection works page-view" id="works">
     <div id="collection" aria-hidden="true" style="position: absolute; top: -40px;"></div>
     <div id="work" aria-hidden="true" style="position: absolute; top: -40px;"></div>
     <div class="collection-header reveal">
@@ -190,7 +234,7 @@
   <!-- ═══════════════════════════════
        SECTION 3 — ABOUT
   ═══════════════════════════════════ -->
-  <section class="about" id="about">
+  <section class="about page-view" id="about">
     <div class="about-left reveal">
       <div class="about-content">
         <h2 class="about-title">ABOUT</h2>
@@ -246,14 +290,14 @@
     </div>
 
     <div class="about-right reveal reveal-delay-1">
-      <img src="img/about_avatar.jpg" alt="amax" class="about-full-img" id="aboutAvatarImg" />
+      <img src="img/about_avatar.jpg" alt="amax" class="about-full-img" id="aboutAvatarImg" draggable="false" />
     </div>
   </section>
 
   <!-- ═══════════════════════════════
        SECTION 4 — CONTACT
   ═══════════════════════════════════ -->
-  <section class="contact" id="contact">
+  <section class="contact page-view" id="contact">
     <div class="contact-inner">
       <div class="contact-header reveal">
         <div class="contact-header-top">
@@ -352,7 +396,8 @@
       <button class="image-modal-nav prev" id="imageModalPrev" aria-label="Previous image">‹</button>
       <button class="image-modal-nav next" id="imageModalNext" aria-label="Next image">›</button>
       <div class="image-modal-frame">
-        <img src="" alt="" class="image-modal-img" id="imageModalImg" />
+        <img src="" alt="" class="image-modal-img" id="imageModalImg" draggable="false" />
+        <div class="image-modal-shield" id="imageModalShield" title="Protected artwork"></div>
       </div>
       <div class="image-modal-bar">
         <div class="image-modal-info">

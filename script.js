@@ -27,19 +27,20 @@ const configReady = fetch("/config")
    NAVBAR — scroll behavior
 ════════════════════════════════════════════ */
 const navbar = document.getElementById("navbar");
-const aboutSection = document.getElementById("about");
 
 function updateNavbar() {
   if (!navbar) return;
   const scrollY = window.scrollY;
   navbar.classList.toggle("scrolled", scrollY > 60);
 
-  if (aboutSection) {
-    const rect = aboutSection.getBoundingClientRect();
-    const navHeight = navbar.offsetHeight || 80;
-    const isAtAbout = rect.top <= navHeight && rect.bottom >= navHeight;
-    navbar.classList.toggle("nav-hidden", isAtAbout);
+  // On the About page: the window is always at scrollY=0 (SPA),
+  // so we manage visibility separately via the about-panes listener.
+  // On other pages, always show navbar.
+  if (typeof currentPage !== "undefined" && currentPage === "about") {
+    // Visibility controlled by about-panes scroll — don't override here
+    return;
   }
+  navbar.classList.remove("nav-hidden");
 }
 
 window.addEventListener(
@@ -1821,3 +1822,244 @@ try {
   initialLang = localStorage.getItem("amax_site_lang") || "en";
 } catch (e) {}
 applyLanguage(initialLang);
+
+/* ════════════════════════════════════════════
+   MULTI-PAGE ROUTER (HOME / WORKS / ABOUT / CONTACT)
+════════════════════════════════════════════ */
+const PAGES = {
+  home: { id: "intro", title: "amax — Motion Design Portfolio" },
+  works: { id: "works", title: "Works — amax Motion Design" },
+  about: { id: "about", title: "About — amax Motion Design" },
+  contact: { id: "contact", title: "Contact — amax Motion Design" },
+};
+
+let currentPage = "home";
+
+function navigateTo(pageKey, updateHistory = true) {
+  const targetKey = PAGES[pageKey] ? pageKey : "home";
+  currentPage = targetKey;
+
+  // 1. Hide all page views and activate selected page
+  document.querySelectorAll(".page-view").forEach((view) => {
+    view.classList.remove("active");
+  });
+
+  const activeView = document.getElementById(PAGES[targetKey].id);
+  if (activeView) {
+    activeView.classList.add("active");
+  }
+
+  // 2. Update navbar active link
+  const navLinks = {
+    home: document.getElementById("navHome"),
+    works: document.getElementById("navWorks"),
+    about: document.getElementById("navAbout"),
+    contact: document.getElementById("navContact"),
+  };
+
+  Object.entries(navLinks).forEach(([key, el]) => {
+    if (el) el.classList.toggle("active", key === targetKey);
+  });
+
+  // 3. Update document title
+  document.title = PAGES[targetKey].title;
+
+  // 4. Update browser URL history
+  if (updateHistory) {
+    try {
+      const cleanPath = targetKey === "home" ? "./" : targetKey;
+      if (window.history && window.history.pushState) {
+        window.history.pushState({ page: targetKey }, PAGES[targetKey].title, cleanPath);
+      } else {
+        window.location.hash = targetKey;
+      }
+    } catch (e) {
+      window.location.hash = targetKey;
+    }
+  }
+
+  // 5. Scroll instantly to top
+  window.scrollTo({ top: 0, behavior: "instant" });
+
+  // 6. Trigger reveal observer
+  setTimeout(() => {
+    if (typeof checkReveal === "function") checkReveal();
+  }, 40);
+
+  // 7. If entering home, trigger spotlight light sequence
+  if (targetKey === "home") {
+    lightTarget = 1;
+    if (typeof startIntroSequence === "function") startIntroSequence();
+  }
+  // 8. Navbar behavior per page
+  if (navbar) {
+    navbar.classList.remove("nav-hidden");
+    navbar.classList.toggle("scrolled", window.scrollY > 60);
+
+    if (targetKey === "about") {
+      // Hide navbar immediately when entering About page
+      navbar.classList.add("nav-hidden");
+
+      // Re-attach scroll listener on about-panes (use a flag to avoid duplicates)
+      setTimeout(() => {
+        const aboutPanes = document.querySelector(".about-panes");
+        if (!aboutPanes || aboutPanes._navListenerAttached) return;
+        aboutPanes._navListenerAttached = true;
+        aboutPanes.addEventListener("scroll", function () {
+          if (aboutPanes.scrollLeft > 8) {
+            navbar.classList.remove("nav-hidden");
+            navbar.classList.add("scrolled");
+          } else {
+            navbar.classList.add("nav-hidden");
+            navbar.classList.remove("scrolled");
+          }
+        }, { passive: true });
+      }, 60);
+    }
+  }
+}
+
+// Nav link and Logo click listeners
+const navLogoLink = document.getElementById("navLogoLink");
+if (navLogoLink) {
+  navLogoLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateTo("home");
+  });
+}
+const navLogo = document.getElementById("navLogo");
+if (navLogo && !navLogoLink) {
+  navLogo.style.cursor = "pointer";
+  navLogo.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateTo("home");
+  });
+}
+
+const navHome = document.getElementById("navHome");
+if (navHome) {
+  navHome.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateTo("home");
+  });
+}
+const navWorks = document.getElementById("navWorks");
+if (navWorks) {
+  navWorks.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateTo("works");
+  });
+}
+const navAbout = document.getElementById("navAbout");
+if (navAbout) {
+  navAbout.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateTo("about");
+  });
+}
+const navContact = document.getElementById("navContact");
+if (navContact) {
+  navContact.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateTo("contact");
+  });
+}
+
+// Browser back & forward navigation
+window.addEventListener("popstate", () => {
+  const route = resolveInitialRoute();
+  navigateTo(route, false);
+});
+
+// Resolve initial page route from path, query params, or hash
+function resolveInitialRoute() {
+  const params = new URLSearchParams(window.location.search);
+  const routeParam = params.get("route");
+  if (routeParam && PAGES[routeParam.toLowerCase()]) {
+    return routeParam.toLowerCase();
+  }
+
+  const path = window.location.pathname.replace(/^\/|\/$/g, "");
+  const segments = path.split("/");
+  const lastSegment = segments[segments.length - 1]?.toLowerCase();
+  if (lastSegment && PAGES[lastSegment]) {
+    return lastSegment;
+  }
+
+  const hash = window.location.hash.replace("#", "").toLowerCase();
+  if (hash && PAGES[hash]) {
+    return hash;
+  }
+
+  return "home";
+}
+
+// Initialize active page on startup
+const initialRoute = resolveInitialRoute();
+navigateTo(initialRoute, false);
+
+// Home Bottom Bar: Discord copy listener
+const homeLinkDiscord = document.getElementById("homeLinkDiscord");
+const homeDiscordTooltip = document.getElementById("homeDiscordTooltip");
+if (homeLinkDiscord && homeDiscordTooltip) {
+  homeLinkDiscord.addEventListener("click", () => {
+    const handle = homeLinkDiscord.getAttribute("data-discord") || "amax.the_skywithsunshine.";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(handle).catch(() => {});
+    }
+    homeDiscordTooltip.classList.add("show");
+    setTimeout(() => {
+      homeDiscordTooltip.classList.remove("show");
+    }, 2000);
+  });
+}
+
+/* ════════════════════════════════════════════
+   IMAGE DOWNLOAD & DRAG PROTECTION
+════════════════════════════════════════════ */
+document.addEventListener("contextmenu", (e) => {
+  if (
+    e.target.tagName === "IMG" ||
+    e.target.closest(
+      ".client-box-img, .about-full-img, .image-modal-img, .intro-bg-img, .artwork-card-img, .client-work-card, .image-modal-frame"
+    )
+  ) {
+    e.preventDefault();
+    return false;
+  }
+});
+
+document.addEventListener("dragstart", (e) => {
+  if (e.target.tagName === "IMG" || e.target.closest("img")) {
+    e.preventDefault();
+    return false;
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+    const isImageOpen =
+      imageModalBackdrop && imageModalBackdrop.classList.contains("open");
+    if (isImageOpen) {
+      e.preventDefault();
+    }
+  }
+});
+
+/* ════════════════════════════════════════════
+   OFFLINE CLIENT FILTER
+════════════════════════════════════════════ */
+function applyOfflineClientFilters() {
+  if (typeof CLIENT_COLLECTIONS === "undefined") return;
+  document.querySelectorAll(".client-box[data-client]").forEach((box) => {
+    const clientKey = box.getAttribute("data-client");
+    const client = CLIENT_COLLECTIONS[clientKey];
+    if (client && client.status === "offline") {
+      box.style.display = "none";
+    } else {
+      box.style.display = "";
+    }
+  });
+}
+applyOfflineClientFilters();
+
