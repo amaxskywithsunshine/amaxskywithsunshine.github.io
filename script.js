@@ -27,6 +27,7 @@ const configReady = fetch("/config")
    NAVBAR — scroll behavior
 ════════════════════════════════════════════ */
 const navbar = document.getElementById("navbar");
+let currentPage = "home"; // hoisted — used by updateNavbar before router init
 
 function updateNavbar() {
   if (!navbar) return;
@@ -1833,7 +1834,7 @@ const PAGES = {
   contact: { id: "contact", title: "Contact — amax Motion Design" },
 };
 
-let currentPage = "home";
+currentPage = "home"; // already declared above
 
 function navigateTo(pageKey, updateHistory = true) {
   const targetKey = PAGES[pageKey] ? pageKey : "home";
