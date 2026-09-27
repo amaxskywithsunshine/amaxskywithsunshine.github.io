@@ -1341,7 +1341,7 @@ let CLIENT_COLLECTIONS = {
     "url": "https://www.youtube.com/@Aihara-wan",
     "desc": "Vtuber",
     "avatar": "A",
-    "status": "offline",
+    "status": "online",
     "links": [
       {
         "platform": "YouTube",
