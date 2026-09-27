@@ -380,17 +380,43 @@ const modalDate = document.getElementById("modalDate");
 const modalYTLink = document.getElementById("modalYTLink");
 
 function openModal(videoId, title, date) {
-  // Inject autoplay iframe
-  modalPlayer.innerHTML = `
-    <iframe
-      src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1"
-      allow="autoplay; encrypted-media; fullscreen"
-      allowfullscreen
-    ></iframe>
-  `;
+  const isLocal =
+    typeof videoId === "string" &&
+    (videoId.startsWith("video/") ||
+      videoId.startsWith("/video/") ||
+      videoId.startsWith("./video/") ||
+      /\.(mp4|webm|mov|m4v|ogg)$/i.test(videoId));
+
+  if (isLocal) {
+    modalPlayer.innerHTML = `
+      <video
+        src="${videoId}"
+        controls
+        autoplay
+        playsinline
+        style="width: 100%; height: 100%; object-fit: contain; background: #000;"
+      ></video>
+    `;
+    if (modalYTLink) {
+      modalYTLink.href = videoId;
+      modalYTLink.style.display = "none";
+    }
+  } else {
+    // Inject autoplay iframe
+    modalPlayer.innerHTML = `
+      <iframe
+        src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1"
+        allow="autoplay; encrypted-media; fullscreen"
+        allowfullscreen
+      ></iframe>
+    `;
+    if (modalYTLink) {
+      modalYTLink.href = `https://www.youtube.com/watch?v=${videoId}`;
+      modalYTLink.style.display = "";
+    }
+  }
   modalTitle.textContent = title;
   modalDate.textContent = formatDate(date);
-  modalYTLink.href = `https://www.youtube.com/watch?v=${videoId}`;
   modalBackdrop.classList.add("open");
   document.body.style.overflow = "hidden";
 }
@@ -398,9 +424,10 @@ function openModal(videoId, title, date) {
 function closeModal() {
   modalBackdrop.classList.remove("open");
   document.body.style.overflow = "";
-  // Stop video by clearing iframe
+  // Stop video by clearing player
   setTimeout(() => {
     modalPlayer.innerHTML = "";
+    if (modalYTLink) modalYTLink.style.display = "";
   }, 300);
 }
 
@@ -414,115 +441,115 @@ document.addEventListener("keydown", (e) => {
 
 let CATALOG_VIDEOS = [
   {
-    "id": "AdU297GBNvg",
-    "title": "visuals:AZURE2026",
-    "pubDate": "2026-07-07T07:53:15Z"
+    id: "AdU297GBNvg",
+    title: "visuals:AZURE2026",
+    pubDate: "2026-07-07T07:53:15Z",
   },
   {
-    "id": "rpY9ydbisP4",
-    "title": "visuals:AZURE2026 [ Discarded ]",
-    "pubDate": "2026-06-11T16:26:26Z"
+    id: "rpY9ydbisP4",
+    title: "visuals:AZURE2026 [ Discarded ]",
+    pubDate: "2026-06-11T16:26:26Z",
   },
   {
-    "id": "Rwc5zKMN1xM",
-    "title": "visuals:NO_WORRIES.",
-    "pubDate": "2026-05-31T15:03:05Z"
+    id: "Rwc5zKMN1xM",
+    title: "visuals:NO_WORRIES.",
+    pubDate: "2026-05-31T15:03:05Z",
   },
   {
-    "id": "mm-pWXxyT6k",
-    "title": "visuals:Height.",
-    "pubDate": "2026-05-31T13:49:22Z"
+    id: "mm-pWXxyT6k",
+    title: "visuals:Height.",
+    pubDate: "2026-05-31T13:49:22Z",
   },
   {
-    "id": "N0SML3Qotaw",
-    "title": "banner:HIRO.",
-    "pubDate": "2026-05-31T13:08:11Z"
+    id: "N0SML3Qotaw",
+    title: "banner:HIRO.",
+    pubDate: "2026-05-31T13:08:11Z",
   },
   {
-    "id": "zIEbQMFPSMs",
-    "title": "remake:AMOS",
-    "pubDate": "2026-03-15T13:54:37Z"
+    id: "zIEbQMFPSMs",
+    title: "remake:AMOS",
+    pubDate: "2026-03-15T13:54:37Z",
   },
   {
-    "id": "0eXpsDlfUII",
-    "title": "reels:2024-2025",
-    "pubDate": "2026-03-08T02:10:51Z"
+    id: "0eXpsDlfUII",
+    title: "reels:2024-2025",
+    pubDate: "2026-03-08T02:10:51Z",
   },
   {
-    "id": "ZVTB6703DnE",
-    "title": "HBD:amax.",
-    "pubDate": "2026-02-02T09:11:09Z"
+    id: "ZVTB6703DnE",
+    title: "HBD:amax.",
+    pubDate: "2026-02-02T09:11:09Z",
   },
   {
-    "id": "Q-Fg1dh8s_I",
-    "title": "HBD:sxcstyles2025.",
-    "pubDate": "2025-08-17T04:02:46Z"
+    id: "Q-Fg1dh8s_I",
+    title: "HBD:sxcstyles2025.",
+    pubDate: "2025-08-17T04:02:46Z",
   },
   {
-    "id": "4gGzsHAM4mA",
-    "title": "amv:News.",
-    "pubDate": "2024-10-21T10:21:34Z"
+    id: "4gGzsHAM4mA",
+    title: "amv:News.",
+    pubDate: "2024-10-21T10:21:34Z",
   },
   {
-    "id": "NiYcw0yX2VY",
-    "title": "文字PV:not_enough.",
-    "pubDate": "2024-09-12T03:43:59Z"
+    id: "NiYcw0yX2VY",
+    title: "文字PV:not_enough.",
+    pubDate: "2024-09-12T03:43:59Z",
   },
   {
-    "id": "QpnHcE5G0ks",
-    "title": "文字PV:all_alone.",
-    "pubDate": "2024-06-10T09:03:54Z"
+    id: "QpnHcE5G0ks",
+    title: "文字PV:all_alone.",
+    pubDate: "2024-06-10T09:03:54Z",
   },
   {
-    "id": "R3zzz9GDyfs",
-    "title": "amv:Untitled.",
-    "pubDate": "2024-05-13T17:43:31Z"
+    id: "R3zzz9GDyfs",
+    title: "amv:Untitled.",
+    pubDate: "2024-05-13T17:43:31Z",
   },
   {
-    "id": "P5uiNuZG46s",
-    "title": "amv:Daisey.",
-    "pubDate": "2024-02-29T06:37:30Z"
+    id: "P5uiNuZG46s",
+    title: "amv:Daisey.",
+    pubDate: "2024-02-29T06:37:30Z",
   },
   {
-    "id": "XgDKkSS0aPw",
-    "title": "amv:dot.",
-    "pubDate": "2024-02-05T00:59:57Z"
+    id: "XgDKkSS0aPw",
+    title: "amv:dot.",
+    pubDate: "2024-02-05T00:59:57Z",
   },
   {
-    "id": "gNO7aiqYkSQ",
-    "title": "visuals:busy.",
-    "pubDate": "2024-01-07T11:14:44Z"
+    id: "gNO7aiqYkSQ",
+    title: "visuals:busy.",
+    pubDate: "2024-01-07T11:14:44Z",
   },
   {
-    "id": "zVkIiLFjrWU",
-    "title": "miley",
-    "pubDate": "2023-12-09T15:07:36Z"
+    id: "zVkIiLFjrWU",
+    title: "miley",
+    pubDate: "2023-12-09T15:07:36Z",
   },
   {
-    "id": "Rc__qEAHGAU",
-    "title": "amv:Story.",
-    "pubDate": "2023-10-27T14:12:59Z"
+    id: "Rc__qEAHGAU",
+    title: "amv:Story.",
+    pubDate: "2023-10-27T14:12:59Z",
   },
   {
-    "id": "Taiw_SjScNY",
-    "title": "HBD:sxcstyles",
-    "pubDate": "2023-07-22T06:01:41Z"
+    id: "Taiw_SjScNY",
+    title: "HBD:sxcstyles",
+    pubDate: "2023-07-22T06:01:41Z",
   },
   {
-    "id": "ot68zIJmfyY",
-    "title": "intro:HiroNeyka.",
-    "pubDate": "2023-06-10T09:08:34Z"
+    id: "ot68zIJmfyY",
+    title: "intro:HiroNeyka.",
+    pubDate: "2023-06-10T09:08:34Z",
   },
   {
-    "id": "r5wQP7NbVmQ",
-    "title": "fantro:Nerumi-S",
-    "pubDate": "2023-05-29T10:29:48Z"
+    id: "r5wQP7NbVmQ",
+    title: "fantro:Nerumi-S",
+    pubDate: "2023-05-29T10:29:48Z",
   },
   {
-    "id": "x8C_vZsPIFc",
-    "title": "amv:amax&witty.",
-    "pubDate": "2023-05-20T12:13:08Z"
-  }
+    id: "x8C_vZsPIFc",
+    title: "amv:amax&witty.",
+    pubDate: "2023-05-20T12:13:08Z",
+  },
 ];
 
 function mergeWithCatalog(liveList) {
@@ -611,7 +638,9 @@ async function loadVideos() {
 
   // ── Sync with catalog.json if available (works on both local server and GitHub Pages) ──
   try {
-    const catRes = await fetch(`catalog.json?t=${Date.now()}`, { signal: AbortSignal.timeout(3000) });
+    const catRes = await fetch(`catalog.json?t=${Date.now()}`, {
+      signal: AbortSignal.timeout(3000),
+    });
     if (catRes.ok) {
       const catData = await catRes.json();
       if (Array.isArray(catData) && catData.length > 0) {
@@ -976,6 +1005,18 @@ if (contactForm) {
         _captcha: "false",
       };
 
+      // Also record message locally to admin inbox if backend server is reachable
+      fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: nameVal,
+          email: emailVal,
+          inquiry: inquiryVal,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+
       const response = await fetch(
         "https://formsubmit.co/ajax/aongsakrb@gmail.com",
         {
@@ -1255,7 +1296,15 @@ function renderClientShowcase(clientKey) {
       clientKey === "personal" && currentT.worksPersonalTitle
         ? currentT.worksPersonalTitle
         : data.name;
-  if (avatarEl) avatarEl.textContent = data.avatar || data.name.charAt(0);
+  if (avatarEl) {
+    const av = data.avatar || data.name.charAt(0);
+    const isImg = av && (av.includes("/") || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(av));
+    if (isImg) {
+      avatarEl.innerHTML = `<img src="${av}" alt="${data.name}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.onerror=null;this.parentElement.textContent='?'" />`;
+    } else {
+      avatarEl.textContent = av;
+    }
+  }
   if (descEl)
     descEl.textContent =
       clientKey === "personal" && currentT.worksPersonalDesc
@@ -1531,7 +1580,7 @@ const I18N_DATA = {
     tabBackground: "BACKGROUND",
     statProjects: "PROJECTS",
     statYears: "YEARS EXP.",
-    aboutOverview: `Amax is a motion designer from Thailand. He makes smooth animations that match music and sound. As a solo creator who has never collaborated with anyone, he creates both 2D and 3D graphics entirely by himself, but that is also why he lacks experience working with others.<br /><br />He learns from many different styles, but he always tries new ideas to make his work fresh and unique.<br /><br />He is still practicing story writing. His greatest strength is making videos that look cool, energetic, and move to the beat.<br /><br />Amax cares about good quality and staying healthy. He does not rush his work. Depending on the project, he may take from one day to over a year to finish, making sure every piece of work he creates turns out great for him.`,
+    aboutOverview: `ดีจั๊ฟ`,
     aboutBackground: `Amax is a motion designer from Thailand.<br /><br />He started making videos by editing anime music videos (AMVs), and in 2024, he loved watching motion design creators from Japan and China, and their work inspired him a lot. Later, in late 2025, he started learning 3D for the first time, making motion graphics with references from Japanese and Chinese creators.<br /><br />In 2026, he also discovered virtual club culture. After visiting music clubs in VRChat, he became very interested in DJing and VJing. His dream is to perform in VRChat clubs and build his own virtual club one day.<br /><br />Besides motion design, he also likes making music, 3D modeling, and drawing. His first dream was to make video games. He believes that once you set a goal, you should never give up. He uses all these skills to help him make games in the future.<br /><br />Over the last four years, he has worked for clients, friends, and himself. He always works hard on his art, hoping to share his work with people who enjoy his style.`,
     // Contact section
     contactYearTag: "DIRECT INQUIRIES & COLLABORATION",
@@ -1903,7 +1952,11 @@ function navigateTo(pageKey, updateHistory = true) {
     try {
       const cleanPath = targetKey === "home" ? "./" : targetKey;
       if (window.history && window.history.pushState) {
-        window.history.pushState({ page: targetKey }, PAGES[targetKey].title, cleanPath);
+        window.history.pushState(
+          { page: targetKey },
+          PAGES[targetKey].title,
+          cleanPath,
+        );
       } else {
         window.location.hash = targetKey;
       }
@@ -2034,7 +2087,9 @@ const homeLinkDiscord = document.getElementById("homeLinkDiscord");
 const homeDiscordTooltip = document.getElementById("homeDiscordTooltip");
 if (homeLinkDiscord && homeDiscordTooltip) {
   homeLinkDiscord.addEventListener("click", () => {
-    const handle = homeLinkDiscord.getAttribute("data-discord") || "amax.the_skywithsunshine.";
+    const handle =
+      homeLinkDiscord.getAttribute("data-discord") ||
+      "amax.the_skywithsunshine.";
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(handle).catch(() => {});
     }
@@ -2052,7 +2107,7 @@ document.addEventListener("contextmenu", (e) => {
   if (
     e.target.tagName === "IMG" ||
     e.target.closest(
-      ".client-box-img, .about-full-img, .image-modal-img, .intro-bg-img, .artwork-card-img, .client-work-card, .image-modal-frame"
+      ".client-box-img, .about-full-img, .image-modal-img, .intro-bg-img, .artwork-card-img, .client-work-card, .image-modal-frame",
     )
   ) {
     e.preventDefault();
@@ -2093,4 +2148,3 @@ function applyOfflineClientFilters() {
   });
 }
 applyOfflineClientFilters();
-
