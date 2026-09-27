@@ -4,7 +4,9 @@
   "description": "Motion Graphic Portfolio",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "admin": "node server.js --admin",
+    "dev": "node server.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

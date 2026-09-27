@@ -73,7 +73,9 @@ function requireAdminAuth(req, res, next) {
   // 1. Verify Server Hardware ID
   const hwCheck = verifyHWID(ALLOWED_HWID);
   if (!hwCheck.allowed) {
-    console.warn(`[SECURITY ALERT] HWID verification failed: Detected ${hwCheck.currentHwid}, Allowed ${ALLOWED_HWID}`);
+    console.warn(
+      `[SECURITY ALERT] HWID verification failed: Detected ${hwCheck.currentHwid}, Allowed ${ALLOWED_HWID}`,
+    );
     return res.status(403).json({
       error: "HARDWARE_UNAUTHORIZED",
       message: `Console locked: Server is running on unauthorized hardware (${hwCheck.currentHwid}).`,
@@ -152,7 +154,10 @@ app.post("/api/admin/auth/login", (req, res) => {
 
   // 2. Admin Key Check
   if (!adminKey || adminKey !== ADMIN_KEY) {
-    const current = failedLoginAttempts.get(clientIp) || { attempts: 0, lockUntil: 0 };
+    const current = failedLoginAttempts.get(clientIp) || {
+      attempts: 0,
+      lockUntil: 0,
+    };
     current.attempts += 1;
     if (current.attempts >= 5) {
       current.lockUntil = now + 10 * 60 * 1000; // 10 min lock
@@ -212,7 +217,9 @@ app.post("/api/admin/catalog/save", requireAdminAuth, (req, res) => {
   const { items, commitMessage, push } = req.body || {};
 
   if (!Array.isArray(items)) {
-    return res.status(400).json({ error: "Invalid catalog format. Must be an array." });
+    return res
+      .status(400)
+      .json({ error: "Invalid catalog format. Must be an array." });
   }
 
   try {
@@ -263,7 +270,8 @@ app.get("/api/admin/youtube/channel-sync", requireAdminAuth, (req, res) => {
   const currentCatalog = getCatalog();
   const catalogIds = new Set(currentCatalog.map((item) => item.id));
   const apiKey = process.env.YOUTUBE_API_KEY || API_KEY || "";
-  const playlistId = process.env.YOUTUBE_UPLOADS_PLAYLIST_ID || UPLOADS_PLAYLIST_ID;
+  const playlistId =
+    process.env.YOUTUBE_UPLOADS_PLAYLIST_ID || UPLOADS_PLAYLIST_ID;
 
   function processUploads(uploads) {
     const newVideos = uploads.filter((v) => !catalogIds.has(v.id));
@@ -278,30 +286,34 @@ app.get("/api/admin/youtube/channel-sync", requireAdminAuth, (req, res) => {
   if (apiKey) {
     const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`;
     https
-      .get(apiUrl, { headers: { Referer: "https://amaxskywithsunshine.github.io/" } }, (apiRes) => {
-        if (apiRes.statusCode === 200) {
-          let data = "";
-          apiRes.on("data", (chunk) => (data += chunk));
-          apiRes.on("end", () => {
-            try {
-              const json = JSON.parse(data);
-              const items = (json.items || []).map((v) => ({
-                id: v.snippet.resourceId.videoId,
-                title: decodeHtmlEntities(v.snippet.title),
-                pubDate: v.snippet.publishedAt,
-                thumbnail:
-                  v.snippet.thumbnails?.high?.url ||
-                  v.snippet.thumbnails?.default?.url ||
-                  `https://img.youtube.com/vi/${v.snippet.resourceId.videoId}/hqdefault.jpg`,
-              }));
-              return processUploads(items);
-            } catch (e) {}
+      .get(
+        apiUrl,
+        { headers: { Referer: "https://amaxskywithsunshine.github.io/" } },
+        (apiRes) => {
+          if (apiRes.statusCode === 200) {
+            let data = "";
+            apiRes.on("data", (chunk) => (data += chunk));
+            apiRes.on("end", () => {
+              try {
+                const json = JSON.parse(data);
+                const items = (json.items || []).map((v) => ({
+                  id: v.snippet.resourceId.videoId,
+                  title: decodeHtmlEntities(v.snippet.title),
+                  pubDate: v.snippet.publishedAt,
+                  thumbnail:
+                    v.snippet.thumbnails?.high?.url ||
+                    v.snippet.thumbnails?.default?.url ||
+                    `https://img.youtube.com/vi/${v.snippet.resourceId.videoId}/hqdefault.jpg`,
+                }));
+                return processUploads(items);
+              } catch (e) {}
+              fetchFromRSSFallback();
+            });
+          } else {
             fetchFromRSSFallback();
-          });
-        } else {
-          fetchFromRSSFallback();
-        }
-      })
+          }
+        },
+      )
       .on("error", () => fetchFromRSSFallback());
   } else {
     fetchFromRSSFallback();
@@ -322,7 +334,9 @@ app.get("/api/admin/youtube/channel-sync", requireAdminAuth, (req, res) => {
             const entries = xml.split("<entry>").slice(1);
             const liveItems = entries
               .map((entry) => {
-                const idMatch = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+                const idMatch = entry.match(
+                  /<yt:videoId>([^<]+)<\/yt:videoId>/,
+                );
                 const titleMatch = entry.match(/<title>([^<]+)<\/title>/);
                 const pubMatch = entry.match(/<published>([^<]+)<\/published>/);
                 const vid = idMatch ? idMatch[1] : "";
@@ -436,7 +450,11 @@ app.get("/api/videos", (req, res) => {
                 const merged = mergeWithLiveCatalog(items);
                 videoCache.items = merged;
                 videoCache.timestamp = now;
-                return res.json({ status: "ok", source: "youtube_api_merged", items: merged });
+                return res.json({
+                  status: "ok",
+                  source: "youtube_api_merged",
+                  items: merged,
+                });
               }
             } catch (e) {}
             fetchFromRSS();
@@ -444,7 +462,7 @@ app.get("/api/videos", (req, res) => {
         } else {
           fetchFromRSS();
         }
-      }
+      },
     );
 
     apiReq.on("error", () => fetchFromRSS());
@@ -480,7 +498,9 @@ app.get("/api/videos", (req, res) => {
             const entries = xml.split("<entry>").slice(1);
             const liveItems = entries
               .map((entry) => {
-                const idMatch = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+                const idMatch = entry.match(
+                  /<yt:videoId>([^<]+)<\/yt:videoId>/,
+                );
                 const titleMatch = entry.match(/<title>([^<]+)<\/title>/);
                 const pubMatch = entry.match(/<published>([^<]+)<\/published>/);
                 const vid = idMatch ? idMatch[1] : "";
@@ -545,11 +565,52 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.listen(PORT, () => {
+function openBrowser(url) {
+  try {
+    const cmd =
+      process.platform === "win32" ? `start "" "${url}"` : `open "${url}"`;
+    require("child_process").exec(cmd);
+  } catch (e) {}
+}
+
+function printBanner(port) {
   const hw = getSystemHWID();
-  console.log(`\n======================================================`);
-  console.log(`🚀 AMAX Portfolio Server running on http://localhost:${PORT}`);
-  console.log(`🔐 Admin Console: http://localhost:${PORT}/admin`);
-  console.log(`🛡️ Hardware ID: ${hw.hwid} (Host: ${hw.hostname})`);
-  console.log(`======================================================\n`);
+  const hwCheck = verifyHWID(ALLOWED_HWID);
+  const statusStr = hwCheck.allowed ? "VERIFIED HOST" : "HWID MISMATCH";
+
+  console.log("");
+  console.log("  ╔═══════════════════════════════════════════════════════════╗");
+  console.log("  ║             AMAX PORTFOLIO & CATALOG CONSOLE              ║");
+  console.log("  ╚═══════════════════════════════════════════════════════════╝");
+  console.log("");
+  console.log(`  ➜  Local:     http://localhost:${port}/`);
+  console.log(`  ➜  Admin:     http://localhost:${port}/admin`);
+  console.log(`  ➜  Hardware:  ${hw.hwid} [${statusStr}]`);
+  console.log(`  ➜  Host:      ${hw.hostname} (${hw.platform} ${hw.arch})`);
+  console.log("");
+  console.log("  Press Ctrl+C to stop the server\n");
+
+  if (process.argv.includes("--admin")) {
+    console.log(`  Opening Admin Console in browser: http://localhost:${port}/admin\n`);
+    openBrowser(`http://localhost:${port}/admin`);
+  }
+}
+
+const server = app.listen(PORT, () => {
+  printBanner(PORT);
 });
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.log(`\n  ⚠️  Port ${PORT} is already in use by an active server!\n`);
+    console.log(`  ➜  Local:   http://localhost:${PORT}/`);
+    console.log(`  ➜  Admin:   http://localhost:${PORT}/admin\n`);
+    console.log(`  The server is already running and ready in your browser.\n`);
+    if (process.argv.includes("--admin")) {
+      openBrowser(`http://localhost:${PORT}/admin`);
+    }
+  } else {
+    console.error("Server error:", err);
+  }
+});
+
