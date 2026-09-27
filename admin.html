@@ -142,6 +142,11 @@
           <span class="icon-external">↗</span>
         </a>
 
+        <button type="button" class="btn btn-outline btn-sm" id="btnSiteProfile">
+          <span>SITE PROFILE</span>
+          <span>✦</span>
+        </button>
+
         <button type="button" class="btn btn-outline btn-sm" id="btnGitHistory">
           <span>GIT LOGS</span>
           <span class="badge-branch" id="navBranchBadge">main</span>
@@ -218,12 +223,25 @@
             <div class="client-profile-name-row">
               <h2 class="client-profile-name" id="activeClientName">Personal Project</h2>
               <span class="client-profile-handle" id="activeClientHandle">@iaexamax</span>
+              <!-- ONLINE / OFFLINE Toggle -->
+              <label class="status-toggle" id="clientStatusToggle" title="Toggle client visibility (ONLINE/OFFLINE)">
+                <input type="checkbox" id="clientStatusCheck" />
+                <span class="status-toggle-track">
+                  <span class="status-toggle-dot"></span>
+                </span>
+                <span class="status-toggle-label" id="clientStatusLabel">ONLINE</span>
+              </label>
             </div>
             <p class="client-profile-desc" id="activeClientDesc">Original motion design, typography PVs, visual experiments, and animated showcase reels.</p>
             <div class="client-profile-links" id="activeClientLinks"></div>
           </div>
         </div>
         <div class="client-profile-right">
+          <div class="profile-right-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="btnEditClientInfo">
+              <span>✏ EDIT CLIENT INFO</span>
+            </button>
+          </div>
           <div class="client-type-filters" role="group" aria-label="Filter works by type">
             <button type="button" class="type-filter-btn active" data-type="all">ALL (<span id="countFilterAll">0</span>)</button>
             <button type="button" class="type-filter-btn" data-type="video"><img src="img/icons/video.png" class="btn-filter-icon" alt="" /><span>VIDEOS (<span id="countFilterVideo">0</span>)</span></button>
@@ -429,6 +447,149 @@
           <button type="button" class="btn btn-ghost" id="btnCancelClient">CANCEL</button>
           <button type="submit" class="btn btn-primary btn-glow" id="btnSaveClient">
             CREATE CLIENT CATALOG
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       MODAL 0b: EDIT CLIENT CATALOG MODAL (STATUS + LINKS)
+  ════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="editClientModalBackdrop" style="display: none;">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-header">
+        <h3 class="modal-title" id="editClientModalTitle">EDIT CLIENT CATALOG</h3>
+        <button type="button" class="modal-close" id="btnCloseEditClientModal">&times;</button>
+      </div>
+
+      <form id="editClientForm" class="modal-body" autocomplete="off">
+        <input type="hidden" id="editClientKey" />
+
+        <!-- Basic Info -->
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="editClientName" class="form-label">DISPLAY NAME</label>
+            <input type="text" id="editClientName" class="form-input" required />
+          </div>
+          <div class="form-group flex-1">
+            <label for="editClientHandle" class="form-label">HANDLE</label>
+            <input type="text" id="editClientHandle" class="form-input" placeholder="@handle" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="editClientAvatar" class="form-label">AVATAR INITIAL</label>
+            <input type="text" id="editClientAvatar" class="form-input" maxlength="2" />
+          </div>
+          <div class="form-group flex-3">
+            <label for="editClientDesc" class="form-label">DESCRIPTION</label>
+            <input type="text" id="editClientDesc" class="form-input" />
+          </div>
+        </div>
+
+        <!-- Status Toggle -->
+        <div class="form-group">
+          <label class="form-label">CATALOG STATUS</label>
+          <div class="status-toggle-row">
+            <label class="status-toggle-large">
+              <input type="checkbox" id="editClientStatus" />
+              <span class="status-toggle-track">
+                <span class="status-toggle-dot"></span>
+              </span>
+            </label>
+            <div class="status-toggle-info">
+              <span class="status-toggle-state-label" id="editClientStatusLabel">ONLINE</span>
+              <span class="status-toggle-state-desc">Enable to show this client on the public portfolio. Disable to hide it (OFFLINE).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Social Links Manager -->
+        <div class="form-group">
+          <div class="link-manager-header">
+            <label class="form-label">SOCIAL & PLATFORM LINKS</label>
+            <button type="button" class="btn btn-xs btn-outline" id="btnAddClientLink">+ ADD LINK</button>
+          </div>
+          <div class="link-manager-list" id="editClientLinksList">
+            <!-- Populated dynamically -->
+          </div>
+          <p class="form-hint">Tip: Use the icon URL field to point to any icon in <code>img/icons/</code>. The platform label appears as tooltip.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="btnCancelEditClient">CANCEL</button>
+          <button type="submit" class="btn btn-primary btn-glow" id="btnSaveEditClient">SAVE CHANGES</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       MODAL 0c: SITE PROFILE MANAGER
+  ════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="siteProfileModalBackdrop" style="display: none;">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-header">
+        <h3 class="modal-title">SITE PROFILE MANAGER</h3>
+        <button type="button" class="modal-close" id="btnCloseSiteProfileModal">&times;</button>
+      </div>
+
+      <form id="siteProfileForm" class="modal-body" autocomplete="off">
+        <div class="form-row">
+          <!-- Avatar Preview + Upload -->
+          <div class="form-group" style="flex: 0 0 auto; display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <label class="form-label">AVATAR</label>
+            <div class="profile-avatar-preview" id="siteAvatarPreview">
+              <img src="" alt="Avatar" id="siteAvatarImg" class="profile-avatar-img" />
+              <span id="siteAvatarInitial" class="profile-avatar-initial">A</span>
+            </div>
+            <label class="btn btn-outline btn-xs" style="cursor:pointer;">
+              UPLOAD IMAGE
+              <input type="file" id="siteAvatarFile" accept="image/*" style="display:none;" />
+            </label>
+          </div>
+
+          <!-- Bio / Info -->
+          <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
+            <div class="form-group">
+              <label for="siteDisplayName" class="form-label">DISPLAY NAME</label>
+              <input type="text" id="siteDisplayName" class="form-input" placeholder="e.g. AMax" />
+            </div>
+            <div class="form-group">
+              <label for="siteBio" class="form-label">BIO / SHORT DESCRIPTION</label>
+              <textarea id="siteBio" class="form-input form-textarea" rows="3" placeholder="Short intro for the About page..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overview & Background (multilingual) -->
+        <div class="form-group">
+          <label class="form-label">OVERVIEW (EN)</label>
+          <textarea id="siteOverviewEn" class="form-input form-textarea" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">BACKGROUND (EN)</label>
+          <textarea id="siteBackgroundEn" class="form-input form-textarea" rows="2"></textarea>
+        </div>
+
+        <!-- Site Social Links -->
+        <div class="form-group">
+          <div class="link-manager-header">
+            <label class="form-label">SITE SOCIAL LINKS (Footer / About)</label>
+            <button type="button" class="btn btn-xs btn-outline" id="btnAddSiteLink">+ ADD LINK</button>
+          </div>
+          <div class="link-manager-list" id="siteLinksList"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="btnCancelSiteProfile">CANCEL</button>
+          <button type="submit" class="btn btn-success btn-glow" id="btnSaveSiteProfile">
+            <img src="img/icons/sync.png" class="btn-icon-svg" alt="" />
+            SAVE & COMMIT PROFILE
           </button>
         </div>
       </form>

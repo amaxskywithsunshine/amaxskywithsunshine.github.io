@@ -74,7 +74,9 @@
 
   // Client Selection & Profile
   const clientTabsRow = document.getElementById("clientTabsRow");
-  const btnOpenAddClientModal = document.getElementById("btnOpenAddClientModal");
+  const btnOpenAddClientModal = document.getElementById(
+    "btnOpenAddClientModal",
+  );
   const activeClientAvatar = document.getElementById("activeClientAvatar");
   const activeClientName = document.getElementById("activeClientName");
   const activeClientHandle = document.getElementById("activeClientHandle");
@@ -185,7 +187,9 @@
   const btnClosePlayerModal = document.getElementById("btnClosePlayerModal");
   const playerIframeWrap = document.getElementById("playerIframeWrap");
 
-  const imageLightboxBackdrop = document.getElementById("imageLightboxBackdrop");
+  const imageLightboxBackdrop = document.getElementById(
+    "imageLightboxBackdrop",
+  );
   const lightboxTitle = document.getElementById("lightboxTitle");
   const lightboxImg = document.getElementById("lightboxImg");
   const btnCloseLightbox = document.getElementById("btnCloseLightbox");
@@ -225,7 +229,11 @@
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
     } catch (e) {
       return dateStr;
     }
@@ -257,7 +265,10 @@
       const msgBuffer = new TextEncoder().encode(text);
       const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+      const hashHex = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
       return `DEV-${hashHex.substring(0, 4)}-${hashHex.substring(4, 8)}-${hashHex.substring(8, 12)}`;
     } catch (e) {
       return "DEV-BROWSER-GENERIC";
@@ -271,7 +282,11 @@
       headers["x-admin-token"] = state.token;
     }
     headers["x-client-fingerprint"] = state.clientFingerprint;
-    if (options.body && typeof options.body === "object" && !(options.body instanceof FormData)) {
+    if (
+      options.body &&
+      typeof options.body === "object" &&
+      !(options.body instanceof FormData)
+    ) {
       headers["Content-Type"] = "application/json";
       options.body = JSON.stringify(options.body);
     }
@@ -281,12 +296,19 @@
       const res = await fetch(endpoint, options);
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error((data && data.message) || `HTTP ${res.status}: ${res.statusText}`);
+        throw new Error(
+          (data && data.message) || `HTTP ${res.status}: ${res.statusText}`,
+        );
       }
       return data;
     } catch (err) {
-      if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
-        throw new Error("Cannot connect to server. Ensure 'node server.js' is running locally.");
+      if (
+        err.message.includes("Failed to fetch") ||
+        err.message.includes("NetworkError")
+      ) {
+        throw new Error(
+          "Cannot connect to server. Ensure 'node server.js' is running locally.",
+        );
       }
       throw err;
     }
@@ -300,8 +322,10 @@
     // Password visibility toggle
     if (btnTogglePw && adminKeyInput) {
       btnTogglePw.addEventListener("click", () => {
-        adminKeyInput.type = adminKeyInput.type === "password" ? "text" : "password";
-        btnTogglePw.textContent = adminKeyInput.type === "password" ? "👁️" : "🙈";
+        adminKeyInput.type =
+          adminKeyInput.type === "password" ? "text" : "password";
+        btnTogglePw.textContent =
+          adminKeyInput.type === "password" ? "👁️" : "🙈";
       });
     }
 
@@ -351,7 +375,8 @@
 
   function updateHardwareUI(data) {
     if (diagHwid) diagHwid.textContent = data.currentHwid || "UNKNOWN";
-    if (diagHost) diagHost.textContent = `${data.systemInfo?.hostname || "Local"} (${data.systemInfo?.platform || "OS"})`;
+    if (diagHost)
+      diagHost.textContent = `${data.systemInfo?.hostname || "Local"} (${data.systemInfo?.platform || "OS"})`;
 
     if (data.hwidValid) {
       if (diagStatusBadge) {
@@ -364,7 +389,8 @@
         navHwidText.textContent = `HWID VERIFIED : ${data.currentHwid.slice(-9)}`;
       }
       if (statHwidShort) statHwidShort.textContent = "HWID-OK";
-      if (statHostLabel) statHostLabel.textContent = `HOST: ${data.systemInfo?.hostname || "iTxAmax"}`;
+      if (statHostLabel)
+        statHostLabel.textContent = `HOST: ${data.systemInfo?.hostname || "iTxAmax"}`;
     } else {
       if (diagStatusBadge) {
         diagStatusBadge.className = "hw-status-badge mismatch";
@@ -379,17 +405,20 @@
       }
       if (navHwidText) {
         navHwidText.textContent = "HARDWARE LOCKED";
-        if (navHwidBadge) navHwidBadge.className = "navbar-status-pill mismatch";
+        if (navHwidBadge)
+          navHwidBadge.className = "navbar-status-pill mismatch";
       }
       if (statHwidShort) statHwidShort.textContent = "HWID-LOCK";
     }
 
     // Security Drawer details
     if (secServerHwid) secServerHwid.textContent = data.currentHwid || "--";
-    if (secHostname) secHostname.textContent = data.systemInfo?.hostname || "--";
+    if (secHostname)
+      secHostname.textContent = data.systemInfo?.hostname || "--";
     if (secMac) secMac.textContent = data.systemInfo?.primaryMac || "--";
     if (secCpu) secCpu.textContent = data.systemInfo?.cpuModel || "--";
-    if (secOs) secOs.textContent = `${data.systemInfo?.platform} ${data.systemInfo?.arch}`;
+    if (secOs)
+      secOs.textContent = `${data.systemInfo?.platform} ${data.systemInfo?.arch}`;
     if (secClientFp) secClientFp.textContent = state.clientFingerprint;
     if (secAllowedHwid) secAllowedHwid.textContent = data.allowedHwid || "--";
   }
@@ -402,7 +431,8 @@
     if (!key) return;
 
     btnLogin.disabled = true;
-    btnLogin.querySelector(".btn-text").textContent = "VERIFYING CREDENTIALS & HWID...";
+    btnLogin.querySelector(".btn-text").textContent =
+      "VERIFYING CREDENTIALS & HWID...";
 
     try {
       const res = await apiRequest("/api/admin/auth/login", {
@@ -422,11 +452,13 @@
         enterDashboard();
       }
     } catch (err) {
-      loginErrorMsg.textContent = err.message || "Invalid Admin Key or Hardware Mismatch";
+      loginErrorMsg.textContent =
+        err.message || "Invalid Admin Key or Hardware Mismatch";
       showToast(err.message, "error");
     } finally {
       btnLogin.disabled = false;
-      btnLogin.querySelector(".btn-text").textContent = "AUTHENTICATE & ENTER CONSOLE";
+      btnLogin.querySelector(".btn-text").textContent =
+        "AUTHENTICATE & ENTER CONSOLE";
     }
   }
 
@@ -506,7 +538,7 @@
           </div>
           <div class="commit-subject">${c.subject}</div>
         </div>
-      `
+      `,
         )
         .join("");
     }
@@ -539,9 +571,12 @@
       const isOriginal = key === "personal";
       const tagText = isOriginal ? "ORIGINAL" : "CLIENT";
 
+      const isOnline = client.status !== 'offline';
+      const statusLabel = isOnline ? 'ONLINE' : 'OFFLINE';
+
       const card = document.createElement("button");
       card.type = "button";
-      card.className = `client-box-tab ${isActive ? "active" : ""}`;
+      card.className = `client-box-tab ${isActive ? "active" : ""} ${!isOnline ? "client-offline" : ""}`;
       card.dataset.client = key;
       card.innerHTML = `
         <div class="client-box-preview">
@@ -552,7 +587,7 @@
           <div class="client-box-top-row">
             <span class="client-box-tag">${tagText}</span>
             <span class="client-box-status">
-              <span class="status-dot-sm"></span> ONLINE
+              <span class="status-dot-sm" style="background:${isOnline ? '' : '#555'}"></span> ${statusLabel}
             </span>
           </div>
           <h3 class="client-box-title">${client.name || key}</h3>
@@ -631,7 +666,10 @@
 
   function handleCreateClient(e) {
     e.preventDefault();
-    const rawKey = inputClientKey.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const rawKey = inputClientKey.value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "");
     const name = inputClientName.value.trim();
 
     if (!rawKey || !name) {
@@ -645,7 +683,11 @@
     }
 
     const handle = inputClientHandle.value.trim() || `@${rawKey}`;
-    const avatar = (inputClientAvatar.value.trim() || name.charAt(0) || "C").toUpperCase();
+    const avatar = (
+      inputClientAvatar.value.trim() ||
+      name.charAt(0) ||
+      "C"
+    ).toUpperCase();
     const desc = inputClientDesc.value.trim() || "Client Collection";
     const url = inputClientUrl.value.trim() || "";
 
@@ -696,7 +738,10 @@
     populateImageSelectDropdown();
     renderCatalog();
 
-    showToast(`Created client collection "${name}". Remember to click SAVE & COMMIT!`, "success");
+    showToast(
+      `Created client collection "${name}". Remember to click SAVE & COMMIT!`,
+      "success",
+    );
   }
 
   // ── ACTIVE CLIENT PROFILE & CLEAN SOCIAL ICONS ──
@@ -705,36 +750,54 @@
     const works = client.works || [];
 
     if (activeClientAvatar) {
-      activeClientAvatar.textContent = client.avatar || state.activeClientKey.charAt(0).toUpperCase();
+      activeClientAvatar.textContent =
+        client.avatar || state.activeClientKey.charAt(0).toUpperCase();
     }
-    if (activeClientName) activeClientName.textContent = client.name || state.activeClientKey;
-    if (activeClientHandle) activeClientHandle.textContent = client.handle || "";
+    if (activeClientName)
+      activeClientName.textContent = client.name || state.activeClientKey;
+    if (activeClientHandle)
+      activeClientHandle.textContent = client.handle || "";
     if (activeClientDesc) activeClientDesc.textContent = client.desc || "";
 
     if (btnAddWorkLabel) {
       btnAddWorkLabel.textContent = `ADD WORK (${client.name || state.activeClientKey})`;
     }
 
-    // USER REQUIREMENT: Social icons sized appropriately without text <span>
+    // Sync ONLINE/OFFLINE toggle in profile banner
+    const statusCheck = document.getElementById('clientStatusCheck');
+    const statusLabel = document.getElementById('clientStatusLabel');
+    if (statusCheck) {
+      const isOnline = client.status !== 'offline';
+      statusCheck.checked = isOnline;
+      if (statusLabel) {
+        statusLabel.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+      }
+    }
+
+    // Social icons (icon-only)
     if (activeClientLinks) {
       if (Array.isArray(client.links) && client.links.length > 0) {
         activeClientLinks.innerHTML = client.links
           .map(
             (link) => `
-            <a href="${link.url}" target="_blank" rel="noopener" class="client-icon-btn" title="${link.platform || ''}${link.label ? `: ${link.label}` : ''}">
-              ${link.icon ? `<img src="${link.icon}" alt="${link.platform || 'Link'}" class="client-link-icon" />` : `<span class="icon-fallback">${(link.platform || "L").charAt(0)}</span>`}
+            <a href="${link.url || '#'}" target="_blank" rel="noopener" class="client-icon-btn" title="${link.platform || ''}${link.label ? `: ${link.label}` : ''}">
+              ${link.icon ? `<img src="${link.icon}" alt="${link.platform || 'Link'}" class="client-link-icon" />` : `<span class="icon-fallback">${(link.platform || 'L').charAt(0)}</span>`}
             </a>
-          `
+          `,
           )
-          .join("");
+          .join('');
       } else {
-        activeClientLinks.innerHTML = "";
+        activeClientLinks.innerHTML = '<span style="color:#555;font-size:11px;">No links added.</span>';
       }
     }
 
     // Update filter counts for active client
-    const videoWorks = works.filter((w) => w.type === "video" || (!w.type && (w.videoId || w.id)));
-    const imageWorks = works.filter((w) => w.type === "image" || (!w.videoId && !w.id && w.src));
+    const videoWorks = works.filter(
+      (w) => w.type === 'video' || (!w.type && (w.videoId || w.id)),
+    );
+    const imageWorks = works.filter(
+      (w) => w.type === 'image' || (!w.videoId && !w.id && w.src),
+    );
 
     if (countFilterAll) countFilterAll.textContent = works.length;
     if (countFilterVideo) countFilterVideo.textContent = videoWorks.length;
@@ -782,7 +845,8 @@
 
     const query = state.filterQuery.toLowerCase();
     const filtered = works.filter((item) => {
-      const isImage = item.type === "image" || (!item.videoId && !item.id && item.src);
+      const isImage =
+        item.type === "image" || (!item.videoId && !item.id && item.src);
       const isVideo = !isImage;
 
       if (state.filterType === "video" && !isVideo) return false;
@@ -791,9 +855,13 @@
       if (!query) return true;
       const title = (item.title || "").toLowerCase();
       const cat = (item.category || "").toLowerCase();
-      const idOrSrc = String(item.videoId || item.id || item.src || "").toLowerCase();
+      const idOrSrc = String(
+        item.videoId || item.id || item.src || "",
+      ).toLowerCase();
 
-      return title.includes(query) || cat.includes(query) || idOrSrc.includes(query);
+      return (
+        title.includes(query) || cat.includes(query) || idOrSrc.includes(query)
+      );
     });
 
     catalogContainer.innerHTML = "";
@@ -806,15 +874,19 @@
 
     filtered.forEach((item) => {
       const realIndex = works.indexOf(item);
-      const isImage = item.type === "image" || (!item.videoId && !item.id && item.src);
-      const cat = item.category || (isImage ? "Stream Artwork" : "Motion Graphic");
+      const isImage =
+        item.type === "image" || (!item.videoId && !item.id && item.src);
+      const cat =
+        item.category || (isImage ? "Stream Artwork" : "Motion Graphic");
 
       let thumbUrl = "";
       if (isImage) {
         thumbUrl = item.src || "img/personal_preview.jpg";
       } else {
         const vid = extractVideoId(item.videoId || item.id);
-        thumbUrl = vid ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg` : (item.src || "img/personal_preview.jpg");
+        thumbUrl = vid
+          ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg`
+          : item.src || "img/personal_preview.jpg";
       }
 
       const row = document.createElement("div");
@@ -872,10 +944,18 @@
       });
 
       // Actions
-      row.querySelector('[data-action="up"]').addEventListener("click", () => moveItem(realIndex, -1));
-      row.querySelector('[data-action="down"]').addEventListener("click", () => moveItem(realIndex, 1));
-      row.querySelector('[data-action="edit"]').addEventListener("click", () => openEditModal(realIndex));
-      row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteItem(realIndex));
+      row
+        .querySelector('[data-action="up"]')
+        .addEventListener("click", () => moveItem(realIndex, -1));
+      row
+        .querySelector('[data-action="down"]')
+        .addEventListener("click", () => moveItem(realIndex, 1));
+      row
+        .querySelector('[data-action="edit"]')
+        .addEventListener("click", () => openEditModal(realIndex));
+      row
+        .querySelector('[data-action="delete"]')
+        .addEventListener("click", () => deleteItem(realIndex));
 
       // Drag and drop
       setupDragAndDrop(row, realIndex);
@@ -934,7 +1014,9 @@
     const item = works[index];
     if (!item) return;
 
-    const confirmDel = confirm(`Are you sure you want to remove:\n"${item.title}" from ${state.clients[state.activeClientKey]?.name}?`);
+    const confirmDel = confirm(
+      `Are you sure you want to remove:\n"${item.title}" from ${state.clients[state.activeClientKey]?.name}?`,
+    );
     if (!confirmDel) return;
 
     works.splice(index, 1);
@@ -1106,7 +1188,10 @@
     inputImageSrc.value = "";
     selectExistingImage.value = "";
     inputVideoTitle.value = "";
-    inputCategory.value = state.activeClientKey === "aihara" ? "Stream Thumbnail" : "Motion Graphic";
+    inputCategory.value =
+      state.activeClientKey === "aihara"
+        ? "Stream Thumbnail"
+        : "Motion Graphic";
     inputVideoDate.value = new Date().toISOString().split("T")[0];
 
     updateWorkTypeVisibility();
@@ -1121,7 +1206,8 @@
     videoModalTitle.textContent = `EDIT WORK (${state.clients[state.activeClientKey]?.name || ""})`;
     videoEditIndex.value = index;
 
-    const isImage = item.type === "image" || (!item.videoId && !item.id && item.src);
+    const isImage =
+      item.type === "image" || (!item.videoId && !item.id && item.src);
     if (isImage) {
       radioTypeImage.checked = true;
       inputImageSrc.value = item.src || "";
@@ -1134,8 +1220,11 @@
     }
 
     inputVideoTitle.value = item.title || "";
-    inputCategory.value = item.category || (isImage ? "Stream Thumbnail" : "Motion Graphic");
-    inputVideoDate.value = item.pubDate ? item.pubDate.split("T")[0] : new Date().toISOString().split("T")[0];
+    inputCategory.value =
+      item.category || (isImage ? "Stream Thumbnail" : "Motion Graphic");
+    inputVideoDate.value = item.pubDate
+      ? item.pubDate.split("T")[0]
+      : new Date().toISOString().split("T")[0];
 
     updateWorkTypeVisibility();
     videoModalBackdrop.style.display = "flex";
@@ -1160,7 +1249,8 @@
   function updatePreviewCard() {
     const isImage = radioTypeImage.checked;
     const title = inputVideoTitle.value.trim() || "Enter work title above...";
-    const cat = inputCategory.value.trim() || (isImage ? "Artwork" : "Motion Graphic");
+    const cat =
+      inputCategory.value.trim() || (isImage ? "Artwork" : "Motion Graphic");
     const date = inputVideoDate.value || new Date().toISOString().split("T")[0];
 
     previewTitle.textContent = title;
@@ -1186,7 +1276,10 @@
   btnFetchMeta.addEventListener("click", async () => {
     const vid = extractVideoId(inputVideoUrl.value);
     if (!vid) {
-      showToast("Please enter a valid YouTube URL or 11-char Video ID first.", "error");
+      showToast(
+        "Please enter a valid YouTube URL or 11-char Video ID first.",
+        "error",
+      );
       return;
     }
 
@@ -1219,7 +1312,9 @@
 
     const isImage = radioTypeImage.checked;
     const title = inputVideoTitle.value.trim();
-    const category = inputCategory.value.trim() || (isImage ? "Stream Thumbnail" : "Motion Graphic");
+    const category =
+      inputCategory.value.trim() ||
+      (isImage ? "Stream Thumbnail" : "Motion Graphic");
     const editIdx = parseInt(videoEditIndex.value, 10);
 
     if (!title) {
@@ -1247,7 +1342,9 @@
         showToast("Valid YouTube Video ID or URL is required.", "error");
         return;
       }
-      const date = inputVideoDate.value ? new Date(inputVideoDate.value).toISOString() : new Date().toISOString();
+      const date = inputVideoDate.value
+        ? new Date(inputVideoDate.value).toISOString()
+        : new Date().toISOString();
       item = {
         id: vid,
         videoId: vid,
@@ -1265,7 +1362,10 @@
     } else {
       // Add to top of works list
       works.unshift(item);
-      showToast(`Added "${title}" to ${state.clients[state.activeClientKey]?.name}!`, "success");
+      showToast(
+        `Added "${title}" to ${state.clients[state.activeClientKey]?.name}!`,
+        "success",
+      );
     }
 
     markChanges();
@@ -1291,10 +1391,16 @@
         state.discoveredYtVideos = data.newVideos;
         renderDiscoveredVideos(data.newVideos);
         ytScanBanner.style.display = "block";
-        showToast(`Found ${data.newVideos.length} new YouTube uploads!`, "success");
+        showToast(
+          `Found ${data.newVideos.length} new YouTube uploads!`,
+          "success",
+        );
       } else {
         ytScanBanner.style.display = "none";
-        showToast("Your video catalog is fully up to date with YouTube!", "success");
+        showToast(
+          "Your video catalog is fully up to date with YouTube!",
+          "success",
+        );
       }
     } catch (err) {
       showToast(`YouTube scan error: ${err.message}`, "error");
@@ -1318,7 +1424,7 @@
         </div>
         <button type="button" class="btn btn-xs btn-primary" data-add-yt="${i}">+ ADD TO CATALOG</button>
       </div>
-    `
+    `,
       )
       .join("");
 
@@ -1397,7 +1503,8 @@
     commitTerminalOutput.textContent = "";
 
     // Conventional commit message auto-generation
-    const activeName = state.clients[state.activeClientKey]?.name || state.activeClientKey;
+    const activeName =
+      state.clients[state.activeClientKey]?.name || state.activeClientKey;
     let autoMsg = `feat(catalog): update client collections and works (${totalWorks} works)`;
     commitMessageInput.value = autoMsg;
     commitModalBackdrop.style.display = "flex";
@@ -1417,16 +1524,23 @@
     btnExecuteCommit.disabled = true;
     btnExecuteCommit.innerHTML = `<span>COMMITTING &amp; VALIDATING...</span>`;
     commitTerminalBox.style.display = "block";
-    commitTerminalOutput.textContent = "⚙️ Validating clients data schema and assets...\n";
+    commitTerminalOutput.textContent =
+      "⚙️ Validating clients data schema and assets...\n";
 
-    const commitMsg = commitMessageInput.value.trim() || `feat(catalog): update client collections and works`;
+    const commitMsg =
+      commitMessageInput.value.trim() ||
+      `feat(catalog): update client collections and works`;
     const push = checkPushRemote.checked;
 
     try {
-      commitTerminalOutput.textContent += "📝 Writing clients.json and catalog.json...\n";
-      commitTerminalOutput.textContent += "🔄 Syncing script.js and index.html counts...\n";
-      commitTerminalOutput.textContent += "⚡ Checking JavaScript syntax with node --check...\n";
-      commitTerminalOutput.textContent += "🌿 Staging git changes & committing...\n";
+      commitTerminalOutput.textContent +=
+        "📝 Writing clients.json and catalog.json...\n";
+      commitTerminalOutput.textContent +=
+        "🔄 Syncing script.js and index.html counts...\n";
+      commitTerminalOutput.textContent +=
+        "⚡ Checking JavaScript syntax with node --check...\n";
+      commitTerminalOutput.textContent +=
+        "🌿 Staging git changes & committing...\n";
 
       const res = await apiRequest("/api/admin/clients/save", {
         method: "POST",
@@ -1504,7 +1618,8 @@
     gitDrawerBackdrop.style.display = "none";
   });
   gitDrawerBackdrop.addEventListener("click", (e) => {
-    if (e.target === gitDrawerBackdrop) gitDrawerBackdrop.style.display = "none";
+    if (e.target === gitDrawerBackdrop)
+      gitDrawerBackdrop.style.display = "none";
   });
 
   // ── SECURITY DRAWER ──
@@ -1515,7 +1630,8 @@
     secDrawerBackdrop.style.display = "none";
   });
   secDrawerBackdrop.addEventListener("click", (e) => {
-    if (e.target === secDrawerBackdrop) secDrawerBackdrop.style.display = "none";
+    if (e.target === secDrawerBackdrop)
+      secDrawerBackdrop.style.display = "none";
   });
 
   // ── PREVIEW LIGHTBOXES ──
@@ -1552,10 +1668,286 @@
     if (lightboxImg) lightboxImg.src = "";
   }
 
-  if (btnCloseLightbox) btnCloseLightbox.addEventListener("click", closeImageLightbox);
+  if (btnCloseLightbox)
+    btnCloseLightbox.addEventListener("click", closeImageLightbox);
   if (imageLightboxBackdrop) {
     imageLightboxBackdrop.addEventListener("click", (e) => {
       if (e.target === imageLightboxBackdrop) closeImageLightbox();
+    });
+  }
+
+  // ── CLIENT STATUS TOGGLE (Banner) ──
+  const clientStatusCheck = document.getElementById('clientStatusCheck');
+  const clientStatusLabel = document.getElementById('clientStatusLabel');
+  if (clientStatusCheck) {
+    clientStatusCheck.addEventListener('change', () => {
+      const client = state.clients[state.activeClientKey];
+      if (!client) return;
+      const isOnline = clientStatusCheck.checked;
+      client.status = isOnline ? 'online' : 'offline';
+      if (clientStatusLabel) clientStatusLabel.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+      markChanges();
+      renderClientTabs();
+      showToast(`Catalog "${client.name}" set to ${isOnline ? 'ONLINE' : 'OFFLINE'}.`, 'info');
+    });
+  }
+
+  // ── EDIT CLIENT MODAL ──
+  const editClientModalBackdrop = document.getElementById('editClientModalBackdrop');
+  const editClientForm = document.getElementById('editClientForm');
+  const editClientKeyInput = document.getElementById('editClientKey');
+  const editClientNameInput = document.getElementById('editClientName');
+  const editClientHandleInput = document.getElementById('editClientHandle');
+  const editClientAvatarInput = document.getElementById('editClientAvatar');
+  const editClientDescInput = document.getElementById('editClientDesc');
+  const editClientStatusInput = document.getElementById('editClientStatus');
+  const editClientStatusLabel = document.getElementById('editClientStatusLabel');
+  const editClientLinksList = document.getElementById('editClientLinksList');
+  const btnAddClientLink = document.getElementById('btnAddClientLink');
+  const btnEditClientInfo = document.getElementById('btnEditClientInfo');
+  const btnCloseEditClientModal = document.getElementById('btnCloseEditClientModal');
+  const btnCancelEditClient = document.getElementById('btnCancelEditClient');
+
+  function openEditClientModal() {
+    const key = state.activeClientKey;
+    const client = state.clients[key] || {};
+    if (editClientKeyInput) editClientKeyInput.value = key;
+    if (editClientNameInput) editClientNameInput.value = client.name || '';
+    if (editClientHandleInput) editClientHandleInput.value = client.handle || '';
+    if (editClientAvatarInput) editClientAvatarInput.value = client.avatar || '';
+    if (editClientDescInput) editClientDescInput.value = client.desc || '';
+    const isOnline = client.status !== 'offline';
+    if (editClientStatusInput) editClientStatusInput.checked = isOnline;
+    syncEditStatusLabel(isOnline);
+    renderEditLinkRows(client.links || []);
+    if (editClientModalBackdrop) editClientModalBackdrop.style.display = 'flex';
+  }
+
+  function closeEditClientModal() {
+    if (editClientModalBackdrop) editClientModalBackdrop.style.display = 'none';
+  }
+
+  function syncEditStatusLabel(isOnline) {
+    if (!editClientStatusLabel) return;
+    editClientStatusLabel.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+    editClientStatusLabel.className = 'status-toggle-state-label' + (isOnline ? '' : ' offline');
+  }
+
+  if (editClientStatusInput) {
+    editClientStatusInput.addEventListener('change', () =>
+      syncEditStatusLabel(editClientStatusInput.checked)
+    );
+  }
+
+  // Render editable link rows
+  function renderEditLinkRows(links) {
+    if (!editClientLinksList) return;
+    editClientLinksList.innerHTML = '';
+    links.forEach((link, i) => addEditLinkRow(link, i));
+  }
+
+  function addEditLinkRow(link = {}, index) {
+    const row = document.createElement('div');
+    row.className = 'link-manager-row';
+    row.dataset.idx = index !== undefined ? index : Date.now();
+    row.innerHTML = `
+      <input type="text" placeholder="Platform (e.g. YouTube)" class="lm-platform" value="${link.platform || ''}" />
+      <input type="url" placeholder="URL (https://...)" class="lm-url" value="${link.url || ''}" />
+      <input type="text" placeholder="Icon path (img/icons/...)" class="lm-icon" value="${link.icon || ''}" />
+      <button type="button" class="link-del-btn" title="Remove">×</button>
+    `;
+    row.querySelector('.link-del-btn').addEventListener('click', () => row.remove());
+    if (editClientLinksList) editClientLinksList.appendChild(row);
+  }
+
+  if (btnAddClientLink) {
+    btnAddClientLink.addEventListener('click', () => addEditLinkRow());
+  }
+
+  if (btnEditClientInfo) {
+    btnEditClientInfo.addEventListener('click', openEditClientModal);
+  }
+  if (btnCloseEditClientModal) {
+    btnCloseEditClientModal.addEventListener('click', closeEditClientModal);
+  }
+  if (btnCancelEditClient) {
+    btnCancelEditClient.addEventListener('click', closeEditClientModal);
+  }
+  if (editClientModalBackdrop) {
+    editClientModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === editClientModalBackdrop) closeEditClientModal();
+    });
+  }
+
+  if (editClientForm) {
+    editClientForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = editClientKeyInput ? editClientKeyInput.value : state.activeClientKey;
+      const client = state.clients[key];
+      if (!client) return;
+
+      client.name = editClientNameInput.value.trim() || client.name;
+      client.handle = editClientHandleInput.value.trim();
+      client.avatar = editClientAvatarInput.value.trim() || client.name.charAt(0).toUpperCase();
+      client.desc = editClientDescInput.value.trim();
+      client.status = editClientStatusInput.checked ? 'online' : 'offline';
+
+      // Collect links from rows
+      const rows = editClientLinksList ? editClientLinksList.querySelectorAll('.link-manager-row') : [];
+      const links = [];
+      rows.forEach((row) => {
+        const platform = row.querySelector('.lm-platform')?.value.trim() || '';
+        const url = row.querySelector('.lm-url')?.value.trim() || '';
+        const icon = row.querySelector('.lm-icon')?.value.trim() || '';
+        if (url) links.push({ platform, url, icon, label: platform });
+      });
+      client.links = links;
+
+      markChanges();
+      closeEditClientModal();
+      renderClientTabs();
+      updateActiveClientProfile();
+      showToast(`Client "${client.name}" updated! Click SAVE & COMMIT to persist.`, 'success');
+    });
+  }
+
+  // ── SITE PROFILE MODAL ──
+  const siteProfileModalBackdrop = document.getElementById('siteProfileModalBackdrop');
+  const siteProfileForm = document.getElementById('siteProfileForm');
+  const btnSiteProfile = document.getElementById('btnSiteProfile');
+  const btnCloseSiteProfileModal = document.getElementById('btnCloseSiteProfileModal');
+  const btnCancelSiteProfile = document.getElementById('btnCancelSiteProfile');
+  const siteAvatarFile = document.getElementById('siteAvatarFile');
+  const siteAvatarImg = document.getElementById('siteAvatarImg');
+  const siteAvatarInitial = document.getElementById('siteAvatarInitial');
+  const siteDisplayName = document.getElementById('siteDisplayName');
+  const siteBio = document.getElementById('siteBio');
+  const siteOverviewEn = document.getElementById('siteOverviewEn');
+  const siteBackgroundEn = document.getElementById('siteBackgroundEn');
+  const siteLinksList = document.getElementById('siteLinksList');
+  const btnAddSiteLink = document.getElementById('btnAddSiteLink');
+
+  let siteProfileData = {};
+  let pendingAvatarFile = null;
+
+  async function openSiteProfileModal() {
+    try {
+      const data = await apiRequest('/api/site/profile');
+      siteProfileData = data || {};
+      // Populate form
+      if (siteDisplayName) siteDisplayName.value = data.displayName || '';
+      if (siteBio) siteBio.value = data.bio || '';
+      if (siteOverviewEn) siteOverviewEn.value = (data.about && data.about.overview && data.about.overview.EN) ? data.about.overview.EN : '';
+      if (siteBackgroundEn) siteBackgroundEn.value = (data.about && data.about.background && data.about.background.EN) ? data.about.background.EN : '';
+      // Avatar
+      if (data.avatar && siteAvatarImg) {
+        siteAvatarImg.src = data.avatar;
+        siteAvatarImg.classList.add('visible');
+        if (siteAvatarInitial) siteAvatarInitial.style.display = 'none';
+      } else {
+        if (siteAvatarImg) siteAvatarImg.classList.remove('visible');
+        if (siteAvatarInitial) siteAvatarInitial.style.display = '';
+      }
+      // Populate site links
+      if (siteLinksList) siteLinksList.innerHTML = '';
+      (data.socialLinks || []).forEach((link, i) => addSiteLinkRow(link, i));
+      if (siteProfileModalBackdrop) siteProfileModalBackdrop.style.display = 'flex';
+    } catch (err) {
+      showToast('Could not load site profile: ' + err.message, 'error');
+    }
+  }
+
+  function closeSiteProfileModal() {
+    if (siteProfileModalBackdrop) siteProfileModalBackdrop.style.display = 'none';
+    pendingAvatarFile = null;
+  }
+
+  function addSiteLinkRow(link = {}, index) {
+    const row = document.createElement('div');
+    row.className = 'link-manager-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Platform" class="lm-platform" value="${link.platform || ''}" />
+      <input type="url" placeholder="URL" class="lm-url" value="${link.url || ''}" />
+      <input type="text" placeholder="Icon path" class="lm-icon" value="${link.icon || ''}" />
+      <button type="button" class="link-del-btn" title="Remove">×</button>
+    `;
+    row.querySelector('.link-del-btn').addEventListener('click', () => row.remove());
+    if (siteLinksList) siteLinksList.appendChild(row);
+  }
+
+  if (btnAddSiteLink) {
+    btnAddSiteLink.addEventListener('click', () => addSiteLinkRow());
+  }
+
+  // Avatar file preview
+  if (siteAvatarFile) {
+    siteAvatarFile.addEventListener('change', () => {
+      const file = siteAvatarFile.files[0];
+      if (!file) return;
+      pendingAvatarFile = file;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (siteAvatarImg) {
+          siteAvatarImg.src = ev.target.result;
+          siteAvatarImg.classList.add('visible');
+          if (siteAvatarInitial) siteAvatarInitial.style.display = 'none';
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (btnSiteProfile) btnSiteProfile.addEventListener('click', openSiteProfileModal);
+  if (btnCloseSiteProfileModal) btnCloseSiteProfileModal.addEventListener('click', closeSiteProfileModal);
+  if (btnCancelSiteProfile) btnCancelSiteProfile.addEventListener('click', closeSiteProfileModal);
+  if (siteProfileModalBackdrop) {
+    siteProfileModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === siteProfileModalBackdrop) closeSiteProfileModal();
+    });
+  }
+
+  if (siteProfileForm) {
+    siteProfileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btnSave = document.getElementById('btnSaveSiteProfile');
+      if (btnSave) { btnSave.disabled = true; btnSave.textContent = 'SAVING...'; }
+
+      try {
+        // If there's a pending avatar, upload it first
+        if (pendingAvatarFile) {
+          const fd = new FormData();
+          fd.append('avatar', pendingAvatarFile);
+          await apiRequest('/api/admin/upload-avatar', { method: 'POST', body: fd });
+        }
+
+        // Collect site links
+        const rows = siteLinksList ? siteLinksList.querySelectorAll('.link-manager-row') : [];
+        const socialLinks = [];
+        rows.forEach((row) => {
+          const platform = row.querySelector('.lm-platform')?.value.trim() || '';
+          const url = row.querySelector('.lm-url')?.value.trim() || '';
+          const icon = row.querySelector('.lm-icon')?.value.trim() || '';
+          if (url) socialLinks.push({ platform, url, icon });
+        });
+
+        const payload = {
+          displayName: siteDisplayName ? siteDisplayName.value.trim() : '',
+          bio: siteBio ? siteBio.value.trim() : '',
+          about: {
+            overview: { EN: siteOverviewEn ? siteOverviewEn.value.trim() : '' },
+            background: { EN: siteBackgroundEn ? siteBackgroundEn.value.trim() : '' }
+          },
+          socialLinks,
+        };
+
+        await apiRequest('/api/admin/profile', { method: 'POST', body: payload });
+        showToast('Site profile saved and committed!', 'success');
+        closeSiteProfileModal();
+      } catch (err) {
+        showToast('Failed to save profile: ' + err.message, 'error');
+      } finally {
+        if (btnSave) { btnSave.disabled = false; btnSave.innerHTML = '<img src="img/icons/sync.png" class="btn-icon-svg" alt="" /> SAVE & COMMIT PROFILE'; }
+      }
     });
   }
 
@@ -1563,6 +1955,8 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeAddClientModal();
+      closeEditClientModal();
+      closeSiteProfileModal();
       closeVideoModal();
       closeCommitModal();
       closeVideoPlayer();
