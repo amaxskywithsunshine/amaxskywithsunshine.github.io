@@ -399,83 +399,115 @@ document.addEventListener("keydown", (e) => {
 
 let CATALOG_VIDEOS = [
   {
-    id: "AdU297GBNvg",
-    title: "visuals:AZURE2026",
-    pubDate: "2026-07-07T07:53:15Z",
+    "id": "AdU297GBNvg",
+    "title": "visuals:AZURE2026",
+    "pubDate": "2026-07-07T07:53:15Z"
   },
   {
-    id: "rpY9ydbisP4",
-    title: "visuals:AZURE2026 [ Discarded ]",
-    pubDate: "2026-06-11T16:26:26Z",
+    "id": "rpY9ydbisP4",
+    "title": "visuals:AZURE2026 [ Discarded ]",
+    "pubDate": "2026-06-11T16:26:26Z"
   },
   {
-    id: "Rwc5zKMN1xM",
-    title: "visuals:NO_WORRIES.",
-    pubDate: "2026-05-31T15:03:05Z",
+    "id": "Rwc5zKMN1xM",
+    "title": "visuals:NO_WORRIES.",
+    "pubDate": "2026-05-31T15:03:05Z"
   },
   {
-    id: "mm-pWXxyT6k",
-    title: "visuals:Height.",
-    pubDate: "2026-05-31T13:49:22Z",
-  },
-  { id: "N0SML3Qotaw", title: "banner:HIRO.", pubDate: "2026-05-31T13:08:11Z" },
-  { id: "zIEbQMFPSMs", title: "remake:AMOS", pubDate: "2026-03-15T13:54:37Z" },
-  {
-    id: "0eXpsDlfUII",
-    title: "reels:2024-2025",
-    pubDate: "2026-03-08T02:10:51Z",
-  },
-  { id: "ZVTB6703DnE", title: "HBD:amax.", pubDate: "2026-02-02T09:11:09Z" },
-  {
-    id: "Q-Fg1dh8s_I",
-    title: "HBD:sxcstyles2025.",
-    pubDate: "2025-08-17T04:02:46Z",
-  },
-  { id: "4gGzsHAM4mA", title: "amv:News.", pubDate: "2024-10-21T10:21:34Z" },
-  {
-    id: "NiYcw0yX2VY",
-    title: "文字PV:not_enough.",
-    pubDate: "2024-09-12T03:43:59Z",
+    "id": "mm-pWXxyT6k",
+    "title": "visuals:Height.",
+    "pubDate": "2026-05-31T13:49:22Z"
   },
   {
-    id: "QpnHcE5G0ks",
-    title: "文字PV:all_alone.",
-    pubDate: "2024-06-10T09:03:54Z",
+    "id": "N0SML3Qotaw",
+    "title": "banner:HIRO.",
+    "pubDate": "2026-05-31T13:08:11Z"
   },
   {
-    id: "R3zzz9GDyfs",
-    title: "amv:Untitled.",
-    pubDate: "2024-05-13T17:43:31Z",
-  },
-  { id: "P5uiNuZG46s", title: "amv:Daisey.", pubDate: "2024-02-29T06:37:30Z" },
-  { id: "XgDKkSS0aPw", title: "amv:dot.", pubDate: "2024-02-05T00:59:57Z" },
-  {
-    id: "gNO7aiqYkSQ",
-    title: "visuals:busy.",
-    pubDate: "2024-01-07T11:14:44Z",
-  },
-  { id: "zVkIiLFjrWU", title: "miley", pubDate: "2023-12-09T15:07:36Z" },
-  { id: "Rc__qEAHGAU", title: "amv:Story.", pubDate: "2023-10-27T14:12:59Z" },
-  {
-    id: "Taiw_SjScNY",
-    title: "HBD:sxcstyles",
-    pubDate: "2023-07-22T06:01:41Z",
+    "id": "zIEbQMFPSMs",
+    "title": "remake:AMOS",
+    "pubDate": "2026-03-15T13:54:37Z"
   },
   {
-    id: "ot68zIJmfyY",
-    title: "intro:HiroNeyka.",
-    pubDate: "2023-06-10T09:08:34Z",
+    "id": "0eXpsDlfUII",
+    "title": "reels:2024-2025",
+    "pubDate": "2026-03-08T02:10:51Z"
   },
   {
-    id: "r5wQP7NbVmQ",
-    title: "fantro:Nerumi-S",
-    pubDate: "2023-05-29T10:29:48Z",
+    "id": "ZVTB6703DnE",
+    "title": "HBD:amax.",
+    "pubDate": "2026-02-02T09:11:09Z"
   },
   {
-    id: "x8C_vZsPIFc",
-    title: "amv:amax&witty.",
-    pubDate: "2023-05-20T12:13:08Z",
+    "id": "Q-Fg1dh8s_I",
+    "title": "HBD:sxcstyles2025.",
+    "pubDate": "2025-08-17T04:02:46Z"
   },
+  {
+    "id": "4gGzsHAM4mA",
+    "title": "amv:News.",
+    "pubDate": "2024-10-21T10:21:34Z"
+  },
+  {
+    "id": "NiYcw0yX2VY",
+    "title": "文字PV:not_enough.",
+    "pubDate": "2024-09-12T03:43:59Z"
+  },
+  {
+    "id": "QpnHcE5G0ks",
+    "title": "文字PV:all_alone.",
+    "pubDate": "2024-06-10T09:03:54Z"
+  },
+  {
+    "id": "R3zzz9GDyfs",
+    "title": "amv:Untitled.",
+    "pubDate": "2024-05-13T17:43:31Z"
+  },
+  {
+    "id": "P5uiNuZG46s",
+    "title": "amv:Daisey.",
+    "pubDate": "2024-02-29T06:37:30Z"
+  },
+  {
+    "id": "XgDKkSS0aPw",
+    "title": "amv:dot.",
+    "pubDate": "2024-02-05T00:59:57Z"
+  },
+  {
+    "id": "gNO7aiqYkSQ",
+    "title": "visuals:busy.",
+    "pubDate": "2024-01-07T11:14:44Z"
+  },
+  {
+    "id": "zVkIiLFjrWU",
+    "title": "miley",
+    "pubDate": "2023-12-09T15:07:36Z"
+  },
+  {
+    "id": "Rc__qEAHGAU",
+    "title": "amv:Story.",
+    "pubDate": "2023-10-27T14:12:59Z"
+  },
+  {
+    "id": "Taiw_SjScNY",
+    "title": "HBD:sxcstyles",
+    "pubDate": "2023-07-22T06:01:41Z"
+  },
+  {
+    "id": "ot68zIJmfyY",
+    "title": "intro:HiroNeyka.",
+    "pubDate": "2023-06-10T09:08:34Z"
+  },
+  {
+    "id": "r5wQP7NbVmQ",
+    "title": "fantro:Nerumi-S",
+    "pubDate": "2023-05-29T10:29:48Z"
+  },
+  {
+    "id": "x8C_vZsPIFc",
+    "title": "amv:amax&witty.",
+    "pubDate": "2023-05-20T12:13:08Z"
+  }
 ];
 
 function mergeWithCatalog(liveList) {
