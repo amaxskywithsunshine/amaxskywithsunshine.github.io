@@ -1585,7 +1585,7 @@ const I18N_DATA = {
 He learns from many different styles, but he always tries new ideas to make his work fresh and unique.
 .<br /><br />
 He is still practicing story writing. His greatest strength is making videos that look cool, energetic, and move to the beat.
-.<br /><br />
+<br /><br />
 Amax cares about good quality and staying healthy. He does not rush his work. Depending on the project, he may take from one day to over a year to finish, making sure every piece of work he creates turns out great for him.`,
     aboutBackground: `Amax is a motion designer from Thailand.<br /><br />He started making videos by editing anime music videos (AMVs), and in 2024, he loved watching motion design creators from Japan and China, and their work inspired him a lot. Later, in late 2025, he started learning 3D for the first time, making motion graphics with references from Japanese and Chinese creators.<br /><br />In 2026, he also discovered virtual club culture. After visiting music clubs in VRChat, he became very interested in DJing and VJing. His dream is to perform in VRChat clubs and build his own virtual club one day.<br /><br />Besides motion design, he also likes making music, 3D modeling, and drawing. His first dream was to make video games. He believes that once you set a goal, you should never give up. He uses all these skills to help him make games in the future.<br /><br />Over the last four years, he has worked for clients, friends, and himself. He always works hard on his art, hoping to share his work with people who enjoy his style.`,
     // Contact section
