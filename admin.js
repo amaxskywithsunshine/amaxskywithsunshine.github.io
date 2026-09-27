@@ -1,6 +1,7 @@
 /**
  * AMAX CATALOG & HARDWARE SECURITY CONSOLE — CONTROLLER
  * Multi-Client Portfolio Management & Image Works Support
+ * Theme: Gotham Minimalist Dark (Matching Main Website)
  */
 
 (function () {
@@ -73,6 +74,7 @@
 
   // Client Selection & Profile
   const clientTabsRow = document.getElementById("clientTabsRow");
+  const btnOpenAddClientModal = document.getElementById("btnOpenAddClientModal");
   const activeClientAvatar = document.getElementById("activeClientAvatar");
   const activeClientName = document.getElementById("activeClientName");
   const activeClientHandle = document.getElementById("activeClientHandle");
@@ -82,6 +84,21 @@
   const countFilterVideo = document.getElementById("countFilterVideo");
   const countFilterImage = document.getElementById("countFilterImage");
   const typeFilterBtns = document.querySelectorAll(".type-filter-btn");
+
+  // Add Client Modal Elements
+  const clientModalBackdrop = document.getElementById("clientModalBackdrop");
+  const btnCloseClientModal = document.getElementById("btnCloseClientModal");
+  const btnCancelClient = document.getElementById("btnCancelClient");
+  const clientForm = document.getElementById("clientForm");
+  const inputClientKey = document.getElementById("inputClientKey");
+  const inputClientName = document.getElementById("inputClientName");
+  const inputClientHandle = document.getElementById("inputClientHandle");
+  const inputClientAvatar = document.getElementById("inputClientAvatar");
+  const inputClientDesc = document.getElementById("inputClientDesc");
+  const inputClientUrl = document.getElementById("inputClientUrl");
+  const inputClientYt = document.getElementById("inputClientYt");
+  const inputClientX = document.getElementById("inputClientX");
+  const inputClientTwitch = document.getElementById("inputClientTwitch");
 
   // Action Banners & Toolbar
   const changesBanner = document.getElementById("changesBanner");
@@ -103,7 +120,7 @@
   const catalogContainer = document.getElementById("catalogContainer");
   const emptyState = document.getElementById("emptyState");
 
-  // Add / Edit Modal Elements
+  // Add / Edit Work Modal Elements
   const videoModalBackdrop = document.getElementById("videoModalBackdrop");
   const videoModalTitle = document.getElementById("videoModalTitle");
   const btnCloseVideoModal = document.getElementById("btnCloseVideoModal");
@@ -122,7 +139,6 @@
   const inputVideoTitle = document.getElementById("inputVideoTitle");
   const inputCategory = document.getElementById("inputCategory");
   const inputVideoDate = document.getElementById("inputVideoDate");
-  const previewCard = document.getElementById("previewCard");
   const previewThumb = document.getElementById("previewThumb");
   const previewPlayIcon = document.getElementById("previewPlayIcon");
   const previewBadge = document.getElementById("previewBadge");
@@ -202,16 +218,6 @@
       str.match(/embed\/([a-zA-Z0-9_-]{11})/) ||
       str.match(/shorts\/([a-zA-Z0-9_-]{11})/);
     return m ? m[1] : str;
-  }
-
-  function getCategoryClass(cat) {
-    if (!cat) return "";
-    const c = cat.toLowerCase();
-    if (c.includes("typography")) return "cat-typography";
-    if (c.includes("visual") || c.includes("key visual")) return "cat-visuals";
-    if (c.includes("anime") || c.includes("amv")) return "cat-amv";
-    if (c.includes("intro")) return "cat-intro";
-    return "";
   }
 
   function formatDate(dateStr) {
@@ -305,13 +311,13 @@
     // Logout
     if (btnLogout) btnLogout.addEventListener("click", handleLogout);
 
-    // Setup client tab click listeners
-    setupClientTabs();
+    // Setup Add Client Modal listeners
+    setupAddClientModal();
 
     // Setup work type filters
     setupTypeFilters();
 
-    // Setup Add/Edit modal type toggles
+    // Setup Add/Edit work modal type toggles
     setupWorkTypeSwitcher();
 
     // Check Auth Status & Hardware
@@ -460,8 +466,8 @@
         updateGitStatusUI(data.gitStatus);
       }
 
+      renderClientTabs();
       populateImageSelectDropdown();
-      updateClientTabsBadges();
       updateActiveClientProfile();
       updateGlobalStats();
       renderCatalog();
@@ -506,42 +512,200 @@
     }
   }
 
-  // ── CLIENT TABS & PROFILE ──
-  function setupClientTabs() {
-    const tabs = document.querySelectorAll(".client-tab");
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        const clientKey = tab.dataset.client;
-        if (!clientKey || clientKey === state.activeClientKey) return;
+  // ── DYNAMIC CLIENT TABS (MATCHING MAIN SITE .client-box) ──
+  function renderClientTabs() {
+    if (!clientTabsRow) return;
+    clientTabsRow.innerHTML = "";
 
-        state.activeClientKey = clientKey;
-        tabs.forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
+    const clientEntries = Object.entries(state.clients);
 
+    clientEntries.forEach(([key, client]) => {
+      const works = client.works || [];
+      const isActive = key === state.activeClientKey;
+      const count = works.length;
+
+      // Find preview image
+      let previewImg = "img/personal_preview.jpg";
+      if (client.previewImg) {
+        previewImg = client.previewImg;
+      } else if (works.length > 0 && works[0].src) {
+        previewImg = works[0].src;
+      } else if (key === "aihara") {
+        previewImg = "img/clients/aihara/battlefield_v.png";
+      } else if (key === "hironeyka") {
+        previewImg = "img/clients/hironeyka/banner_hiro.jpg";
+      }
+
+      const isOriginal = key === "personal";
+      const tagText = isOriginal ? "ORIGINAL" : "CLIENT";
+
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = `client-box-tab ${isActive ? "active" : ""}`;
+      card.dataset.client = key;
+      card.innerHTML = `
+        <div class="client-box-preview">
+          <img src="${previewImg}" alt="${client.name}" class="client-box-img" loading="lazy" />
+          <div class="client-box-shade"></div>
+        </div>
+        <div class="client-box-content">
+          <div class="client-box-top-row">
+            <span class="client-box-tag">${tagText}</span>
+            <span class="client-box-status">
+              <span class="status-dot-sm"></span> ONLINE
+            </span>
+          </div>
+          <h3 class="client-box-title">${client.name || key}</h3>
+          <span class="client-box-sub">${client.handle || `@${key}`}</span>
+          <div class="client-box-footer">
+            <span class="client-box-count">${count} WORK${count === 1 ? "" : "S"}</span>
+            <span class="client-box-arrow">&rarr;</span>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => {
+        if (state.activeClientKey === key) return;
+        state.activeClientKey = key;
+        renderClientTabs();
         updateActiveClientProfile();
         populateImageSelectDropdown();
         renderCatalog();
       });
+
+      clientTabsRow.appendChild(card);
     });
+
+    // Append + NEW CLIENT Card
+    const newCard = document.createElement("div");
+    newCard.className = "client-tab-new";
+    newCard.title = "Add a new client collection";
+    newCard.innerHTML = `
+      <span class="client-tab-new-plus">+</span>
+      <span class="client-tab-new-text">NEW CLIENT</span>
+    `;
+    newCard.addEventListener("click", openAddClientModal);
+    clientTabsRow.appendChild(newCard);
   }
 
-  function updateClientTabsBadges() {
-    for (const [key, client] of Object.entries(state.clients)) {
-      const badge = document.getElementById(`badge_${key}`);
-      if (badge) {
-        const count = client.works?.length || 0;
-        badge.textContent = `${count} WORK${count === 1 ? "" : "S"}`;
-      }
+  // ── ADD CLIENT MODAL ──
+  function setupAddClientModal() {
+    if (btnOpenAddClientModal) {
+      btnOpenAddClientModal.addEventListener("click", openAddClientModal);
+    }
+    if (btnCloseClientModal) {
+      btnCloseClientModal.addEventListener("click", closeAddClientModal);
+    }
+    if (btnCancelClient) {
+      btnCancelClient.addEventListener("click", closeAddClientModal);
+    }
+    if (clientModalBackdrop) {
+      clientModalBackdrop.addEventListener("click", (e) => {
+        if (e.target === clientModalBackdrop) closeAddClientModal();
+      });
+    }
+    if (clientForm) {
+      clientForm.addEventListener("submit", handleCreateClient);
     }
   }
 
+  function openAddClientModal() {
+    if (!clientModalBackdrop) return;
+    inputClientKey.value = "";
+    inputClientName.value = "";
+    inputClientHandle.value = "";
+    inputClientAvatar.value = "";
+    inputClientDesc.value = "";
+    inputClientUrl.value = "";
+    inputClientYt.value = "";
+    inputClientX.value = "";
+    inputClientTwitch.value = "";
+    clientModalBackdrop.style.display = "flex";
+  }
+
+  function closeAddClientModal() {
+    if (clientModalBackdrop) {
+      clientModalBackdrop.style.display = "none";
+    }
+  }
+
+  function handleCreateClient(e) {
+    e.preventDefault();
+    const rawKey = inputClientKey.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const name = inputClientName.value.trim();
+
+    if (!rawKey || !name) {
+      showToast("Client Slug and Display Name are required.", "error");
+      return;
+    }
+
+    if (state.clients[rawKey]) {
+      showToast(`A client with ID '${rawKey}' already exists!`, "error");
+      return;
+    }
+
+    const handle = inputClientHandle.value.trim() || `@${rawKey}`;
+    const avatar = (inputClientAvatar.value.trim() || name.charAt(0) || "C").toUpperCase();
+    const desc = inputClientDesc.value.trim() || "Client Collection";
+    const url = inputClientUrl.value.trim() || "";
+
+    const links = [];
+    if (inputClientYt.value.trim()) {
+      links.push({
+        platform: "YouTube",
+        label: handle,
+        url: inputClientYt.value.trim(),
+        icon: "img/icons/Platform=YouTube, Color=Negative.png",
+      });
+    }
+    if (inputClientX.value.trim()) {
+      links.push({
+        platform: "Twitter / X",
+        label: handle,
+        url: inputClientX.value.trim(),
+        icon: "img/icons/Platform=X (Twitter), Color=Negative.png",
+      });
+    }
+    if (inputClientTwitch.value.trim()) {
+      links.push({
+        platform: "Twitch",
+        label: handle,
+        url: inputClientTwitch.value.trim(),
+        icon: "img/icons/Platform=Twitch, Color=Negative.png",
+      });
+    }
+
+    // Add to state
+    state.clients[rawKey] = {
+      name,
+      handle,
+      url,
+      desc,
+      avatar,
+      previewImg: "img/personal_preview.jpg",
+      links,
+      works: [],
+    };
+
+    state.activeClientKey = rawKey;
+    markChanges();
+    closeAddClientModal();
+    renderClientTabs();
+    updateActiveClientProfile();
+    updateGlobalStats();
+    populateImageSelectDropdown();
+    renderCatalog();
+
+    showToast(`Created client collection "${name}". Remember to click SAVE & COMMIT!`, "success");
+  }
+
+  // ── ACTIVE CLIENT PROFILE & CLEAN SOCIAL ICONS ──
   function updateActiveClientProfile() {
     const client = state.clients[state.activeClientKey] || {};
     const works = client.works || [];
 
     if (activeClientAvatar) {
       activeClientAvatar.textContent = client.avatar || state.activeClientKey.charAt(0).toUpperCase();
-      activeClientAvatar.className = `client-profile-avatar ${state.activeClientKey}`;
     }
     if (activeClientName) activeClientName.textContent = client.name || state.activeClientKey;
     if (activeClientHandle) activeClientHandle.textContent = client.handle || "";
@@ -551,16 +715,14 @@
       btnAddWorkLabel.textContent = `ADD WORK (${client.name || state.activeClientKey})`;
     }
 
-    // Render client social links
+    // USER REQUIREMENT: Social icons sized appropriately without text <span>
     if (activeClientLinks) {
       if (Array.isArray(client.links) && client.links.length > 0) {
         activeClientLinks.innerHTML = client.links
           .map(
             (link) => `
-            <a href="${link.url}" target="_blank" rel="noopener" class="client-link-pill">
-              ${link.icon ? `<img src="${link.icon}" alt="" class="client-link-icon" />` : ""}
-              <span>${link.label || link.platform}</span>
-              <span class="ext-arrow">↗</span>
+            <a href="${link.url}" target="_blank" rel="noopener" class="client-icon-btn" title="${link.platform || ''}${link.label ? `: ${link.label}` : ''}">
+              ${link.icon ? `<img src="${link.icon}" alt="${link.platform || 'Link'}" class="client-link-icon" />` : `<span class="icon-fallback">${(link.platform || "L").charAt(0)}</span>`}
             </a>
           `
           )
@@ -646,7 +808,6 @@
       const realIndex = works.indexOf(item);
       const isImage = item.type === "image" || (!item.videoId && !item.id && item.src);
       const cat = item.category || (isImage ? "Stream Artwork" : "Motion Graphic");
-      const catClass = getCategoryClass(cat);
 
       let thumbUrl = "";
       if (isImage) {
@@ -682,14 +843,14 @@
           <span class="drag-dots">⋮⋮</span>
           <span>${String(realIndex + 1).padStart(2, "0")}</span>
         </div>
-        <div class="col-thumb-wrap ${isImage ? "thumb-image" : "thumb-video"}" title="Click to preview">
+        <div class="col-thumb-wrap" title="Click to preview">
           <img src="${thumbUrl}" alt="${item.title || "Work"}" class="col-thumb-img" loading="lazy" />
           <div class="col-thumb-play">${isImage ? "🔍" : "▶"}</div>
         </div>
         <div>${typeBadge}</div>
         <div class="col-title-wrap">
           <div class="video-row-title">${item.title || "Untitled"}</div>
-          <span class="video-category-tag ${catClass}">${cat}</span>
+          <span class="video-category-tag">${cat}</span>
         </div>
         <div>${sourceMarkup}</div>
         <div class="col-actions-wrap">
@@ -733,7 +894,7 @@
     });
     row.addEventListener("dragover", (e) => {
       e.preventDefault();
-      row.style.background = "rgba(139, 92, 246, 0.15)";
+      row.style.background = "rgba(255, 255, 255, 0.04)";
     });
     row.addEventListener("dragleave", () => {
       row.style.background = "";
@@ -778,7 +939,7 @@
 
     works.splice(index, 1);
     markChanges();
-    updateClientTabsBadges();
+    renderClientTabs();
     updateActiveClientProfile();
     updateGlobalStats();
     renderCatalog();
@@ -808,7 +969,7 @@
       state.clients = JSON.parse(JSON.stringify(state.originalClients));
       state.hasUnsavedChanges = false;
       updateChangesBanner();
-      updateClientTabsBadges();
+      renderClientTabs();
       updateActiveClientProfile();
       updateGlobalStats();
       renderCatalog();
@@ -924,7 +1085,7 @@
     reader.readAsDataURL(file);
   }
 
-  // ── ADD & EDIT MODAL ──
+  // ── ADD & EDIT WORK MODAL ──
   btnOpenAddModal.addEventListener("click", () => {
     openAddModal();
   });
@@ -1108,7 +1269,7 @@
     }
 
     markChanges();
-    updateClientTabsBadges();
+    renderClientTabs();
     updateActiveClientProfile();
     updateGlobalStats();
     renderCatalog();
@@ -1182,7 +1343,7 @@
             ytScanBanner.style.display = "none";
           }
           markChanges();
-          updateClientTabsBadges();
+          renderClientTabs();
           updateActiveClientProfile();
           updateGlobalStats();
           renderCatalog();
@@ -1209,7 +1370,7 @@
     state.discoveredYtVideos = [];
     ytScanBanner.style.display = "none";
     markChanges();
-    updateClientTabsBadges();
+    renderClientTabs();
     updateActiveClientProfile();
     updateGlobalStats();
     renderCatalog();
@@ -1401,6 +1562,7 @@
   // Global ESC key listener
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
+      closeAddClientModal();
       closeVideoModal();
       closeCommitModal();
       closeVideoPlayer();

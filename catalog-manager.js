@@ -203,6 +203,12 @@ function saveClientsAndCommit(clientsData, options = {}) {
       client.works = [];
     }
     counts[key] = client.works.length;
+    const clientImgDir = path.join(CLIENT_IMAGES_DIR, key);
+    if (!fs.existsSync(clientImgDir)) {
+      try {
+        fs.mkdirSync(clientImgDir, { recursive: true });
+      } catch (e) {}
+    }
   }
 
   // 1. Write clients.json

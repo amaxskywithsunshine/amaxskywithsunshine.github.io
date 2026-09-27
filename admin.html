@@ -198,35 +198,15 @@
 
       <!-- CLIENT COLLECTION SELECTOR TABS -->
       <section class="client-tabs-section">
-        <div class="client-tabs-label">SELECT CLIENT OR COLLECTION TO MANAGE :</div>
+        <div class="client-tabs-header-bar">
+          <div class="client-tabs-label">SELECT CLIENT OR COLLECTION TO MANAGE :</div>
+          <button type="button" class="btn btn-outline btn-xs" id="btnOpenAddClientModal">
+            <span class="icon">+</span>
+            <span>ADD NEW CLIENT</span>
+          </button>
+        </div>
         <div class="client-tabs-row" id="clientTabsRow">
-          <!-- Dynamically populated or fallback -->
-          <button type="button" class="client-tab active" data-client="personal" id="tabClient_personal">
-            <span class="client-tab-avatar">P</span>
-            <div class="client-tab-info">
-              <span class="client-tab-title">Personal Project</span>
-              <span class="client-tab-handle">@iaexamax</span>
-            </div>
-            <span class="client-tab-badge" id="badge_personal">22 WORKS</span>
-          </button>
-
-          <button type="button" class="client-tab" data-client="aihara" id="tabClient_aihara">
-            <span class="client-tab-avatar aihara">A</span>
-            <div class="client-tab-info">
-              <span class="client-tab-title">Aihara Ch.</span>
-              <span class="client-tab-handle">@Aihara-wan</span>
-            </div>
-            <span class="client-tab-badge" id="badge_aihara">4 WORKS</span>
-          </button>
-
-          <button type="button" class="client-tab" data-client="hironeyka" id="tabClient_hironeyka">
-            <span class="client-tab-avatar hiro">H</span>
-            <div class="client-tab-info">
-              <span class="client-tab-title">HiroKitsuNyx</span>
-              <span class="client-tab-handle">@HiroNeyka</span>
-            </div>
-            <span class="client-tab-badge" id="badge_hironeyka">2 WORKS</span>
-          </button>
+          <!-- Dynamically populated by admin.js with client-box cards and + NEW CLIENT card -->
         </div>
       </section>
 
@@ -341,6 +321,118 @@
         </div>
       </section>
     </main>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════
+       MODAL 0: ADD NEW CLIENT CATALOG MODAL
+  ════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="clientModalBackdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="clientModalTitle">CREATE NEW CLIENT CATALOG</h3>
+        <button type="button" class="modal-close" id="btnCloseClientModal">&times;</button>
+      </div>
+
+      <form id="clientForm" class="modal-body" autocomplete="off">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="inputClientKey" class="form-label">
+              CLIENT ID / SLUG
+              <span class="label-hint">(lowercase, e.g. hololive, nerumi)</span>
+            </label>
+            <input
+              type="text"
+              id="inputClientKey"
+              class="form-input hw-mono"
+              placeholder="e.g. nerumi"
+              required
+              pattern="[a-zA-Z0-9_-]+"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="inputClientName" class="form-label">CLIENT DISPLAY NAME</label>
+            <input
+              type="text"
+              id="inputClientName"
+              class="form-input"
+              placeholder="e.g. Nerumi-S Ch."
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="inputClientHandle" class="form-label">SOCIAL HANDLE</label>
+            <input
+              type="text"
+              id="inputClientHandle"
+              class="form-input"
+              placeholder="e.g. @Nerumi-S"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="inputClientAvatar" class="form-label">AVATAR INITIAL</label>
+            <input
+              type="text"
+              id="inputClientAvatar"
+              class="form-input"
+              placeholder="e.g. N"
+              maxlength="2"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="inputClientDesc" class="form-label">DESCRIPTION / TAG</label>
+          <input
+            type="text"
+            id="inputClientDesc"
+            class="form-input"
+            placeholder="e.g. VTuber &amp; Motion Graphic Producer"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="inputClientUrl" class="form-label">PRIMARY CHANNEL / WEBSITE URL</label>
+          <input
+            type="url"
+            id="inputClientUrl"
+            class="form-input"
+            placeholder="https://www.youtube.com/@..."
+          />
+        </div>
+
+        <!-- CLIENT SOCIAL LINKS -->
+        <div class="form-group">
+          <label class="form-label">SOCIAL PLATFORM LINKS (OPTIONAL)</label>
+          <div class="social-input-grid">
+            <div class="social-input-row">
+              <span class="social-platform-badge">YouTube</span>
+              <input type="url" id="inputClientYt" class="form-input" placeholder="https://www.youtube.com/@..." />
+            </div>
+            <div class="social-input-row">
+              <span class="social-platform-badge">X / Twitter</span>
+              <input type="url" id="inputClientX" class="form-input" placeholder="https://x.com/..." />
+            </div>
+            <div class="social-input-row">
+              <span class="social-platform-badge">Twitch</span>
+              <input type="url" id="inputClientTwitch" class="form-input" placeholder="https://www.twitch.tv/..." />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="btnCancelClient">CANCEL</button>
+          <button type="submit" class="btn btn-primary btn-glow" id="btnSaveClient">
+            CREATE CLIENT CATALOG
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
 
