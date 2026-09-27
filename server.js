@@ -22,7 +22,7 @@ const HANDLE = process.env.YOUTUBE_HANDLE || "iaexamax";
 const UPLOADS_PLAYLIST_ID =
   process.env.YOUTUBE_UPLOADS_PLAYLIST_ID || "UUuDkWnsBiTKlsecae0D11Ag";
 const API_KEY = process.env.YOUTUBE_API_KEY || "";
-const ADMIN_KEY = process.env.ADMIN_KEY || "amax2026";
+const ADMIN_KEY = process.env.ADMIN_KEY || "";
 const ALLOWED_HWID = process.env.ALLOWED_HWID || "";
 
 // In-memory active auth sessions: Map<token, { createdAt, clientFingerprint, ip }>
@@ -152,8 +152,8 @@ app.post("/api/admin/auth/login", (req, res) => {
 
   const { adminKey, clientFingerprint } = req.body || {};
 
-  // 2. Admin Key Check
-  if (!adminKey || adminKey !== ADMIN_KEY) {
+  // 2. Admin Key Check (requires non-empty ADMIN_KEY in .env)
+  if (!ADMIN_KEY || !adminKey || adminKey !== ADMIN_KEY) {
     const current = failedLoginAttempts.get(clientIp) || {
       attempts: 0,
       lockUntil: 0,

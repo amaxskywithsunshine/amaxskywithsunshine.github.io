@@ -5,6 +5,16 @@
 (function () {
   "use strict";
 
+  // Security Guard: If accessed on public hosting (e.g. GitHub Pages), redirect away immediately
+  if (
+    window.location.hostname !== "localhost" &&
+    window.location.hostname !== "127.0.0.1" &&
+    window.location.hostname !== "::1"
+  ) {
+    window.location.replace("./");
+    return;
+  }
+
   // ── STATE ──
   let state = {
     token: localStorage.getItem("amax_admin_token") || "",
