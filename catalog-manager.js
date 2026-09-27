@@ -1,6 +1,6 @@
 /**
  * Catalog Manager & Git Workflow Automation
- * Manages video catalog updates, synchronization across files, and automated git commits.
+ * Manages video and image catalogs for all clients, synchronization across files, and automated git commits.
  */
 const fs = require("fs");
 const path = require("path");
@@ -8,8 +8,10 @@ const { execSync } = require("child_process");
 const https = require("https");
 
 const CATALOG_PATH = path.join(__dirname, "catalog.json");
+const CLIENTS_PATH = path.join(__dirname, "clients.json");
 const SCRIPT_PATH = path.join(__dirname, "script.js");
 const INDEX_PATH = path.join(__dirname, "index.html");
+const CLIENT_IMAGES_DIR = path.join(__dirname, "img", "clients");
 
 function extractVideoId(urlOrId) {
   if (!urlOrId) return "";
@@ -37,11 +39,64 @@ function getCatalog() {
   return [];
 }
 
+function getClients() {
+  try {
+    if (fs.existsSync(CLIENTS_PATH)) {
+      const raw = fs.readFileSync(CLIENTS_PATH, "utf8");
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error("[CLIENTS] Error reading clients.json:", err.message);
+  }
+  return {};
+}
+
+function getAvailableImages() {
+  const images = [];
+  if (!fs.existsSync(CLIENT_IMAGES_DIR)) return images;
+
+  function scan(dir, prefix) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const ent of entries) {
+      const rel = prefix ? `${prefix}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        scan(path.join(dir, ent.name), rel);
+      } else if (/\.(png|jpe?g|webp|gif|svg)$/i.test(ent.name)) {
+        images.push(`img/clients/${rel}`);
+      }
+    }
+  }
+
+  scan(CLIENT_IMAGES_DIR, "");
+  return images;
+}
+
+function saveUploadedImage(clientKey, originalName, base64Data) {
+  const sanitizedClient = (clientKey || "general").replace(/[^a-zA-Z0-9_-]/g, "");
+  const targetDir = path.join(CLIENT_IMAGES_DIR, sanitizedClient);
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const ext = path.extname(originalName) || ".png";
+  const base = path
+    .basename(originalName, ext)
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .toLowerCase();
+  const fileName = `${base}_${Date.now().toString(36)}${ext}`;
+  const filePath = path.join(targetDir, fileName);
+
+  const cleanBase64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, "");
+  fs.writeFileSync(filePath, Buffer.from(cleanBase64, "base64"));
+
+  return `img/clients/${sanitizedClient}/${fileName}`;
+}
+
 function getGitStatus() {
   try {
     const branch = execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf8" }).trim();
-    const lastCommit = execSync("git log -n 1 --format=\"%h - %s (%cr)\"", { encoding: "utf8" }).trim();
-    const recentCommits = execSync("git log -n 5 --format=\"%h|%s|%cr|%an\"", { encoding: "utf8" })
+    const lastCommit = execSync('git log -n 1 --format="%h - %s (%cr)"', { encoding: "utf8" }).trim();
+    const recentCommits = execSync('git log -n 5 --format="%h|%s|%cr|%an"', { encoding: "utf8" })
       .trim()
       .split("\n")
       .filter(Boolean)
@@ -70,17 +125,27 @@ function getGitStatus() {
   }
 }
 
-function syncScriptJs(catalogItems) {
+function syncScriptJs(catalogVideos, clientsData) {
   const original = fs.readFileSync(SCRIPT_PATH, "utf8");
-  const regex = /(let|const)\s+CATALOG_VIDEOS\s*=\s*\[[\s\S]*?\];/;
+  let updated = original;
 
-  if (!regex.test(original)) {
-    throw new Error("Could not find CATALOG_VIDEOS array in script.js");
+  // 1. Update CATALOG_VIDEOS if provided
+  if (catalogVideos) {
+    const catRegex = /(let|const)\s+CATALOG_VIDEOS\s*=\s*\[[\s\S]*?\];/;
+    if (catRegex.test(updated)) {
+      const jsonStr = JSON.stringify(catalogVideos, null, 2);
+      updated = updated.replace(catRegex, `let CATALOG_VIDEOS = ${jsonStr};`);
+    }
   }
 
-  const jsonStr = JSON.stringify(catalogItems, null, 2);
-  const replacement = `let CATALOG_VIDEOS = ${jsonStr};`;
-  const updated = original.replace(regex, replacement);
+  // 2. Update CLIENT_COLLECTIONS if provided
+  if (clientsData) {
+    const clientRegex = /(let|const)\s+CLIENT_COLLECTIONS\s*=\s*\{[\s\S]*?\n\};/;
+    if (clientRegex.test(updated)) {
+      const clientJsonStr = JSON.stringify(clientsData, null, 2);
+      updated = updated.replace(clientRegex, `let CLIENT_COLLECTIONS = ${clientJsonStr};`);
+    }
+  }
 
   fs.writeFileSync(SCRIPT_PATH, updated, "utf8");
 
@@ -94,60 +159,75 @@ function syncScriptJs(catalogItems) {
   }
 }
 
-function syncIndexHtml(count) {
+function syncIndexHtmlCounts(counts = {}) {
   if (!fs.existsSync(INDEX_PATH)) return;
   let html = fs.readFileSync(INDEX_PATH, "utf8");
 
-  // Update personalWorksCount and clientWorkCount
-  html = html.replace(
-    /(<span class="client-box-count" id="personalWorksCount">)[^<]*(<\/span>)/g,
-    `$1${count} WORKS$2`
-  );
-  html = html.replace(
-    /(<span class="client-stat-badge" id="clientWorkCount">)[^<]*(<\/span>)/g,
-    `$1${count} WORKS$2`
-  );
+  if (typeof counts.personal === "number") {
+    html = html.replace(
+      /(<span class="client-box-count" id="personalWorksCount">)[^<]*(<\/span>)/g,
+      `$1${counts.personal} WORKS$2`
+    );
+    html = html.replace(
+      /(<span class="client-stat-badge" id="clientWorkCount">)[^<]*(<\/span>)/g,
+      `$1${counts.personal} WORKS$2`
+    );
+  }
+
+  if (typeof counts.aihara === "number") {
+    html = html.replace(
+      /(<span class="client-box-count" id="aiharaWorksCount">)[^<]*(<\/span>)/g,
+      `$1${counts.aihara} WORKS$2`
+    );
+  }
+
+  if (typeof counts.hironeyka === "number") {
+    html = html.replace(
+      /(<span class="client-box-count" id="hiroWorksCount">)[^<]*(<\/span>)/g,
+      `$1${counts.hironeyka} WORKS$2`
+    );
+  }
 
   fs.writeFileSync(INDEX_PATH, html, "utf8");
 }
 
-function saveCatalogAndCommit(catalogItems, options = {}) {
-  if (!Array.isArray(catalogItems)) {
-    throw new Error("Catalog items must be an array");
+function saveClientsAndCommit(clientsData, options = {}) {
+  if (!clientsData || typeof clientsData !== "object") {
+    throw new Error("Invalid clients data format. Must be an object.");
   }
 
-  // Sanitize and validate items
-  const cleanItems = catalogItems.map((item, idx) => {
-    const id = extractVideoId(item.id || item.videoId || item.link);
-    if (!id) {
-      throw new Error(`Item at position #${idx + 1} is missing a valid YouTube Video ID`);
+  // Sanitize and validate works in each client
+  const counts = {};
+  for (const [key, client] of Object.entries(clientsData)) {
+    if (!Array.isArray(client.works)) {
+      client.works = [];
     }
-    const title = (item.title || "").trim();
-    if (!title) {
-      throw new Error(`Item at position #${idx + 1} (${id}) is missing a title`);
-    }
-    let pubDate = item.pubDate;
-    if (!pubDate || isNaN(new Date(pubDate).getTime())) {
-      pubDate = new Date().toISOString();
-    }
+    counts[key] = client.works.length;
+  }
 
-    return {
-      id,
-      title,
-      pubDate: typeof pubDate === "string" ? pubDate : new Date(pubDate).toISOString(),
-    };
-  });
+  // 1. Write clients.json
+  fs.writeFileSync(CLIENTS_PATH, JSON.stringify(clientsData, null, 2) + "\n", "utf8");
 
-  // 1. Write catalog.json
-  fs.writeFileSync(CATALOG_PATH, JSON.stringify(cleanItems, null, 2) + "\n", "utf8");
+  // 2. Also keep catalog.json in sync with personal video works
+  let personalVideos = [];
+  if (clientsData.personal && Array.isArray(clientsData.personal.works)) {
+    personalVideos = clientsData.personal.works
+      .filter((w) => w.videoId || w.id)
+      .map((w) => ({
+        id: extractVideoId(w.id || w.videoId),
+        title: (w.title || "").trim(),
+        pubDate: w.pubDate || new Date().toISOString(),
+      }));
+    fs.writeFileSync(CATALOG_PATH, JSON.stringify(personalVideos, null, 2) + "\n", "utf8");
+  }
 
-  // 2. Synchronize script.js
-  syncScriptJs(cleanItems);
+  // 3. Synchronize script.js
+  syncScriptJs(personalVideos.length > 0 ? personalVideos : null, clientsData);
 
-  // 3. Synchronize index.html
-  syncIndexHtml(cleanItems.length);
+  // 4. Synchronize index.html counts
+  syncIndexHtmlCounts(counts);
 
-  // 4. Git commit procedure following GEMINI.md
+  // 5. Git commit procedure following GEMINI.md
   let commitResult = {
     committed: false,
     commitHash: null,
@@ -157,8 +237,8 @@ function saveCatalogAndCommit(catalogItems, options = {}) {
   };
 
   try {
-    // Stage modified files
-    execSync('git add "catalog.json" "script.js" "index.html"', {
+    // Stage modified files & any added images
+    execSync('git add "clients.json" "catalog.json" "script.js" "index.html" "img/clients"', {
       cwd: __dirname,
       encoding: "utf8",
     });
@@ -172,7 +252,7 @@ function saveCatalogAndCommit(catalogItems, options = {}) {
       const commitMsg =
         options.commitMessage && options.commitMessage.trim().length > 0
           ? options.commitMessage.trim()
-          : `feat(catalog): update portfolio catalog (${cleanItems.length} works)`;
+          : `feat(catalog): update client collections and works`;
 
       // Git commit
       execSync(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`, {
@@ -215,11 +295,32 @@ function saveCatalogAndCommit(catalogItems, options = {}) {
 
   return {
     success: true,
-    totalItems: cleanItems.length,
-    items: cleanItems,
+    clients: clientsData,
     commit: commitResult,
     gitStatus: getGitStatus(),
   };
+}
+
+function saveCatalogAndCommit(catalogItems, options = {}) {
+  const currentClients = getClients();
+  if (currentClients.personal) {
+    currentClients.personal.works = catalogItems.map((item) => ({
+      id: extractVideoId(item.id),
+      title: item.title,
+      pubDate: item.pubDate,
+      category: item.category || "Motion Graphic",
+      type: "video",
+      videoId: extractVideoId(item.id),
+      src: `https://img.youtube.com/vi/${extractVideoId(item.id)}/hqdefault.jpg`,
+    }));
+    return saveClientsAndCommit(currentClients, options);
+  }
+
+  // Fallback if clients.json not initialized
+  fs.writeFileSync(CATALOG_PATH, JSON.stringify(catalogItems, null, 2) + "\n", "utf8");
+  syncScriptJs(catalogItems, null);
+  syncIndexHtmlCounts({ personal: catalogItems.length });
+  return { success: true };
 }
 
 function pushToRemote() {
@@ -242,7 +343,6 @@ function pushToRemote() {
   }
 }
 
-// Fetch metadata for a YouTube video
 function fetchVideoMetadata(videoIdOrUrl) {
   const vid = extractVideoId(videoIdOrUrl);
   if (!vid) {
@@ -252,7 +352,6 @@ function fetchVideoMetadata(videoIdOrUrl) {
   const apiKey = process.env.YOUTUBE_API_KEY || "";
 
   return new Promise((resolve) => {
-    // Attempt 1: YouTube Data API v3 if API key is present
     if (apiKey) {
       const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${vid}&key=${apiKey}`;
       https
@@ -309,7 +408,6 @@ function fallbackOEmbed(vid, resolve) {
             });
           }
         } catch (e) {}
-        // Fallback default
         resolve({
           id: vid,
           title: `Video ${vid}`,
@@ -333,6 +431,10 @@ function fallbackOEmbed(vid, resolve) {
 module.exports = {
   extractVideoId,
   getCatalog,
+  getClients,
+  getAvailableImages,
+  saveUploadedImage,
+  saveClientsAndCommit,
   saveCatalogAndCommit,
   pushToRemote,
   getGitStatus,

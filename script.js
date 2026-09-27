@@ -1038,7 +1038,7 @@ function getCategoryFromTitle(title) {
   return "Motion Graphic";
 }
 
-const CLIENT_COLLECTIONS = {
+let CLIENT_COLLECTIONS = {
   personal: {
     name: "Personal Project",
     handle: "@iaexamax",
@@ -1183,6 +1183,29 @@ const CLIENT_COLLECTIONS = {
 let activeClientKey = null; // Default: unselected on page start
 let activeImageIndex = 0;
 let currentClientWorks = [];
+
+// ── Sync dynamic client collections if available ──
+async function syncClientsJson() {
+  try {
+    const res = await fetch(`clients.json?t=${Date.now()}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && typeof data === "object") {
+        CLIENT_COLLECTIONS = data;
+        const pLen = CLIENT_COLLECTIONS.personal?.works?.length || 22;
+        const aLen = CLIENT_COLLECTIONS.aihara?.works?.length || 4;
+        const hLen = CLIENT_COLLECTIONS.hironeyka?.works?.length || 2;
+        const pCountEl = document.getElementById("personalWorksCount");
+        const aCountEl = document.getElementById("aiharaWorksCount");
+        const hCountEl = document.getElementById("hiroWorksCount");
+        if (pCountEl) pCountEl.textContent = `${pLen} WORKS`;
+        if (aCountEl) aCountEl.textContent = `${aLen} WORKS`;
+        if (hCountEl) hCountEl.textContent = `${hLen} WORKS`;
+      }
+    }
+  } catch (e) {}
+}
+syncClientsJson();
 
 function renderClientShowcase(clientKey) {
   const data = CLIENT_COLLECTIONS[clientKey];

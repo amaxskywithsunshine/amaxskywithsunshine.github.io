@@ -1,5 +1,6 @@
 /**
  * AMAX CATALOG & HARDWARE SECURITY CONSOLE — CONTROLLER
+ * Multi-Client Portfolio Management & Image Works Support
  */
 
 (function () {
@@ -24,9 +25,15 @@
     hwidValid: false,
     clientFingerprint: "",
     systemInfo: null,
-    catalog: [],
-    originalCatalog: [],
+
+    // Multi-client collection state
+    clients: {},
+    originalClients: {},
+    activeClientKey: "personal",
+    filterType: "all", // 'all' | 'video' | 'image'
     filterQuery: "",
+    availableImages: [],
+
     hasUnsavedChanges: false,
     discoveredYtVideos: [],
   };
@@ -54,12 +61,27 @@
   const navHwidBadge = document.getElementById("navHwidBadge");
   const navHwidText = document.getElementById("navHwidText");
   const navBranchBadge = document.getElementById("navBranchBadge");
-  const statTotalVideos = document.getElementById("statTotalVideos");
+  const statTotalWorks = document.getElementById("statTotalWorks");
+  const statTotalWorksLabel = document.getElementById("statTotalWorksLabel");
+  const statVideosCount = document.getElementById("statVideosCount");
+  const statImagesCount = document.getElementById("statImagesCount");
   const statGitState = document.getElementById("statGitState");
   const statLastCommit = document.getElementById("statLastCommit");
   const statYtStatus = document.getElementById("statYtStatus");
   const statHwidShort = document.getElementById("statHwidShort");
   const statHostLabel = document.getElementById("statHostLabel");
+
+  // Client Selection & Profile
+  const clientTabsRow = document.getElementById("clientTabsRow");
+  const activeClientAvatar = document.getElementById("activeClientAvatar");
+  const activeClientName = document.getElementById("activeClientName");
+  const activeClientHandle = document.getElementById("activeClientHandle");
+  const activeClientDesc = document.getElementById("activeClientDesc");
+  const activeClientLinks = document.getElementById("activeClientLinks");
+  const countFilterAll = document.getElementById("countFilterAll");
+  const countFilterVideo = document.getElementById("countFilterVideo");
+  const countFilterImage = document.getElementById("countFilterImage");
+  const typeFilterBtns = document.querySelectorAll(".type-filter-btn");
 
   // Action Banners & Toolbar
   const changesBanner = document.getElementById("changesBanner");
@@ -76,27 +98,39 @@
   const btnScanChannel = document.getElementById("btnScanChannel");
   const btnPushRemote = document.getElementById("btnPushRemote");
   const btnOpenAddModal = document.getElementById("btnOpenAddModal");
+  const btnAddWorkLabel = document.getElementById("btnAddWorkLabel");
   const btnSaveAndCommit = document.getElementById("btnSaveAndCommit");
   const catalogContainer = document.getElementById("catalogContainer");
   const emptyState = document.getElementById("emptyState");
 
-  // Modals & Drawers
+  // Add / Edit Modal Elements
   const videoModalBackdrop = document.getElementById("videoModalBackdrop");
   const videoModalTitle = document.getElementById("videoModalTitle");
   const btnCloseVideoModal = document.getElementById("btnCloseVideoModal");
   const videoForm = document.getElementById("videoForm");
   const videoEditIndex = document.getElementById("videoEditIndex");
+  const radioTypeVideo = document.getElementById("radioTypeVideo");
+  const radioTypeImage = document.getElementById("radioTypeImage");
+  const sectionVideoInputs = document.getElementById("sectionVideoInputs");
+  const sectionImageInputs = document.getElementById("sectionImageInputs");
+  const groupPublishDate = document.getElementById("groupPublishDate");
   const inputVideoUrl = document.getElementById("inputVideoUrl");
   const btnFetchMeta = document.getElementById("btnFetchMeta");
+  const selectExistingImage = document.getElementById("selectExistingImage");
+  const fileUploadInput = document.getElementById("fileUploadInput");
+  const inputImageSrc = document.getElementById("inputImageSrc");
   const inputVideoTitle = document.getElementById("inputVideoTitle");
+  const inputCategory = document.getElementById("inputCategory");
   const inputVideoDate = document.getElementById("inputVideoDate");
-  const catPreviewBadge = document.getElementById("catPreviewBadge");
+  const previewCard = document.getElementById("previewCard");
   const previewThumb = document.getElementById("previewThumb");
+  const previewPlayIcon = document.getElementById("previewPlayIcon");
   const previewBadge = document.getElementById("previewBadge");
   const previewTitle = document.getElementById("previewTitle");
   const previewDate = document.getElementById("previewDate");
   const btnCancelVideo = document.getElementById("btnCancelVideo");
 
+  // Commit Modal
   const commitModalBackdrop = document.getElementById("commitModalBackdrop");
   const btnCloseCommitModal = document.getElementById("btnCloseCommitModal");
   const summaryTotal = document.getElementById("summaryTotal");
@@ -107,6 +141,7 @@
   const btnCancelCommit = document.getElementById("btnCancelCommit");
   const btnExecuteCommit = document.getElementById("btnExecuteCommit");
 
+  // Git Drawer
   const gitDrawerBackdrop = document.getElementById("gitDrawerBackdrop");
   const btnCloseGitDrawer = document.getElementById("btnCloseGitDrawer");
   const btnGitHistory = document.getElementById("btnGitHistory");
@@ -116,6 +151,7 @@
   const btnDrawerPush = document.getElementById("btnDrawerPush");
   const commitHistoryList = document.getElementById("commitHistoryList");
 
+  // Security Drawer
   const secDrawerBackdrop = document.getElementById("secDrawerBackdrop");
   const btnCloseSecDrawer = document.getElementById("btnCloseSecDrawer");
   const btnSecDashboard = document.getElementById("btnSecDashboard");
@@ -127,16 +163,23 @@
   const secClientFp = document.getElementById("secClientFp");
   const secAllowedHwid = document.getElementById("secAllowedHwid");
 
+  // Lightboxes
   const playerModalBackdrop = document.getElementById("playerModalBackdrop");
   const playerModalTitle = document.getElementById("playerModalTitle");
   const btnClosePlayerModal = document.getElementById("btnClosePlayerModal");
   const playerIframeWrap = document.getElementById("playerIframeWrap");
+
+  const imageLightboxBackdrop = document.getElementById("imageLightboxBackdrop");
+  const lightboxTitle = document.getElementById("lightboxTitle");
+  const lightboxImg = document.getElementById("lightboxImg");
+  const btnCloseLightbox = document.getElementById("btnCloseLightbox");
 
   const btnLogout = document.getElementById("btnLogout");
 
   // ── HELPERS & UTILITIES ──
   function showToast(message, type = "info") {
     const container = document.getElementById("toastContainer");
+    if (!container) return;
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
     const icon = type === "success" ? "✓" : type === "error" ? "✕" : "ℹ";
@@ -161,25 +204,13 @@
     return m ? m[1] : str;
   }
 
-  function getCategoryFromTitle(title) {
-    if (!title) return "Motion Graphic";
-    const t = title.toLowerCase();
-    if (t.includes("文字pv")) return "Typography Motion PV";
-    if (t.includes("visuals:")) return "Motion Visual";
-    if (t.includes("amv:")) return "Anime Music Video (AMV)";
-    if (t.includes("reels:")) return "Motion Reel";
-    if (t.includes("banner:")) return "Channel Banner & Visual";
-    if (t.includes("intro:") || t.includes("fantro:")) return "Intro Animation";
-    if (t.includes("remake:")) return "Motion Remake";
-    if (t.includes("hbd:")) return "Celebration Visual";
-    return "Motion Graphic";
-  }
-
   function getCategoryClass(cat) {
-    if (cat.includes("Typography")) return "cat-typography";
-    if (cat.includes("Visual")) return "cat-visuals";
-    if (cat.includes("Anime") || cat.includes("AMV")) return "cat-amv";
-    if (cat.includes("Intro")) return "cat-intro";
+    if (!cat) return "";
+    const c = cat.toLowerCase();
+    if (c.includes("typography")) return "cat-typography";
+    if (c.includes("visual") || c.includes("key visual")) return "cat-visuals";
+    if (c.includes("anime") || c.includes("amv")) return "cat-amv";
+    if (c.includes("intro")) return "cat-intro";
     return "";
   }
 
@@ -187,6 +218,7 @@
     if (!dateStr) return "--";
     try {
       const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
       return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
     } catch (e) {
       return dateStr;
@@ -203,7 +235,6 @@
         screen.width + "x" + screen.height + "x" + screen.colorDepth,
         Intl.DateTimeFormat().resolvedOptions().timeZone || "",
       ];
-      // Canvas fingerprint
       try {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
@@ -260,17 +291,28 @@
     state.clientFingerprint = await computeClientFingerprint();
     if (diagClientFp) diagClientFp.textContent = state.clientFingerprint;
 
-    // Password toggle
-    btnTogglePw.addEventListener("click", () => {
-      adminKeyInput.type = adminKeyInput.type === "password" ? "text" : "password";
-      btnTogglePw.textContent = adminKeyInput.type === "password" ? "👁️" : "🙈";
-    });
+    // Password visibility toggle
+    if (btnTogglePw && adminKeyInput) {
+      btnTogglePw.addEventListener("click", () => {
+        adminKeyInput.type = adminKeyInput.type === "password" ? "text" : "password";
+        btnTogglePw.textContent = adminKeyInput.type === "password" ? "👁️" : "🙈";
+      });
+    }
 
     // Login Form Submit
-    loginForm.addEventListener("submit", handleLogin);
+    if (loginForm) loginForm.addEventListener("submit", handleLogin);
 
     // Logout
-    btnLogout.addEventListener("click", handleLogout);
+    if (btnLogout) btnLogout.addEventListener("click", handleLogout);
+
+    // Setup client tab click listeners
+    setupClientTabs();
+
+    // Setup work type filters
+    setupTypeFilters();
+
+    // Setup Add/Edit modal type toggles
+    setupWorkTypeSwitcher();
 
     // Check Auth Status & Hardware
     await checkAuthStatus();
@@ -292,7 +334,6 @@
         exitDashboard();
       }
     } catch (err) {
-      // Backend not running
       if (staticServerAlert) staticServerAlert.style.display = "block";
       if (diagStatusBadge) {
         diagStatusBadge.className = "hw-status-badge mismatch";
@@ -307,9 +348,11 @@
     if (diagHost) diagHost.textContent = `${data.systemInfo?.hostname || "Local"} (${data.systemInfo?.platform || "OS"})`;
 
     if (data.hwidValid) {
-      diagStatusBadge.className = "hw-status-badge verified";
-      diagStatusText.textContent = "HARDWARE VERIFIED";
-      hwMismatchAlert.style.display = "none";
+      if (diagStatusBadge) {
+        diagStatusBadge.className = "hw-status-badge verified";
+        diagStatusText.textContent = "HARDWARE VERIFIED";
+      }
+      if (hwMismatchAlert) hwMismatchAlert.style.display = "none";
 
       if (navHwidText) {
         navHwidText.textContent = `HWID VERIFIED : ${data.currentHwid.slice(-9)}`;
@@ -317,16 +360,20 @@
       if (statHwidShort) statHwidShort.textContent = "HWID-OK";
       if (statHostLabel) statHostLabel.textContent = `HOST: ${data.systemInfo?.hostname || "iTxAmax"}`;
     } else {
-      diagStatusBadge.className = "hw-status-badge mismatch";
-      diagStatusText.textContent = "HARDWARE MISMATCH";
-      hwMismatchAlert.style.display = "block";
-      hwMismatchDesc.innerHTML = `
-        Server HWID: <strong>${data.currentHwid}</strong><br>
-        Allowed HWID: <strong>${data.allowedHwid || "NONE (Configure .env)"}</strong>
-      `;
+      if (diagStatusBadge) {
+        diagStatusBadge.className = "hw-status-badge mismatch";
+        diagStatusText.textContent = "HARDWARE MISMATCH";
+      }
+      if (hwMismatchAlert) {
+        hwMismatchAlert.style.display = "block";
+        hwMismatchDesc.innerHTML = `
+          Server HWID: <strong>${data.currentHwid}</strong><br>
+          Allowed HWID: <strong>${data.allowedHwid || "NONE (Configure .env)"}</strong>
+        `;
+      }
       if (navHwidText) {
         navHwidText.textContent = "HARDWARE LOCKED";
-        navHwidBadge.className = "navbar-status-pill mismatch";
+        if (navHwidBadge) navHwidBadge.className = "navbar-status-pill mismatch";
       }
       if (statHwidShort) statHwidShort.textContent = "HWID-LOCK";
     }
@@ -391,7 +438,7 @@
   function enterDashboard() {
     authView.style.display = "none";
     dashboardView.style.display = "flex";
-    loadCatalog();
+    loadAllClients();
   }
 
   function exitDashboard() {
@@ -399,12 +446,13 @@
     authView.style.display = "flex";
   }
 
-  // ── CATALOG LOADING & RENDERING ──
-  async function loadCatalog() {
+  // ── LOAD CLIENTS & IMAGES ──
+  async function loadAllClients() {
     try {
-      const data = await apiRequest("/api/admin/catalog");
-      state.catalog = Array.isArray(data.catalog) ? data.catalog : [];
-      state.originalCatalog = JSON.parse(JSON.stringify(state.catalog));
+      const data = await apiRequest("/api/admin/clients");
+      state.clients = data.clients || {};
+      state.originalClients = JSON.parse(JSON.stringify(state.clients));
+      state.availableImages = Array.isArray(data.images) ? data.images : [];
       state.hasUnsavedChanges = false;
       updateChangesBanner();
 
@@ -412,9 +460,13 @@
         updateGitStatusUI(data.gitStatus);
       }
 
+      populateImageSelectDropdown();
+      updateClientTabsBadges();
+      updateActiveClientProfile();
+      updateGlobalStats();
       renderCatalog();
     } catch (err) {
-      showToast(`Error loading catalog: ${err.message}`, "error");
+      showToast(`Error loading client collections: ${err.message}`, "error");
     }
   }
 
@@ -454,18 +506,132 @@
     }
   }
 
+  // ── CLIENT TABS & PROFILE ──
+  function setupClientTabs() {
+    const tabs = document.querySelectorAll(".client-tab");
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const clientKey = tab.dataset.client;
+        if (!clientKey || clientKey === state.activeClientKey) return;
+
+        state.activeClientKey = clientKey;
+        tabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        updateActiveClientProfile();
+        populateImageSelectDropdown();
+        renderCatalog();
+      });
+    });
+  }
+
+  function updateClientTabsBadges() {
+    for (const [key, client] of Object.entries(state.clients)) {
+      const badge = document.getElementById(`badge_${key}`);
+      if (badge) {
+        const count = client.works?.length || 0;
+        badge.textContent = `${count} WORK${count === 1 ? "" : "S"}`;
+      }
+    }
+  }
+
+  function updateActiveClientProfile() {
+    const client = state.clients[state.activeClientKey] || {};
+    const works = client.works || [];
+
+    if (activeClientAvatar) {
+      activeClientAvatar.textContent = client.avatar || state.activeClientKey.charAt(0).toUpperCase();
+      activeClientAvatar.className = `client-profile-avatar ${state.activeClientKey}`;
+    }
+    if (activeClientName) activeClientName.textContent = client.name || state.activeClientKey;
+    if (activeClientHandle) activeClientHandle.textContent = client.handle || "";
+    if (activeClientDesc) activeClientDesc.textContent = client.desc || "";
+
+    if (btnAddWorkLabel) {
+      btnAddWorkLabel.textContent = `ADD WORK (${client.name || state.activeClientKey})`;
+    }
+
+    // Render client social links
+    if (activeClientLinks) {
+      if (Array.isArray(client.links) && client.links.length > 0) {
+        activeClientLinks.innerHTML = client.links
+          .map(
+            (link) => `
+            <a href="${link.url}" target="_blank" rel="noopener" class="client-link-pill">
+              ${link.icon ? `<img src="${link.icon}" alt="" class="client-link-icon" />` : ""}
+              <span>${link.label || link.platform}</span>
+              <span class="ext-arrow">↗</span>
+            </a>
+          `
+          )
+          .join("");
+      } else {
+        activeClientLinks.innerHTML = "";
+      }
+    }
+
+    // Update filter counts for active client
+    const videoWorks = works.filter((w) => w.type === "video" || (!w.type && (w.videoId || w.id)));
+    const imageWorks = works.filter((w) => w.type === "image" || (!w.videoId && !w.id && w.src));
+
+    if (countFilterAll) countFilterAll.textContent = works.length;
+    if (countFilterVideo) countFilterVideo.textContent = videoWorks.length;
+    if (countFilterImage) countFilterImage.textContent = imageWorks.length;
+  }
+
+  function updateGlobalStats() {
+    let totalAll = 0;
+    let totalVideos = 0;
+    let totalImages = 0;
+
+    for (const client of Object.values(state.clients)) {
+      const works = client.works || [];
+      totalAll += works.length;
+      works.forEach((w) => {
+        if (w.type === "image" || (!w.videoId && !w.id && w.src)) {
+          totalImages++;
+        } else {
+          totalVideos++;
+        }
+      });
+    }
+
+    if (statTotalWorks) statTotalWorks.textContent = totalAll;
+    if (statVideosCount) statVideosCount.textContent = totalVideos;
+    if (statImagesCount) statImagesCount.textContent = totalImages;
+  }
+
+  // ── WORK TYPE FILTERS ──
+  function setupTypeFilters() {
+    typeFilterBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        typeFilterBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.filterType = btn.dataset.type || "all";
+        renderCatalog();
+      });
+    });
+  }
+
+  // ── CATALOG RENDERING ──
   function renderCatalog() {
-    statTotalVideos.textContent = state.catalog.length;
+    const client = state.clients[state.activeClientKey] || {};
+    const works = client.works || [];
 
     const query = state.filterQuery.toLowerCase();
-    const filtered = state.catalog.filter((item) => {
+    const filtered = works.filter((item) => {
+      const isImage = item.type === "image" || (!item.videoId && !item.id && item.src);
+      const isVideo = !isImage;
+
+      if (state.filterType === "video" && !isVideo) return false;
+      if (state.filterType === "image" && !isImage) return false;
+
       if (!query) return true;
-      const cat = getCategoryFromTitle(item.title).toLowerCase();
-      return (
-        item.title.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query) ||
-        cat.includes(query)
-      );
+      const title = (item.title || "").toLowerCase();
+      const cat = (item.category || "").toLowerCase();
+      const idOrSrc = String(item.videoId || item.id || item.src || "").toLowerCase();
+
+      return title.includes(query) || cat.includes(query) || idOrSrc.includes(query);
     });
 
     catalogContainer.innerHTML = "";
@@ -476,55 +642,81 @@
     }
     emptyState.style.display = "none";
 
-    filtered.forEach((item, index) => {
-      const realIndex = state.catalog.findIndex((v) => v.id === item.id);
-      const cat = getCategoryFromTitle(item.title);
+    filtered.forEach((item) => {
+      const realIndex = works.indexOf(item);
+      const isImage = item.type === "image" || (!item.videoId && !item.id && item.src);
+      const cat = item.category || (isImage ? "Stream Artwork" : "Motion Graphic");
       const catClass = getCategoryClass(cat);
-      const thumbUrl = `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`;
+
+      let thumbUrl = "";
+      if (isImage) {
+        thumbUrl = item.src || "img/personal_preview.jpg";
+      } else {
+        const vid = extractVideoId(item.videoId || item.id);
+        thumbUrl = vid ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg` : (item.src || "img/personal_preview.jpg");
+      }
 
       const row = document.createElement("div");
       row.className = "catalog-row";
       row.draggable = true;
       row.dataset.index = realIndex;
 
+      const typeBadge = isImage
+        ? `<span class="work-type-badge type-image">🖼️ IMAGE</span>`
+        : `<span class="work-type-badge type-video">🎬 VIDEO</span>`;
+
+      let sourceMarkup = "";
+      if (isImage) {
+        sourceMarkup = `<span class="col-source-path" title="${item.src || ""}">${item.src ? item.src.split("/").pop() : "--"}</span>`;
+      } else {
+        const vid = extractVideoId(item.videoId || item.id);
+        sourceMarkup = `
+          <a href="https://www.youtube.com/watch?v=${vid}" target="_blank" class="col-id-text" title="Open on YouTube">
+            ${vid} ↗
+          </a>
+        `;
+      }
+
       row.innerHTML = `
         <div class="col-drag-handle">
           <span class="drag-dots">⋮⋮</span>
           <span>${String(realIndex + 1).padStart(2, "0")}</span>
         </div>
-        <div class="col-thumb-wrap" data-vid="${item.id}" data-title="${encodeURIComponent(item.title)}">
-          <img src="${thumbUrl}" alt="${item.title}" class="col-thumb-img" loading="lazy" />
-          <div class="col-thumb-play">▶</div>
+        <div class="col-thumb-wrap ${isImage ? "thumb-image" : "thumb-video"}" title="Click to preview">
+          <img src="${thumbUrl}" alt="${item.title || "Work"}" class="col-thumb-img" loading="lazy" />
+          <div class="col-thumb-play">${isImage ? "🔍" : "▶"}</div>
         </div>
+        <div>${typeBadge}</div>
         <div class="col-title-wrap">
-          <div class="video-row-title">${item.title}</div>
+          <div class="video-row-title">${item.title || "Untitled"}</div>
           <span class="video-category-tag ${catClass}">${cat}</span>
         </div>
-        <div>
-          <a href="https://www.youtube.com/watch?v=${item.id}" target="_blank" class="col-id-text" title="Open on YouTube">
-            ${item.id} ↗
-          </a>
-        </div>
-        <div class="col-date-text">${formatDate(item.pubDate)}</div>
+        <div>${sourceMarkup}</div>
         <div class="col-actions-wrap">
           <button type="button" class="btn-icon" data-action="up" data-idx="${realIndex}" title="Move Up" ${realIndex === 0 ? "disabled" : ""}>↑</button>
-          <button type="button" class="btn-icon" data-action="down" data-idx="${realIndex}" title="Move Down" ${realIndex === state.catalog.length - 1 ? "disabled" : ""}>↓</button>
-          <button type="button" class="btn-icon" data-action="edit" data-idx="${realIndex}" title="Edit Video">✏️</button>
-          <button type="button" class="btn-icon btn-icon-del" data-action="delete" data-idx="${realIndex}" title="Delete Video">🗑️</button>
+          <button type="button" class="btn-icon" data-action="down" data-idx="${realIndex}" title="Move Down" ${realIndex === works.length - 1 ? "disabled" : ""}>↓</button>
+          <button type="button" class="btn-icon" data-action="edit" data-idx="${realIndex}" title="Edit Work">✏️</button>
+          <button type="button" class="btn-icon btn-icon-del" data-action="delete" data-idx="${realIndex}" title="Delete Work">🗑️</button>
         </div>
       `;
 
-      // Event listeners on row elements
+      // Preview click
       row.querySelector(".col-thumb-wrap").addEventListener("click", () => {
-        openVideoPlayer(item.id, item.title);
+        if (isImage) {
+          openImageLightbox(item.src, item.title);
+        } else {
+          const vid = extractVideoId(item.videoId || item.id);
+          openVideoPlayer(vid, item.title);
+        }
       });
 
+      // Actions
       row.querySelector('[data-action="up"]').addEventListener("click", () => moveItem(realIndex, -1));
       row.querySelector('[data-action="down"]').addEventListener("click", () => moveItem(realIndex, 1));
       row.querySelector('[data-action="edit"]').addEventListener("click", () => openEditModal(realIndex));
       row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteItem(realIndex));
 
-      // Drag and drop reordering
+      // Drag and drop
       setupDragAndDrop(row, realIndex);
 
       catalogContainer.appendChild(row);
@@ -551,36 +743,46 @@
       row.style.background = "";
       const fromIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
       const toIndex = index;
+      const works = state.clients[state.activeClientKey]?.works;
+      if (!works) return;
       if (!isNaN(fromIndex) && fromIndex !== toIndex) {
-        const item = state.catalog.splice(fromIndex, 1)[0];
-        state.catalog.splice(toIndex, 0, item);
+        const item = works.splice(fromIndex, 1)[0];
+        works.splice(toIndex, 0, item);
         markChanges();
         renderCatalog();
-        showToast("Catalog reordered.", "info");
+        showToast("Works order updated.", "info");
       }
     });
   }
 
   // ── REORDER & MUTATION ACTIONS ──
   function moveItem(index, direction) {
+    const works = state.clients[state.activeClientKey]?.works;
+    if (!works) return;
     const newIdx = index + direction;
-    if (newIdx < 0 || newIdx >= state.catalog.length) return;
-    const item = state.catalog.splice(index, 1)[0];
-    state.catalog.splice(newIdx, 0, item);
+    if (newIdx < 0 || newIdx >= works.length) return;
+    const item = works.splice(index, 1)[0];
+    works.splice(newIdx, 0, item);
     markChanges();
     renderCatalog();
   }
 
   function deleteItem(index) {
-    const item = state.catalog[index];
+    const works = state.clients[state.activeClientKey]?.works;
+    if (!works) return;
+    const item = works[index];
     if (!item) return;
-    const confirmDel = confirm(`Are you sure you want to remove:\n"${item.title}" (${item.id}) from the catalog?`);
+
+    const confirmDel = confirm(`Are you sure you want to remove:\n"${item.title}" from ${state.clients[state.activeClientKey]?.name}?`);
     if (!confirmDel) return;
 
-    state.catalog.splice(index, 1);
+    works.splice(index, 1);
     markChanges();
+    updateClientTabsBadges();
+    updateActiveClientProfile();
+    updateGlobalStats();
     renderCatalog();
-    showToast(`Removed "${item.title}" from catalog.`, "info");
+    showToast(`Removed "${item.title}".`, "info");
   }
 
   function markChanges() {
@@ -591,17 +793,24 @@
   function updateChangesBanner() {
     if (state.hasUnsavedChanges) {
       changesBanner.style.display = "flex";
-      changesBannerText.textContent = `You have unsaved changes (${state.catalog.length} videos). Remember to commit!`;
+      let totalWorks = 0;
+      for (const c of Object.values(state.clients)) {
+        totalWorks += c.works?.length || 0;
+      }
+      changesBannerText.textContent = `You have unsaved catalog modifications (${totalWorks} works total). Remember to commit!`;
     } else {
       changesBanner.style.display = "none";
     }
   }
 
   btnRevertChanges.addEventListener("click", () => {
-    if (confirm("Revert all unsaved catalog changes?")) {
-      state.catalog = JSON.parse(JSON.stringify(state.originalCatalog));
+    if (confirm("Revert all unsaved catalog changes across all clients?")) {
+      state.clients = JSON.parse(JSON.stringify(state.originalClients));
       state.hasUnsavedChanges = false;
       updateChangesBanner();
+      updateClientTabsBadges();
+      updateActiveClientProfile();
+      updateGlobalStats();
       renderCatalog();
       showToast("Reverted to last committed state.", "info");
     }
@@ -621,30 +830,153 @@
     renderCatalog();
   });
 
-  // ── ADD & EDIT VIDEO MODAL ──
+  // ── WORK TYPE SWITCHER & IMAGE SELECTION ──
+  function setupWorkTypeSwitcher() {
+    radioTypeVideo.addEventListener("change", updateWorkTypeVisibility);
+    radioTypeImage.addEventListener("change", updateWorkTypeVisibility);
+
+    // Existing image select change
+    selectExistingImage.addEventListener("change", (e) => {
+      if (e.target.value) {
+        inputImageSrc.value = e.target.value;
+        updatePreviewCard();
+      }
+    });
+
+    inputImageSrc.addEventListener("input", updatePreviewCard);
+
+    // Image file upload
+    fileUploadInput.addEventListener("change", handleImageUpload);
+  }
+
+  function updateWorkTypeVisibility() {
+    const isImage = radioTypeImage.checked;
+    if (isImage) {
+      sectionVideoInputs.style.display = "none";
+      sectionImageInputs.style.display = "block";
+      if (groupPublishDate) groupPublishDate.style.display = "none";
+      if (previewPlayIcon) previewPlayIcon.style.display = "none";
+      if (!inputCategory.value) inputCategory.value = "Stream Thumbnail";
+    } else {
+      sectionVideoInputs.style.display = "block";
+      sectionImageInputs.style.display = "none";
+      if (groupPublishDate) groupPublishDate.style.display = "block";
+      if (previewPlayIcon) previewPlayIcon.style.display = "block";
+      if (!inputCategory.value || inputCategory.value === "Stream Thumbnail") {
+        inputCategory.value = "Motion Graphic";
+      }
+    }
+    updatePreviewCard();
+  }
+
+  function populateImageSelectDropdown() {
+    selectExistingImage.innerHTML = `<option value="">-- Choose Existing Client Image --</option>`;
+    const clientKey = state.activeClientKey;
+
+    // Filter available images for this client first, then others
+    const sorted = [...state.availableImages].sort((a, b) => {
+      const aMatches = a.includes(`clients/${clientKey}/`);
+      const bMatches = b.includes(`clients/${clientKey}/`);
+      if (aMatches && !bMatches) return -1;
+      if (!aMatches && bMatches) return 1;
+      return a.localeCompare(b);
+    });
+
+    sorted.forEach((img) => {
+      const opt = document.createElement("option");
+      opt.value = img;
+      const isClientImg = img.includes(`clients/${clientKey}/`);
+      opt.textContent = isClientImg ? `⭐ ${img.split("/").pop()}` : img;
+      selectExistingImage.appendChild(opt);
+    });
+  }
+
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const base64Data = evt.target.result;
+      try {
+        showToast("Uploading image...", "info");
+        const res = await apiRequest("/api/admin/upload-image", {
+          method: "POST",
+          body: {
+            clientKey: state.activeClientKey,
+            fileName: file.name,
+            fileData: base64Data,
+          },
+        });
+
+        if (res.success && res.path) {
+          inputImageSrc.value = res.path;
+          state.availableImages = res.images || state.availableImages;
+          populateImageSelectDropdown();
+          selectExistingImage.value = res.path;
+          updatePreviewCard();
+          showToast(`Uploaded successfully: ${res.path}`, "success");
+        }
+      } catch (err) {
+        showToast(`Image upload failed: ${err.message}`, "error");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── ADD & EDIT MODAL ──
   btnOpenAddModal.addEventListener("click", () => {
     openAddModal();
   });
 
   function openAddModal() {
-    videoModalTitle.textContent = "ADD VIDEO TO CATALOG";
+    const client = state.clients[state.activeClientKey] || {};
+    videoModalTitle.textContent = `ADD WORK TO ${client.name?.toUpperCase() || "CLIENT"}`;
     videoEditIndex.value = "-1";
+
+    // Auto default work type based on client collection
+    if (state.activeClientKey === "aihara") {
+      radioTypeImage.checked = true;
+    } else {
+      radioTypeVideo.checked = true;
+    }
+
     inputVideoUrl.value = "";
+    inputImageSrc.value = "";
+    selectExistingImage.value = "";
     inputVideoTitle.value = "";
+    inputCategory.value = state.activeClientKey === "aihara" ? "Stream Thumbnail" : "Motion Graphic";
     inputVideoDate.value = new Date().toISOString().split("T")[0];
-    updatePreviewCard();
+
+    updateWorkTypeVisibility();
     videoModalBackdrop.style.display = "flex";
   }
 
   function openEditModal(index) {
-    const item = state.catalog[index];
+    const works = state.clients[state.activeClientKey]?.works || [];
+    const item = works[index];
     if (!item) return;
-    videoModalTitle.textContent = "EDIT CATALOG VIDEO";
+
+    videoModalTitle.textContent = `EDIT WORK (${state.clients[state.activeClientKey]?.name || ""})`;
     videoEditIndex.value = index;
-    inputVideoUrl.value = item.id;
-    inputVideoTitle.value = item.title;
+
+    const isImage = item.type === "image" || (!item.videoId && !item.id && item.src);
+    if (isImage) {
+      radioTypeImage.checked = true;
+      inputImageSrc.value = item.src || "";
+      selectExistingImage.value = item.src || "";
+      inputVideoUrl.value = "";
+    } else {
+      radioTypeVideo.checked = true;
+      inputVideoUrl.value = item.videoId || item.id || "";
+      inputImageSrc.value = item.src || "";
+    }
+
+    inputVideoTitle.value = item.title || "";
+    inputCategory.value = item.category || (isImage ? "Stream Thumbnail" : "Motion Graphic");
     inputVideoDate.value = item.pubDate ? item.pubDate.split("T")[0] : new Date().toISOString().split("T")[0];
-    updatePreviewCard();
+
+    updateWorkTypeVisibility();
     videoModalBackdrop.style.display = "flex";
   }
 
@@ -661,23 +993,31 @@
   // Live Preview Updating
   inputVideoUrl.addEventListener("input", updatePreviewCard);
   inputVideoTitle.addEventListener("input", updatePreviewCard);
+  inputCategory.addEventListener("input", updatePreviewCard);
   inputVideoDate.addEventListener("input", updatePreviewCard);
 
   function updatePreviewCard() {
-    const vid = extractVideoId(inputVideoUrl.value);
-    const title = inputVideoTitle.value.trim() || "Enter title above...";
+    const isImage = radioTypeImage.checked;
+    const title = inputVideoTitle.value.trim() || "Enter work title above...";
+    const cat = inputCategory.value.trim() || (isImage ? "Artwork" : "Motion Graphic");
     const date = inputVideoDate.value || new Date().toISOString().split("T")[0];
-    const cat = getCategoryFromTitle(title);
 
     previewTitle.textContent = title;
-    previewDate.textContent = formatDate(date);
+    previewDate.textContent = isImage ? "" : formatDate(date);
     previewBadge.textContent = cat;
-    catPreviewBadge.textContent = cat;
 
-    if (vid) {
-      previewThumb.src = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+    if (isImage) {
+      const src = inputImageSrc.value.trim();
+      previewThumb.src = src || "img/personal_preview.jpg";
+      if (previewPlayIcon) previewPlayIcon.style.display = "none";
     } else {
-      previewThumb.src = "img/personal_preview.jpg";
+      const vid = extractVideoId(inputVideoUrl.value);
+      if (vid) {
+        previewThumb.src = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+      } else {
+        previewThumb.src = "img/personal_preview.jpg";
+      }
+      if (previewPlayIcon) previewPlayIcon.style.display = "block";
     }
   }
 
@@ -706,45 +1046,71 @@
       showToast(`Could not fetch info: ${err.message}`, "error");
     } finally {
       btnFetchMeta.disabled = false;
-      btnFetchMeta.textContent = "AUTO-FETCH INFO";
+      btnFetchMeta.textContent = "AUTO-FETCH";
     }
   });
 
-  // Submit Video Form
+  // Submit Work Form
   videoForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const vid = extractVideoId(inputVideoUrl.value);
+    const works = state.clients[state.activeClientKey]?.works;
+    if (!works) return;
+
+    const isImage = radioTypeImage.checked;
     const title = inputVideoTitle.value.trim();
-    const date = inputVideoDate.value ? new Date(inputVideoDate.value).toISOString() : new Date().toISOString();
+    const category = inputCategory.value.trim() || (isImage ? "Stream Thumbnail" : "Motion Graphic");
     const editIdx = parseInt(videoEditIndex.value, 10);
 
-    if (!vid || !title) {
-      showToast("Video ID and Title are required.", "error");
+    if (!title) {
+      showToast("Work Title is required.", "error");
       return;
     }
 
-    const item = {
-      id: vid,
-      title: title,
-      pubDate: date,
-    };
+    let item = null;
 
-    if (editIdx >= 0 && editIdx < state.catalog.length) {
-      state.catalog[editIdx] = item;
-      showToast(`Updated "${title}"`, "success");
-    } else {
-      // Check for duplicate ID
-      const exists = state.catalog.find((v) => v.id === vid);
-      if (exists) {
-        showToast(`Video ${vid} is already in the catalog!`, "error");
+    if (isImage) {
+      const src = inputImageSrc.value.trim();
+      if (!src) {
+        showToast("Please select, upload, or enter an Image path.", "error");
         return;
       }
-      // Add to top of catalog
-      state.catalog.unshift(item);
-      showToast(`Added "${title}" to catalog!`, "success");
+      item = {
+        title: title,
+        category: category,
+        type: "image",
+        src: src,
+      };
+    } else {
+      const vid = extractVideoId(inputVideoUrl.value);
+      if (!vid) {
+        showToast("Valid YouTube Video ID or URL is required.", "error");
+        return;
+      }
+      const date = inputVideoDate.value ? new Date(inputVideoDate.value).toISOString() : new Date().toISOString();
+      item = {
+        id: vid,
+        videoId: vid,
+        title: title,
+        category: category,
+        type: "video",
+        pubDate: date,
+        src: `https://img.youtube.com/vi/${vid}/hqdefault.jpg`,
+      };
+    }
+
+    if (editIdx >= 0 && editIdx < works.length) {
+      works[editIdx] = item;
+      showToast(`Updated "${title}"`, "success");
+    } else {
+      // Add to top of works list
+      works.unshift(item);
+      showToast(`Added "${title}" to ${state.clients[state.activeClientKey]?.name}!`, "success");
     }
 
     markChanges();
+    updateClientTabsBadges();
+    updateActiveClientProfile();
+    updateGlobalStats();
     renderCatalog();
     closeVideoModal();
   });
@@ -758,7 +1124,7 @@
 
     try {
       const data = await apiRequest("/api/admin/youtube/channel-sync");
-      statYtStatus.textContent = "SYNCED";
+      if (statYtStatus) statYtStatus.textContent = "SYNCED";
 
       if (data.newVideos && data.newVideos.length > 0) {
         state.discoveredYtVideos = data.newVideos;
@@ -767,7 +1133,7 @@
         showToast(`Found ${data.newVideos.length} new YouTube uploads!`, "success");
       } else {
         ytScanBanner.style.display = "none";
-        showToast("Your catalog is fully up to date with YouTube!", "success");
+        showToast("Your video catalog is fully up to date with YouTube!", "success");
       }
     } catch (err) {
       showToast(`YouTube scan error: ${err.message}`, "error");
@@ -799,11 +1165,16 @@
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.dataset.addYt, 10);
         const item = state.discoveredYtVideos[idx];
-        if (item) {
-          state.catalog.unshift({
+        const works = state.clients.personal?.works;
+        if (item && works) {
+          works.unshift({
             id: item.id,
+            videoId: item.id,
             title: item.title,
+            category: "Motion Graphic",
+            type: "video",
             pubDate: item.pubDate || new Date().toISOString(),
+            src: `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`,
           });
           state.discoveredYtVideos.splice(idx, 1);
           renderDiscoveredVideos(state.discoveredYtVideos);
@@ -811,27 +1182,38 @@
             ytScanBanner.style.display = "none";
           }
           markChanges();
+          updateClientTabsBadges();
+          updateActiveClientProfile();
+          updateGlobalStats();
           renderCatalog();
-          showToast(`Added "${item.title}" to catalog!`, "success");
+          showToast(`Added "${item.title}" to Personal Project!`, "success");
         }
       });
     });
   }
 
   btnAddAllYtVideos.addEventListener("click", () => {
-    if (!state.discoveredYtVideos.length) return;
+    const works = state.clients.personal?.works;
+    if (!state.discoveredYtVideos.length || !works) return;
     state.discoveredYtVideos.forEach((v) => {
-      state.catalog.unshift({
+      works.unshift({
         id: v.id,
+        videoId: v.id,
         title: v.title,
+        category: "Motion Graphic",
+        type: "video",
         pubDate: v.pubDate || new Date().toISOString(),
+        src: `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`,
       });
     });
     state.discoveredYtVideos = [];
     ytScanBanner.style.display = "none";
     markChanges();
+    updateClientTabsBadges();
+    updateActiveClientProfile();
+    updateGlobalStats();
     renderCatalog();
-    showToast("Added all new uploads to catalog!", "success");
+    showToast("Added all new uploads to Personal Project!", "success");
   });
 
   btnDismissYtBanner.addEventListener("click", () => {
@@ -843,18 +1225,19 @@
   btnQuickCommit.addEventListener("click", openCommitModal);
 
   function openCommitModal() {
-    summaryTotal.textContent = `${state.catalog.length} videos`;
+    let totalWorks = 0;
+    const clientCount = Object.keys(state.clients).length;
+    for (const c of Object.values(state.clients)) {
+      totalWorks += c.works?.length || 0;
+    }
+
+    summaryTotal.textContent = `${totalWorks} works across ${clientCount} collections`;
     commitTerminalBox.style.display = "none";
     commitTerminalOutput.textContent = "";
 
     // Conventional commit message auto-generation
-    const diffCount = state.catalog.length - state.originalCatalog.length;
-    let autoMsg = `feat(catalog): update portfolio catalog (${state.catalog.length} works)`;
-    if (diffCount > 0) {
-      autoMsg = `feat(catalog): add ${diffCount} video${diffCount > 1 ? "s" : ""} to portfolio catalog (${state.catalog.length} works)`;
-    } else if (diffCount < 0) {
-      autoMsg = `feat(catalog): remove ${Math.abs(diffCount)} video(s) from catalog (${state.catalog.length} works)`;
-    }
+    const activeName = state.clients[state.activeClientKey]?.name || state.activeClientKey;
+    let autoMsg = `feat(catalog): update client collections and works (${totalWorks} works)`;
     commitMessageInput.value = autoMsg;
     commitModalBackdrop.style.display = "flex";
   }
@@ -873,21 +1256,21 @@
     btnExecuteCommit.disabled = true;
     btnExecuteCommit.innerHTML = `<span>COMMITTING &amp; VALIDATING...</span>`;
     commitTerminalBox.style.display = "block";
-    commitTerminalOutput.textContent = "⚙️ Validating catalog schema and files...\n";
+    commitTerminalOutput.textContent = "⚙️ Validating clients data schema and assets...\n";
 
-    const commitMsg = commitMessageInput.value.trim() || `feat(catalog): update portfolio catalog (${state.catalog.length} works)`;
+    const commitMsg = commitMessageInput.value.trim() || `feat(catalog): update client collections and works`;
     const push = checkPushRemote.checked;
 
     try {
-      commitTerminalOutput.textContent += "📝 Writing catalog.json...\n";
-      commitTerminalOutput.textContent += "🔄 Syncing script.js CATALOG_VIDEOS...\n";
+      commitTerminalOutput.textContent += "📝 Writing clients.json and catalog.json...\n";
+      commitTerminalOutput.textContent += "🔄 Syncing script.js and index.html counts...\n";
       commitTerminalOutput.textContent += "⚡ Checking JavaScript syntax with node --check...\n";
       commitTerminalOutput.textContent += "🌿 Staging git changes & committing...\n";
 
-      const res = await apiRequest("/api/admin/catalog/save", {
+      const res = await apiRequest("/api/admin/clients/save", {
         method: "POST",
         body: {
-          items: state.catalog,
+          clients: state.clients,
           commitMessage: commitMsg,
           push: push,
         },
@@ -905,8 +1288,8 @@
 
       commitTerminalOutput.textContent += `🎉 All operations completed successfully!`;
 
-      // Update state
-      state.originalCatalog = JSON.parse(JSON.stringify(state.catalog));
+      // Update state snapshot
+      state.originalClients = JSON.parse(JSON.stringify(state.clients));
       state.hasUnsavedChanges = false;
       updateChangesBanner();
 
@@ -914,7 +1297,7 @@
         updateGitStatusUI(res.gitStatus);
       }
 
-      showToast("Catalog updated & committed to Git!", "success");
+      showToast("Portfolio catalog saved & committed to Git!", "success");
 
       setTimeout(() => {
         closeCommitModal();
@@ -974,9 +1357,9 @@
     if (e.target === secDrawerBackdrop) secDrawerBackdrop.style.display = "none";
   });
 
-  // ── VIDEO PLAYER MODAL ──
+  // ── PREVIEW LIGHTBOXES ──
   function openVideoPlayer(videoId, title) {
-    playerModalTitle.textContent = title;
+    playerModalTitle.textContent = title || "VIDEO PREVIEW";
     playerIframeWrap.innerHTML = `
       <iframe
         src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1"
@@ -997,12 +1380,31 @@
     if (e.target === playerModalBackdrop) closeVideoPlayer();
   });
 
+  function openImageLightbox(src, title) {
+    if (lightboxTitle) lightboxTitle.textContent = title || "ARTWORK PREVIEW";
+    if (lightboxImg) lightboxImg.src = src;
+    if (imageLightboxBackdrop) imageLightboxBackdrop.style.display = "flex";
+  }
+
+  function closeImageLightbox() {
+    if (imageLightboxBackdrop) imageLightboxBackdrop.style.display = "none";
+    if (lightboxImg) lightboxImg.src = "";
+  }
+
+  if (btnCloseLightbox) btnCloseLightbox.addEventListener("click", closeImageLightbox);
+  if (imageLightboxBackdrop) {
+    imageLightboxBackdrop.addEventListener("click", (e) => {
+      if (e.target === imageLightboxBackdrop) closeImageLightbox();
+    });
+  }
+
   // Global ESC key listener
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeVideoModal();
       closeCommitModal();
       closeVideoPlayer();
+      closeImageLightbox();
       gitDrawerBackdrop.style.display = "none";
       secDrawerBackdrop.style.display = "none";
     }

@@ -1,0 +1,333 @@
+{
+  "personal": {
+    "name": "Personal Project",
+    "handle": "@iaexamax",
+    "url": "https://www.youtube.com/@iaexamax",
+    "desc": "Original motion design, typography PVs, visual experiments, and animated showcase reels.",
+    "avatar": "P",
+    "links": [
+      {
+        "platform": "YouTube",
+        "label": "@iaexamax",
+        "url": "https://www.youtube.com/@iaexamax",
+        "icon": "img/icons/Platform=YouTube, Color=Negative.png"
+      },
+      {
+        "platform": "Twitter / X",
+        "label": "@i_AExAmax",
+        "url": "https://x.com/i_AExAmax",
+        "icon": "img/icons/Platform=X (Twitter), Color=Negative.png"
+      },
+      {
+        "platform": "Instagram",
+        "label": "@itxamax",
+        "url": "https://www.instagram.com/itxamax/",
+        "icon": "img/icons/Platform=Instagram, Color=Negative.png"
+      },
+      {
+        "platform": "Twitch",
+        "label": "@iaexamax",
+        "url": "https://www.twitch.tv/iaexamax",
+        "icon": "img/icons/Platform=Twitch, Color=Negative.png"
+      },
+      {
+        "platform": "TikTok",
+        "label": "@iaexamax",
+        "url": "https://www.tiktok.com/@iaexamax",
+        "icon": "img/icons/Platform=TikTok, Color=Negative.png"
+      }
+    ],
+    "works": [
+      {
+        "id": "AdU297GBNvg",
+        "title": "visuals:AZURE2026",
+        "pubDate": "2026-07-07T07:53:15Z",
+        "category": "Motion Visual",
+        "type": "video",
+        "videoId": "AdU297GBNvg",
+        "src": "https://img.youtube.com/vi/AdU297GBNvg/hqdefault.jpg"
+      },
+      {
+        "id": "rpY9ydbisP4",
+        "title": "visuals:AZURE2026 [ Discarded ]",
+        "pubDate": "2026-06-11T16:26:26Z",
+        "category": "Motion Visual",
+        "type": "video",
+        "videoId": "rpY9ydbisP4",
+        "src": "https://img.youtube.com/vi/rpY9ydbisP4/hqdefault.jpg"
+      },
+      {
+        "id": "Rwc5zKMN1xM",
+        "title": "visuals:NO_WORRIES.",
+        "pubDate": "2026-05-31T15:03:05Z",
+        "category": "Motion Visual",
+        "type": "video",
+        "videoId": "Rwc5zKMN1xM",
+        "src": "https://img.youtube.com/vi/Rwc5zKMN1xM/hqdefault.jpg"
+      },
+      {
+        "id": "mm-pWXxyT6k",
+        "title": "visuals:Height.",
+        "pubDate": "2026-05-31T13:49:22Z",
+        "category": "Motion Visual",
+        "type": "video",
+        "videoId": "mm-pWXxyT6k",
+        "src": "https://img.youtube.com/vi/mm-pWXxyT6k/hqdefault.jpg"
+      },
+      {
+        "id": "N0SML3Qotaw",
+        "title": "banner:HIRO.",
+        "pubDate": "2026-05-31T13:08:11Z",
+        "category": "Channel Banner & Visual",
+        "type": "video",
+        "videoId": "N0SML3Qotaw",
+        "src": "https://img.youtube.com/vi/N0SML3Qotaw/hqdefault.jpg"
+      },
+      {
+        "id": "zIEbQMFPSMs",
+        "title": "remake:AMOS",
+        "pubDate": "2026-03-15T13:54:37Z",
+        "category": "Motion Remake",
+        "type": "video",
+        "videoId": "zIEbQMFPSMs",
+        "src": "https://img.youtube.com/vi/zIEbQMFPSMs/hqdefault.jpg"
+      },
+      {
+        "id": "0eXpsDlfUII",
+        "title": "reels:2024-2025",
+        "pubDate": "2026-03-08T02:10:51Z",
+        "category": "Motion Reel",
+        "type": "video",
+        "videoId": "0eXpsDlfUII",
+        "src": "https://img.youtube.com/vi/0eXpsDlfUII/hqdefault.jpg"
+      },
+      {
+        "id": "ZVTB6703DnE",
+        "title": "HBD:amax.",
+        "pubDate": "2026-02-02T09:11:09Z",
+        "category": "Celebration Visual",
+        "type": "video",
+        "videoId": "ZVTB6703DnE",
+        "src": "https://img.youtube.com/vi/ZVTB6703DnE/hqdefault.jpg"
+      },
+      {
+        "id": "Q-Fg1dh8s_I",
+        "title": "HBD:sxcstyles2025.",
+        "pubDate": "2025-08-17T04:02:46Z",
+        "category": "Celebration Visual",
+        "type": "video",
+        "videoId": "Q-Fg1dh8s_I",
+        "src": "https://img.youtube.com/vi/Q-Fg1dh8s_I/hqdefault.jpg"
+      },
+      {
+        "id": "4gGzsHAM4mA",
+        "title": "amv:News.",
+        "pubDate": "2024-10-21T10:21:34Z",
+        "category": "Anime Music Video (AMV)",
+        "type": "video",
+        "videoId": "4gGzsHAM4mA",
+        "src": "https://img.youtube.com/vi/4gGzsHAM4mA/hqdefault.jpg"
+      },
+      {
+        "id": "NiYcw0yX2VY",
+        "title": "文字PV:not_enough.",
+        "pubDate": "2024-09-12T03:43:59Z",
+        "category": "Typography Motion PV",
+        "type": "video",
+        "videoId": "NiYcw0yX2VY",
+        "src": "https://img.youtube.com/vi/NiYcw0yX2VY/hqdefault.jpg"
+      },
+      {
+        "id": "QpnHcE5G0ks",
+        "title": "文字PV:all_alone.",
+        "pubDate": "2024-06-10T09:03:54Z",
+        "category": "Typography Motion PV",
+        "type": "video",
+        "videoId": "QpnHcE5G0ks",
+        "src": "https://img.youtube.com/vi/QpnHcE5G0ks/hqdefault.jpg"
+      },
+      {
+        "id": "R3zzz9GDyfs",
+        "title": "amv:Untitled.",
+        "pubDate": "2024-05-13T17:43:31Z",
+        "category": "Anime Music Video (AMV)",
+        "type": "video",
+        "videoId": "R3zzz9GDyfs",
+        "src": "https://img.youtube.com/vi/R3zzz9GDyfs/hqdefault.jpg"
+      },
+      {
+        "id": "P5uiNuZG46s",
+        "title": "amv:Daisey.",
+        "pubDate": "2024-02-29T06:37:30Z",
+        "category": "Anime Music Video (AMV)",
+        "type": "video",
+        "videoId": "P5uiNuZG46s",
+        "src": "https://img.youtube.com/vi/P5uiNuZG46s/hqdefault.jpg"
+      },
+      {
+        "id": "XgDKkSS0aPw",
+        "title": "amv:dot.",
+        "pubDate": "2024-02-05T00:59:57Z",
+        "category": "Anime Music Video (AMV)",
+        "type": "video",
+        "videoId": "XgDKkSS0aPw",
+        "src": "https://img.youtube.com/vi/XgDKkSS0aPw/hqdefault.jpg"
+      },
+      {
+        "id": "gNO7aiqYkSQ",
+        "title": "visuals:busy.",
+        "pubDate": "2024-01-07T11:14:44Z",
+        "category": "Motion Visual",
+        "type": "video",
+        "videoId": "gNO7aiqYkSQ",
+        "src": "https://img.youtube.com/vi/gNO7aiqYkSQ/hqdefault.jpg"
+      },
+      {
+        "id": "zVkIiLFjrWU",
+        "title": "miley",
+        "pubDate": "2023-12-09T15:07:36Z",
+        "category": "Motion Graphic",
+        "type": "video",
+        "videoId": "zVkIiLFjrWU",
+        "src": "https://img.youtube.com/vi/zVkIiLFjrWU/hqdefault.jpg"
+      },
+      {
+        "id": "Rc__qEAHGAU",
+        "title": "amv:Story.",
+        "pubDate": "2023-10-27T14:12:59Z",
+        "category": "Anime Music Video (AMV)",
+        "type": "video",
+        "videoId": "Rc__qEAHGAU",
+        "src": "https://img.youtube.com/vi/Rc__qEAHGAU/hqdefault.jpg"
+      },
+      {
+        "id": "Taiw_SjScNY",
+        "title": "HBD:sxcstyles",
+        "pubDate": "2023-07-22T06:01:41Z",
+        "category": "Celebration Visual",
+        "type": "video",
+        "videoId": "Taiw_SjScNY",
+        "src": "https://img.youtube.com/vi/Taiw_SjScNY/hqdefault.jpg"
+      },
+      {
+        "id": "ot68zIJmfyY",
+        "title": "intro:HiroNeyka.",
+        "pubDate": "2023-06-10T09:08:34Z",
+        "category": "Intro Animation",
+        "type": "video",
+        "videoId": "ot68zIJmfyY",
+        "src": "https://img.youtube.com/vi/ot68zIJmfyY/hqdefault.jpg"
+      },
+      {
+        "id": "r5wQP7NbVmQ",
+        "title": "fantro:Nerumi-S",
+        "pubDate": "2023-05-29T10:29:48Z",
+        "category": "Intro Animation",
+        "type": "video",
+        "videoId": "r5wQP7NbVmQ",
+        "src": "https://img.youtube.com/vi/r5wQP7NbVmQ/hqdefault.jpg"
+      },
+      {
+        "id": "x8C_vZsPIFc",
+        "title": "amv:amax&witty.",
+        "pubDate": "2023-05-20T12:13:08Z",
+        "category": "Anime Music Video (AMV)",
+        "type": "video",
+        "videoId": "x8C_vZsPIFc",
+        "src": "https://img.youtube.com/vi/x8C_vZsPIFc/hqdefault.jpg"
+      }
+    ]
+  },
+  "aihara": {
+    "name": "Aihara Ch.",
+    "handle": "@Aihara-wan",
+    "url": "https://www.youtube.com/@Aihara-wan",
+    "desc": "Vtuber",
+    "avatar": "A",
+    "links": [
+      {
+        "platform": "YouTube",
+        "label": "@Aihara-wan",
+        "url": "https://www.youtube.com/@Aihara-wan",
+        "icon": "img/icons/Platform=YouTube, Color=Negative.png"
+      }
+    ],
+    "works": [
+      {
+        "title": "Battlefield V",
+        "category": "Stream Thumbnail",
+        "type": "image",
+        "src": "img/clients/aihara/battlefield_v.png"
+      },
+      {
+        "title": "For Honor",
+        "category": "Stream Thumbnail",
+        "type": "image",
+        "src": "img/clients/aihara/for_honor.jpg"
+      },
+      {
+        "title": "Sky Story Origin",
+        "category": "Banner & Key Visual",
+        "type": "image",
+        "src": "img/clients/aihara/sky_story_origin.png"
+      },
+      {
+        "title": "No One Can Hide",
+        "category": "Stream Thumbnail",
+        "type": "image",
+        "src": "img/clients/aihara/no_one_can_hide.png"
+      }
+    ]
+  },
+  "hironeyka": {
+    "name": "@HiroKitsuNyx",
+    "handle": "HiroNeyka / HiroKitsuNyx",
+    "url": "https://www.twitch.tv/hirokitsunyx",
+    "desc": "VTuber & Streamer",
+    "avatar": "H",
+    "links": [
+      {
+        "platform": "Twitch",
+        "label": "@hirokitsunyx",
+        "url": "https://www.twitch.tv/hirokitsunyx",
+        "icon": "img/icons/Platform=Twitch, Color=Negative.png"
+      },
+      {
+        "platform": "YouTube",
+        "label": "@HiroNeyka",
+        "url": "https://www.youtube.com/@HiroNeyka",
+        "icon": "img/icons/Platform=YouTube, Color=Negative.png"
+      },
+      {
+        "platform": "X",
+        "label": "@HiroNeyka",
+        "url": "https://x.com/HiroNeyka",
+        "icon": "img/icons/Platform=X (Twitter), Color=Negative.png"
+      },
+      {
+        "platform": "TikTok",
+        "label": "@hironeyka",
+        "url": "https://www.tiktok.com/@hironeyka",
+        "icon": "img/icons/Platform=TikTok, Color=Negative.png"
+      }
+    ],
+    "works": [
+      {
+        "title": "banner:HIRO.",
+        "category": "Channel Banner & Visual",
+        "type": "video",
+        "videoId": "N0SML3Qotaw",
+        "pubDate": "2026-05-31T13:08:11Z",
+        "src": "img/clients/hironeyka/banner_hiro.jpg"
+      },
+      {
+        "title": "intro:HiroNeyka.",
+        "category": "Stream Intro & Motion Graphic",
+        "type": "video",
+        "videoId": "ot68zIJmfyY",
+        "pubDate": "2023-06-10T09:08:34Z",
+        "src": "img/clients/hironeyka/intro_hironeyka.jpg"
+      }
+    ]
+  }
+}

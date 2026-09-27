@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AMAX — Catalog & Hardware Security Console</title>
+  <title>AMAX — Multi-Client Catalog &amp; Hardware Security Console</title>
   <link rel="icon" type="image/png" href="img/LOGO_BIG.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -56,7 +56,7 @@
         </div>
       </div>
 
-      <!-- HARDWARE MISMATCH WARNING (HIDDEN BY DEFAULT) -->
+      <!-- HARDWARE MISMATCH WARNING -->
       <div class="alert-box error" id="hwMismatchAlert" style="display: none;">
         <div class="alert-title">⚠️ HARDWARE ACCESS RESTRICTED</div>
         <div class="alert-desc" id="hwMismatchDesc">
@@ -64,7 +64,7 @@
         </div>
       </div>
 
-      <!-- NO BACKEND WARNING (IF RUN ON STATIC HOSTING) -->
+      <!-- NO BACKEND WARNING -->
       <div class="alert-box warning" id="staticServerAlert" style="display: none;">
         <div class="alert-title">📡 BACKEND SERVER REQUIRED</div>
         <div class="alert-desc">
@@ -126,7 +126,7 @@
           <img src="img/LOGO.png" alt="logo" class="navbar-logo" />
           <div class="brand-text">
             <span class="brand-title">AMAX CONSOLE</span>
-            <span class="brand-badge">CATALOG MANAGER</span>
+            <span class="brand-badge">MULTI-CLIENT MANAGER</span>
           </div>
         </div>
 
@@ -164,10 +164,26 @@
       <!-- HERO STATS STRIP -->
       <section class="stats-strip">
         <div class="stat-card">
+          <div class="stat-icon">📁</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statTotalWorks">0</div>
+            <div class="stat-label" id="statTotalWorksLabel">TOTAL CLIENT WORKS</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
           <div class="stat-icon">🎬</div>
           <div class="stat-body">
-            <div class="stat-value" id="statTotalVideos">0</div>
-            <div class="stat-label">VIDEOS IN CATALOG</div>
+            <div class="stat-value" id="statVideosCount">0</div>
+            <div class="stat-label">VIDEO WORKS</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🖼️</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statImagesCount">0</div>
+            <div class="stat-label">IMAGE WORKS</div>
           </div>
         </div>
 
@@ -178,20 +194,60 @@
             <div class="stat-label" id="statLastCommit">HEAD: --</div>
           </div>
         </div>
+      </section>
 
-        <div class="stat-card">
-          <div class="stat-icon">📡</div>
-          <div class="stat-body">
-            <div class="stat-value" id="statYtStatus">READY</div>
-            <div class="stat-label">YOUTUBE SYNC (@iaexamax)</div>
+      <!-- CLIENT COLLECTION SELECTOR TABS -->
+      <section class="client-tabs-section">
+        <div class="client-tabs-label">SELECT CLIENT OR COLLECTION TO MANAGE :</div>
+        <div class="client-tabs-row" id="clientTabsRow">
+          <!-- Dynamically populated or fallback -->
+          <button type="button" class="client-tab active" data-client="personal" id="tabClient_personal">
+            <span class="client-tab-avatar">P</span>
+            <div class="client-tab-info">
+              <span class="client-tab-title">Personal Project</span>
+              <span class="client-tab-handle">@iaexamax</span>
+            </div>
+            <span class="client-tab-badge" id="badge_personal">22 WORKS</span>
+          </button>
+
+          <button type="button" class="client-tab" data-client="aihara" id="tabClient_aihara">
+            <span class="client-tab-avatar aihara">A</span>
+            <div class="client-tab-info">
+              <span class="client-tab-title">Aihara Ch.</span>
+              <span class="client-tab-handle">@Aihara-wan</span>
+            </div>
+            <span class="client-tab-badge" id="badge_aihara">4 WORKS</span>
+          </button>
+
+          <button type="button" class="client-tab" data-client="hironeyka" id="tabClient_hironeyka">
+            <span class="client-tab-avatar hiro">H</span>
+            <div class="client-tab-info">
+              <span class="client-tab-title">HiroKitsuNyx</span>
+              <span class="client-tab-handle">@HiroNeyka</span>
+            </div>
+            <span class="client-tab-badge" id="badge_hironeyka">2 WORKS</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ACTIVE CLIENT INFO BANNER -->
+      <section class="client-profile-banner" id="clientProfileBanner">
+        <div class="client-profile-left">
+          <div class="client-profile-avatar" id="activeClientAvatar">P</div>
+          <div class="client-profile-details">
+            <div class="client-profile-name-row">
+              <h2 class="client-profile-name" id="activeClientName">Personal Project</h2>
+              <span class="client-profile-handle" id="activeClientHandle">@iaexamax</span>
+            </div>
+            <p class="client-profile-desc" id="activeClientDesc">Original motion design, typography PVs, visual experiments, and animated showcase reels.</p>
+            <div class="client-profile-links" id="activeClientLinks"></div>
           </div>
         </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">💻</div>
-          <div class="stat-body">
-            <div class="stat-value hw-mono stat-hwid" id="statHwidShort">HWID-OK</div>
-            <div class="stat-label" id="statHostLabel">HOST: iTxAmax</div>
+        <div class="client-profile-right">
+          <div class="client-type-filters" role="group" aria-label="Filter works by type">
+            <button type="button" class="type-filter-btn active" data-type="all">ALL (<span id="countFilterAll">0</span>)</button>
+            <button type="button" class="type-filter-btn" data-type="video">🎬 VIDEOS (<span id="countFilterVideo">0</span>)</button>
+            <button type="button" class="type-filter-btn" data-type="image">🖼️ IMAGES (<span id="countFilterImage">0</span>)</button>
           </div>
         </div>
       </section>
@@ -235,7 +291,7 @@
             type="text"
             id="catalogSearch"
             class="toolbar-search"
-            placeholder="Search catalog by title, video ID, or category..."
+            placeholder="Search works by title, ID, category, or file..."
           />
           <button type="button" class="btn-clear-search" id="btnClearSearch" style="display: none;">✕</button>
         </div>
@@ -253,7 +309,7 @@
 
           <button type="button" class="btn btn-primary" id="btnOpenAddModal">
             <span class="icon">+</span>
-            <span>ADD VIDEO</span>
+            <span id="btnAddWorkLabel">ADD WORK</span>
           </button>
 
           <button type="button" class="btn btn-success btn-glow" id="btnSaveAndCommit">
@@ -267,10 +323,10 @@
       <section class="catalog-list-section">
         <div class="catalog-list-header">
           <div class="col-drag">#</div>
-          <div class="col-thumb">THUMBNAIL</div>
+          <div class="col-thumb">PREVIEW</div>
+          <div class="col-type">TYPE</div>
           <div class="col-title">TITLE &amp; CATEGORY</div>
-          <div class="col-id">VIDEO ID</div>
-          <div class="col-date">PUBLISHED</div>
+          <div class="col-source">SOURCE / ID</div>
           <div class="col-actions">ACTIONS</div>
         </div>
 
@@ -280,8 +336,8 @@
 
         <div class="empty-state" id="emptyState" style="display: none;">
           <div class="empty-icon">📂</div>
-          <div class="empty-title">No videos found</div>
-          <div class="empty-desc">Try clearing your search query or add a new video above.</div>
+          <div class="empty-title">No works found</div>
+          <div class="empty-desc">Try clearing your search query or add a new work above.</div>
         </div>
       </section>
     </main>
@@ -289,64 +345,138 @@
 
 
   <!-- ════════════════════════════════════════════════
-       MODAL 1: ADD / EDIT VIDEO MODAL
+       MODAL 1: ADD / EDIT WORK MODAL (SUPPORTS VIDEO & IMAGE)
   ════════════════════════════════════════════════ -->
   <div class="modal-backdrop" id="videoModalBackdrop" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title" id="videoModalTitle">ADD VIDEO TO CATALOG</h3>
+        <h3 class="modal-title" id="videoModalTitle">ADD WORK TO CLIENT</h3>
         <button type="button" class="modal-close" id="btnCloseVideoModal">&times;</button>
       </div>
 
       <form id="videoForm" class="modal-body" autocomplete="off">
         <input type="hidden" id="videoEditIndex" value="-1" />
 
-        <!-- URL / ID INPUT -->
+        <!-- WORK TYPE TOGGLE -->
         <div class="form-group">
-          <label for="inputVideoUrl" class="form-label">
-            YOUTUBE VIDEO LINK OR ID
-            <span class="label-hint">(e.g. https://youtu.be/... or AdU297GBNvg)</span>
-          </label>
-          <div class="input-with-action">
-            <input
-              type="text"
-              id="inputVideoUrl"
-              class="form-input"
-              placeholder="Paste YouTube URL or 11-char Video ID..."
-              required
-            />
-            <button type="button" class="btn btn-outline" id="btnFetchMeta">
-              AUTO-FETCH INFO
-            </button>
+          <label class="form-label">WORK TYPE</label>
+          <div class="work-type-toggle-group">
+            <label class="type-radio-card">
+              <input type="radio" name="workType" value="video" id="radioTypeVideo" checked />
+              <div class="type-radio-content">
+                <span class="radio-icon">🎬</span>
+                <div>
+                  <strong>YouTube Video</strong>
+                  <small>Playable motion design / PV / AMV</small>
+                </div>
+              </div>
+            </label>
+
+            <label class="type-radio-card">
+              <input type="radio" name="workType" value="image" id="radioTypeImage" />
+              <div class="type-radio-content">
+                <span class="radio-icon">🖼️</span>
+                <div>
+                  <strong>Image Artwork</strong>
+                  <small>Thumbnail, Banner, Illustration</small>
+                </div>
+              </div>
+            </label>
           </div>
         </div>
 
-        <!-- VIDEO TITLE -->
+        <!-- VIDEO SECTION (VISIBLE IF TYPE === VIDEO) -->
+        <div id="sectionVideoInputs">
+          <div class="form-group">
+            <label for="inputVideoUrl" class="form-label">
+              YOUTUBE LINK OR VIDEO ID
+              <span class="label-hint">(e.g. https://youtu.be/... or AdU297GBNvg)</span>
+            </label>
+            <div class="input-with-action">
+              <input
+                type="text"
+                id="inputVideoUrl"
+                class="form-input"
+                placeholder="Paste YouTube URL or 11-char Video ID..."
+              />
+              <button type="button" class="btn btn-outline" id="btnFetchMeta">
+                AUTO-FETCH
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMAGE SECTION (VISIBLE IF TYPE === IMAGE) -->
+        <div id="sectionImageInputs" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">SELECT OR UPLOAD IMAGE FILE</label>
+            <div class="image-source-options">
+              <div class="form-row">
+                <div class="flex-1">
+                  <select id="selectExistingImage" class="form-input">
+                    <option value="">-- Choose Existing Client Image --</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="btn btn-outline btn-upload-label">
+                    <span>📤 UPLOAD NEW</span>
+                    <input type="file" id="fileUploadInput" accept="image/png,image/jpeg,image/webp" style="display: none;" />
+                  </label>
+                </div>
+              </div>
+              <div style="margin-top: 8px;">
+                <input
+                  type="text"
+                  id="inputImageSrc"
+                  class="form-input"
+                  placeholder="Or enter image path: img/clients/aihara/battlefield_v.png"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WORK TITLE -->
         <div class="form-group">
-          <label for="inputVideoTitle" class="form-label">VIDEO TITLE</label>
+          <label for="inputVideoTitle" class="form-label">WORK TITLE</label>
           <input
             type="text"
             id="inputVideoTitle"
             class="form-input"
-            placeholder="e.g. visuals:AZURE2026 or 文字PV:not_enough."
+            placeholder="e.g. visuals:AZURE2026 or Battlefield V"
             required
           />
         </div>
 
-        <!-- CATEGORY PREVIEW & PUBLISH DATE -->
+        <!-- CATEGORY & PUBLISH DATE -->
         <div class="form-row">
           <div class="form-group flex-1">
-            <label class="form-label">DETECTED CATEGORY</label>
-            <div class="category-preview-pill" id="catPreviewBadge">Motion Graphic</div>
+            <label for="inputCategory" class="form-label">CATEGORY</label>
+            <input
+              type="text"
+              id="inputCategory"
+              class="form-input"
+              placeholder="e.g. Stream Thumbnail, Motion Visual, Banner"
+              list="categorySuggestions"
+            />
+            <datalist id="categorySuggestions">
+              <option value="Stream Thumbnail"></option>
+              <option value="Banner & Key Visual"></option>
+              <option value="Motion Visual"></option>
+              <option value="Typography Motion PV"></option>
+              <option value="Anime Music Video (AMV)"></option>
+              <option value="Intro Animation"></option>
+              <option value="Celebration Visual"></option>
+              <option value="Motion Graphic"></option>
+            </datalist>
           </div>
 
-          <div class="form-group flex-1">
+          <div class="form-group flex-1" id="groupPublishDate">
             <label for="inputVideoDate" class="form-label">PUBLISHED DATE</label>
             <input
               type="date"
               id="inputVideoDate"
               class="form-input"
-              required
             />
           </div>
         </div>
@@ -357,7 +487,7 @@
           <div class="preview-card" id="previewCard">
             <div class="preview-thumb-wrap">
               <img src="img/personal_preview.jpg" alt="preview" id="previewThumb" class="preview-thumb" />
-              <div class="preview-play-icon">▶</div>
+              <div class="preview-play-icon" id="previewPlayIcon">▶</div>
             </div>
             <div class="preview-info">
               <div class="preview-badge" id="previewBadge">Motion Graphic</div>
@@ -370,7 +500,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" id="btnCancelVideo">CANCEL</button>
           <button type="submit" class="btn btn-primary btn-glow" id="btnSaveVideo">
-            SAVE VIDEO TO CATALOG
+            SAVE WORK TO CLIENT
           </button>
         </div>
       </form>
@@ -390,18 +520,18 @@
 
       <div class="modal-body">
         <p class="commit-intro">
-          This operation will update <code class="hw-mono">catalog.json</code>, synchronize <code class="hw-mono">script.js</code>, update fallback counts in <code class="hw-mono">index.html</code>, validate JavaScript syntax, and create a Git commit.
+          This operation will update <code class="hw-mono">clients.json</code> &amp; <code class="hw-mono">catalog.json</code>, synchronize <code class="hw-mono">script.js</code>, update fallback counts in <code class="hw-mono">index.html</code>, validate JavaScript syntax, and create a Git commit.
         </p>
 
         <!-- CHANGES SUMMARY -->
         <div class="commit-summary-box" id="commitSummaryBox">
           <div class="summary-item">
-            <span class="summary-label">Catalog Items :</span>
-            <span class="summary-val" id="summaryTotal">22 videos</span>
+            <span class="summary-label">Client Collections :</span>
+            <span class="summary-val" id="summaryTotal">3 clients</span>
           </div>
           <div class="summary-item">
             <span class="summary-label">Target Files :</span>
-            <span class="summary-val hw-mono">catalog.json, script.js, index.html</span>
+            <span class="summary-val hw-mono">clients.json, catalog.json, script.js, index.html</span>
           </div>
         </div>
 
@@ -415,7 +545,7 @@
             type="text"
             id="commitMessageInput"
             class="form-input hw-mono"
-            placeholder="feat(catalog): update portfolio catalog..."
+            placeholder="feat(catalog): update client collections and works..."
           />
         </div>
 
@@ -431,7 +561,7 @@
           </label>
         </div>
 
-        <!-- LIVE TERMINAL / OUTPUT STREAM -->
+        <!-- LIVE TERMINAL OUTPUT -->
         <div class="terminal-box" id="commitTerminalBox" style="display: none;">
           <div class="terminal-bar">
             <div class="term-dots">
@@ -489,9 +619,7 @@
         </div>
 
         <h4 class="drawer-subheading">RECENT COMMITS</h4>
-        <div class="commit-history-list" id="commitHistoryList">
-          <!-- Populated dynamically -->
-        </div>
+        <div class="commit-history-list" id="commitHistoryList"></div>
       </div>
     </div>
   </div>
@@ -555,8 +683,9 @@
 
 
   <!-- ════════════════════════════════════════════════
-       MODAL 3: VIDEO PLAYER TEST MODAL
+       MODAL 3: VIDEO & IMAGE PREVIEW MODALS
   ════════════════════════════════════════════════ -->
+  <!-- Video Player Modal -->
   <div class="modal-backdrop" id="playerModalBackdrop" style="display: none;">
     <div class="modal-card modal-player">
       <div class="modal-header">
@@ -564,6 +693,19 @@
         <button type="button" class="modal-close" id="btnClosePlayerModal">&times;</button>
       </div>
       <div class="player-iframe-wrap" id="playerIframeWrap"></div>
+    </div>
+  </div>
+
+  <!-- Image Lightbox Modal -->
+  <div class="modal-backdrop" id="imageLightboxBackdrop" style="display: none;">
+    <div class="modal-card modal-lightbox">
+      <div class="modal-header">
+        <h3 class="modal-title" id="lightboxTitle">ARTWORK PREVIEW</h3>
+        <button type="button" class="modal-close" id="btnCloseLightbox">&times;</button>
+      </div>
+      <div class="lightbox-img-wrap">
+        <img src="" alt="" id="lightboxImg" class="lightbox-img" />
+      </div>
     </div>
   </div>
 

@@ -8,7 +8,11 @@ const fs = require("fs");
 const { getSystemHWID, verifyHWID } = require("./hwid");
 const {
   getCatalog,
+  getClients,
   saveCatalogAndCommit,
+  saveClientsAndCommit,
+  getAvailableImages,
+  saveUploadedImage,
   pushToRemote,
   getGitStatus,
   fetchVideoMetadata,
@@ -131,14 +135,21 @@ app.post("/api/admin/auth/login", (req, res) => {
   const clientIp = req.ip || req.connection.remoteAddress || "127.0.0.1";
   const now = Date.now();
 
-  // Rate limiting check
+  const { adminKey, clientFingerprint } = req.body || {};
+
+  // Rate limiting check: Brute-force protection against invalid passwords
   const attempts = failedLoginAttempts.get(clientIp);
   if (attempts && attempts.lockUntil > now) {
-    const remainingSecs = Math.ceil((attempts.lockUntil - now) / 1000);
-    return res.status(429).json({
-      error: "RATE_LIMITED",
-      message: `Too many failed attempts. Try again in ${remainingSecs} seconds.`,
-    });
+    if (adminKey && ADMIN_KEY && adminKey === ADMIN_KEY) {
+      // Correct password supplied by legitimate admin: clear lockout
+      failedLoginAttempts.delete(clientIp);
+    } else {
+      const remainingSecs = Math.ceil((attempts.lockUntil - now) / 1000);
+      return res.status(429).json({
+        error: "RATE_LIMITED",
+        message: `Too many failed attempts. Try again in ${remainingSecs} seconds.`,
+      });
+    }
   }
 
   // 1. Hardware ID Check
@@ -149,8 +160,6 @@ app.post("/api/admin/auth/login", (req, res) => {
       message: `Access denied: Server is running on unauthorized hardware (${hwCheck.currentHwid}).`,
     });
   }
-
-  const { adminKey, clientFingerprint } = req.body || {};
 
   // 2. Admin Key Check (requires non-empty ADMIN_KEY in .env)
   if (!ADMIN_KEY || !adminKey || adminKey !== ADMIN_KEY) {
@@ -236,6 +245,72 @@ app.post("/api/admin/catalog/save", requireAdminAuth, (req, res) => {
   } catch (err) {
     console.error("[CATALOG SAVE ERROR]", err);
     res.status(500).json({ error: "SAVE_FAILED", message: err.message });
+  }
+});
+
+// Get all client collections (personal, aihara, hironeyka), images, and git status
+app.get("/api/admin/clients", requireAdminAuth, (req, res) => {
+  const clients = getClients();
+  const images = getAvailableImages();
+  const git = getGitStatus();
+  res.json({
+    clients,
+    images,
+    gitStatus: git,
+  });
+});
+
+// Save client collections and trigger automated Git Commit
+app.post("/api/admin/clients/save", requireAdminAuth, (req, res) => {
+  const { clients, commitMessage, push } = req.body || {};
+
+  if (!clients || typeof clients !== "object") {
+    return res
+      .status(400)
+      .json({ error: "Invalid clients format. Must be an object." });
+  }
+
+  try {
+    const result = saveClientsAndCommit(clients, {
+      commitMessage,
+      push: Boolean(push),
+    });
+
+    // Invalidate local in-memory video cache
+    videoCache.items = null;
+    videoCache.timestamp = 0;
+
+    res.json(result);
+  } catch (err) {
+    console.error("[CLIENTS SAVE ERROR]", err);
+    res.status(500).json({ error: "SAVE_FAILED", message: err.message });
+  }
+});
+
+// List available client images
+app.get("/api/admin/images", requireAdminAuth, (req, res) => {
+  res.json({ images: getAvailableImages() });
+});
+
+// Upload image for a client
+app.post("/api/admin/upload-image", requireAdminAuth, (req, res) => {
+  const { clientKey, fileName, fileData } = req.body || {};
+  if (!clientKey || !fileName || !fileData) {
+    return res
+      .status(400)
+      .json({ error: "Missing clientKey, fileName, or fileData" });
+  }
+
+  try {
+    const relativePath = saveUploadedImage(clientKey, fileName, fileData);
+    res.json({
+      success: true,
+      path: relativePath,
+      images: getAvailableImages(),
+    });
+  } catch (err) {
+    console.error("[IMAGE UPLOAD ERROR]", err);
+    res.status(500).json({ error: "UPLOAD_FAILED", message: err.message });
   }
 });
 
