@@ -1915,6 +1915,30 @@ body::-webkit-scrollbar { display: none; }
    RESPONSIVE ADJUSTMENTS
 ════════════════════════════════════════════ */
 @media (max-width: 768px) {
+  .navbar {
+    padding: 12px 20px;
+  }
+  .nav-logo {
+    height: 52px;
+  }
+  .nav-links {
+    gap: 18px;
+  }
+  .nav-links a {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+  .barcode {
+    display: none;
+  }
+  .intro-text {
+    left: 20px;
+    bottom: 24px;
+    right: 20px;
+  }
+  .intro-title {
+    font-size: clamp(38px, 12vw, 64px);
+  }
   .bottom-widgets {
     bottom: 20px;
     right: 20px;

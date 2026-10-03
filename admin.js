@@ -2761,6 +2761,7 @@
   const contactModalBackdrop = document.getElementById("contactModalBackdrop");
   const btnContactList = document.getElementById("btnContactList");
   const inboxUnreadBadge = document.getElementById("inboxUnreadBadge");
+  const mobileNavUnreadDot = document.getElementById("mobileNavUnreadDot");
   const btnRefreshContacts = document.getElementById("btnRefreshContacts");
   const btnCloseContactModal = document.getElementById("btnCloseContactModal");
   const btnCloseContactFooter = document.getElementById(
@@ -2783,6 +2784,9 @@
         } else {
           inboxUnreadBadge.style.display = "none";
         }
+      }
+      if (mobileNavUnreadDot) {
+        mobileNavUnreadDot.style.display = unread > 0 ? "block" : "none";
       }
       return list;
     } catch (e) {
@@ -2811,6 +2815,9 @@
         } else {
           inboxUnreadBadge.style.display = "none";
         }
+      }
+      if (mobileNavUnreadDot) {
+        mobileNavUnreadDot.style.display = unreadCount > 0 ? "block" : "none";
       }
 
       if (list.length === 0) {
@@ -2941,9 +2948,62 @@
     });
   }
 
+  // ── MOBILE NAVIGATION MENU CONTROLLER ──
+  const adminMobileToggle = document.getElementById("adminMobileToggle");
+  const navbarRight = document.getElementById("navbarRight");
+  const mobileNavBackdrop = document.getElementById("mobileNavBackdrop");
+
+  function closeMobileNav() {
+    if (navbarRight) navbarRight.classList.remove("mobile-open");
+    if (adminMobileToggle) {
+      adminMobileToggle.classList.remove("active");
+      adminMobileToggle.setAttribute("aria-expanded", "false");
+    }
+    if (mobileNavBackdrop) mobileNavBackdrop.classList.remove("active");
+    document.body.classList.remove("mobile-nav-lock");
+  }
+
+  function toggleMobileNav() {
+    if (!navbarRight) return;
+    const isOpening = !navbarRight.classList.contains("mobile-open");
+    if (isOpening) {
+      navbarRight.classList.add("mobile-open");
+      if (adminMobileToggle) {
+        adminMobileToggle.classList.add("active");
+        adminMobileToggle.setAttribute("aria-expanded", "true");
+      }
+      if (mobileNavBackdrop) mobileNavBackdrop.classList.add("active");
+      document.body.classList.add("mobile-nav-lock");
+    } else {
+      closeMobileNav();
+    }
+  }
+
+  if (adminMobileToggle) {
+    adminMobileToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleMobileNav();
+    });
+  }
+
+  if (mobileNavBackdrop) {
+    mobileNavBackdrop.addEventListener("click", closeMobileNav);
+  }
+
+  // Auto-close mobile drawer when action buttons are tapped
+  if (navbarRight) {
+    navbarRight.addEventListener("click", (e) => {
+      const btn = e.target.closest("button") || e.target.closest("a");
+      if (btn && !e.target.closest(".nav-work-status-toggle")) {
+        closeMobileNav();
+      }
+    });
+  }
+
   // Global ESC key listener
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
+      closeMobileNav();
       closeAddClientModal();
       closeEditClientModal();
       closeAboutModal();

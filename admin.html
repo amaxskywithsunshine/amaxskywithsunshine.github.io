@@ -153,7 +153,15 @@
         </div>
       </div>
 
-      <div class="navbar-right">
+      <!-- MOBILE MENU HAMBURGER BUTTON (VISIBLE ON MOBILE ONLY) -->
+      <button type="button" class="admin-mobile-toggle" id="adminMobileToggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="mobile-nav-unread-dot" id="mobileNavUnreadDot"></span>
+      </button>
+
+      <div class="navbar-right" id="navbarRight">
         <!-- WORK STATUS TOGGLE (HOMEPAGE WIDGET) -->
         <label class="nav-work-status-toggle" id="navWorkStatusToggleLabel" title="Click to toggle Homepage Work Status (Available for Work / Currently Unavailable)">
           <input type="checkbox" id="navWorkStatusToggle" checked />
@@ -198,6 +206,9 @@
         </button>
       </div>
     </header>
+
+    <!-- MOBILE NAV BACKDROP -->
+    <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
 
     <!-- MAIN DASHBOARD CONTENT -->
     <main class="dashboard-main">
